@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Engine.Network.Client;
+using Engine.Network.Components;
 using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
+using Engine.Network.MessageParser.Messages;
+using Engine.Network.Server;
 using P2PLib.Network.MessageParser;
-using P2PLib.Network.MessageParser.Messages;
-using P2PLib.Network.Server;
 
 namespace Engine
 {

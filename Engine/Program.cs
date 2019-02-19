@@ -7,8 +7,12 @@ using CSharpTest.Net.Serialization;
 using Engine.Core;
 using Engine.Network;
 using Engine.Network.Components;
+using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
+using Engine.Network.MessageParser.Messages;
 using Newtonsoft.Json;
+using P2PLib.Network.MessageParser;
+using P2PLib.Network.MessageParser.Messages;
 using Formatting = System.Xml.Formatting;
 
 namespace Engine
@@ -83,12 +87,6 @@ namespace Engine
 
             mCurrentState = ApplicationInputState.EmptyInput;
 
-            var a = Console.Read();
-            //if (a == '1')
-            //{
-            //    mCollaborativeNotes.SendMessage();
-            //}
-
             Console.Read();
         }
 
@@ -99,6 +97,7 @@ namespace Engine
                 case ((int) MessageType.TextDataMessage):
                 {
                     TextMessage rxMsg = (TextMessage) msg;
+                    Console.WriteLine(rxMsg.Text);
                     break;
                 }
             }
