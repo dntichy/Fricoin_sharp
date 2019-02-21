@@ -6,6 +6,7 @@
         RegisterMessage,
         UnregisterMessage,
         ResgisteredClientsListMessage,
-        TextDataMessage
+        TextDataMessage,
+        Message
     }
 }

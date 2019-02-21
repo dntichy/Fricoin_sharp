@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wallet", "Wallet\Wallet.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2PLib", "P2PLib\P2PLib.csproj", "{AF00AD38-2B00-4844-92D7-381E42B47C5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChainUtils", "ChainUtils\ChainUtils.csproj", "{C43F0EB1-3761-4708-BAA7-9E8F070A33AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{AF00AD38-2B00-4844-92D7-381E42B47C5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF00AD38-2B00-4844-92D7-381E42B47C5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF00AD38-2B00-4844-92D7-381E42B47C5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C43F0EB1-3761-4708-BAA7-9E8F070A33AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C43F0EB1-3761-4708-BAA7-9E8F070A33AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C43F0EB1-3761-4708-BAA7-9E8F070A33AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C43F0EB1-3761-4708-BAA7-9E8F070A33AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

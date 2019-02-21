@@ -7,9 +7,9 @@ using Engine.Network.Client;
 using Engine.Network.Components;
 using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
-using Engine.Network.MessageParser.Messages;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.MessageParser;
+using P2PLib.Network.MessageParser.Messages;
 
 namespace P2PLib.Network.Server
 {

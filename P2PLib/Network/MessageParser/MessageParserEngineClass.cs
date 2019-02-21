@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
-using Engine.Network.MessageParser.Messages;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.MessageParser.Messages;
 

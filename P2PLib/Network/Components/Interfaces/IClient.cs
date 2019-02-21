@@ -1,4 +1,5 @@
 ﻿using System;
+using P2PLib.Network.Components.Enums;
 
 namespace Engine.Network.Components.Interfaces
 {

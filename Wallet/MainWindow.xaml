@@ -7,9 +7,24 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <StackPanel>
+        <!--<StackPanel Margin="0,11,0,-11">
         <Button Click="SendMessage" Width="200" Height="50">Send message</Button>
-        <TextBox Name="Box" Width="200" Height="50"></TextBox>
-        </StackPanel>
+        <TextBox Name="Box" Width="200" Height="50"></TextBox>-->
+        <!--</StackPanel>-->
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="5*" />
+        </Grid.ColumnDefinitions>
+        
+        <Grid Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="5*" />
+            </Grid.RowDefinitions>
+            <Image Grid.Row="0" Name="QrCodeAddress" />
+        </Grid>
+
+
     </Grid>
 </Window>

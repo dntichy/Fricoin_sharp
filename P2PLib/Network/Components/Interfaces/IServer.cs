@@ -1,4 +1,6 @@
-﻿namespace Engine.Network.Components.Interfaces
+﻿using P2PLib.Network.Components.Enums;
+
+namespace Engine.Network.Components.Interfaces
 {
     public interface IServer
     {

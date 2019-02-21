@@ -7,14 +7,11 @@ using P2PLib.Network.Components.Enums;
 
 namespace P2PLib.Network.MessageParser.Messages
 {
-    public class TextMessage : IMessage
+    public class FricoinMessage : IMessage
     {
-        private String mText;
-
-
-        public /*MessageType*/ int Type
+        public int Type
         {
-            get { return (int) MessageType.TextDataMessage; }
+            get { return (int) MessageType.Message; }
         }
 
 
@@ -23,18 +20,15 @@ namespace P2PLib.Network.MessageParser.Messages
             String textResult = "";
             textResult += "<message>";
             textResult += "<type>" + Type + "</type>";
-            textResult += "<text>" + Text + "</text>";
+            textResult += "<command>" + Command + "</command>";
             textResult += "</message>";
 
             return ASCIIEncoding.UTF8.GetBytes(textResult);
         }
 
 
-        public String Text
-        {
-            get { return mText; }
-            set { mText = value; }
-        }
+        public String Text { get; set; }
+        public String Command { get; set; }
 
 
         public bool Parse(Byte[] data)
@@ -83,14 +77,14 @@ namespace P2PLib.Network.MessageParser.Messages
 
             //////////////////////////////////////////////////////////////////////////
             // The real data parsing
-            this.mText = "";
+            this.Text = "";
 
 
             foreach (XmlNode node in messageElement.ChildNodes)
             {
                 if (node.Name == "text")
                 {
-                    this.mText = node.InnerText;
+                    this.Text = node.InnerText;
                 }
 
                 else if (node.Name == "textcolor")
@@ -149,9 +143,9 @@ namespace P2PLib.Network.MessageParser.Messages
 
         public IMessage Clone()
         {
-            TextMessage result = new TextMessage();
+            FricoinMessage result = new FricoinMessage();
 
-            result.Text = mText;
+            result.Text = Text;
             return result;
         }
     }

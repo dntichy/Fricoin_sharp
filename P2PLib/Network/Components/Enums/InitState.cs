@@ -1,4 +1,4 @@
-﻿namespace Engine.Network.Components
+﻿namespace P2PLib.Network.Components.Enums
 {
     public enum InitState
     {

@@ -6,6 +6,7 @@ using System.Security;
 using Engine.Network.Components;
 using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
+using P2PLib.Network.Components.Enums;
 
 namespace Engine.Network.Client
 {

@@ -33,6 +33,7 @@ namespace Engine.Core
                 Encoding.ASCII.GetBytes(
                     $"{TimeStamp} - {PreviousHash ?? ""} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
             byte[] outputBytes = sha256.ComputeHash(inputBytes);
+            
 
             return Convert.ToBase64String(outputBytes);
         }

@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml;
 using Engine.Network.Components;
 using Engine.Network.Components.Interfaces;
+using P2PLib.Network.Components.Enums;
 
 namespace Engine.Network.MessageParser
 {
