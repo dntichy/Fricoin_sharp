@@ -8,10 +8,6 @@ namespace ChainUtils
     {
         public static T[] ConcatArrays<T>(params T[][] arrays)
         {
-            Contract.Requires(arrays != null);
-            Contract.Requires(Contract.ForAll(arrays, (arr) => arr != null));
-            Contract.Ensures(Contract.Result<T[]>() != null);
-            Contract.Ensures(Contract.Result<T[]>().Length == arrays.Sum(arr => arr.Length));
 
             var result = new T[arrays.Sum(arr => arr.Length)];
             int offset = 0;
@@ -26,10 +22,7 @@ namespace ChainUtils
 
         public static T[] ConcatArrays<T>(T[] arr1, T[] arr2)
         {
-            Contract.Requires(arr1 != null);
-            Contract.Requires(arr2 != null);
-            Contract.Ensures(Contract.Result<T[]>() != null);
-            Contract.Ensures(Contract.Result<T[]>().Length == arr1.Length + arr2.Length);
+         
 
             var result = new T[arr1.Length + arr2.Length];
             Buffer.BlockCopy(arr1, 0, result, 0, arr1.Length);
@@ -39,13 +32,7 @@ namespace ChainUtils
 
         public static T[] SubArray<T>(T[] arr, int start, int length)
         {
-            Contract.Requires(arr != null);
-            Contract.Requires(start >= 0);
-            Contract.Requires(length >= 0);
-            Contract.Requires(start + length <= arr.Length);
-            Contract.Ensures(Contract.Result<T[]>() != null);
-            Contract.Ensures(Contract.Result<T[]>().Length == length);
-
+         
             var result = new T[length];
             Buffer.BlockCopy(arr, start, result, 0, length);
             return result;
@@ -53,12 +40,7 @@ namespace ChainUtils
 
         public static T[] SubArray<T>(T[] arr, int start)
         {
-            Contract.Requires(arr != null);
-            Contract.Requires(start >= 0);
-            Contract.Requires(start <= arr.Length);
-            Contract.Ensures(Contract.Result<T[]>() != null);
-            Contract.Ensures(Contract.Result<T[]>().Length == arr.Length - start);
-
+         
             return SubArray(arr, start, arr.Length - start);
         }
     }

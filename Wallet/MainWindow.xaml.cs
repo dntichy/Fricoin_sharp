@@ -76,8 +76,19 @@ namespace Wallet
                 Console.WriteLine("GOOD JOB");
             }
 
+            //string s1 = Encoding.UTF8.GetString(privK);
+            //string s2 = Encoding.UTF8.GetString(pubK);
+            string s1 = Convert.ToBase64String(privK); // gsjqFw==
+            string s2 = Convert.ToBase64String(pubK); // gsjqFw==
 
-            CreateQrCode("");
+
+            Console.WriteLine("Private base64: " + s1);
+            Console.WriteLine("Public base64: " + s2);
+            var x = SHA.GenerateSHA256String(s1);
+            var result = Base58Encoding.Encode(Encoding.ASCII.GetBytes(x));
+            Console.WriteLine("Public base58: " + result);
+
+            CreateQrCode(s1);
 
 
             //other
