@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Engine.Network.Client;
-using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
+using P2PLib.Network.Client;
+using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
 using P2PLib.Network.Server;

@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Engine.Network.MessageParser;
+using P2PLib.Network.Components;
+using P2PLib.Network.Components.Enums;
+using P2PLib.Network.Components.Interfaces;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
-using Engine.Network.Components;
-using Engine.Network.Components.Interfaces;
-using Engine.Network.MessageParser;
-using P2PLib.Network.Components.Enums;
 
-namespace Engine.Network.Client
+namespace P2PLib.Network.Client
 {
     public class P2PClient : IClient
     {

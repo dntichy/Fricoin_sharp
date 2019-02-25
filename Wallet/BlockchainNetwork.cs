@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Engine;
-using Engine.Network.Client;
-using Engine.Network.Components.Interfaces;
 using Engine.Network.MessageParser;
+using P2PLib.Network.Client;
+using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
 using P2PLib.Network.Server;
 
 namespace Wallet
 {
-    public class CollaborativeNotesClass : ICollaborativeNotes
+    public class BlockchainNetwork : IBlockchainNetwork
     {
         private event OnReceiveMessageDelegate mOnReceiveMessage;
 
@@ -41,13 +40,6 @@ namespace Wallet
             set { mListenPort = value; }
         }
 
-        /*
-		public int BaseSendPort
-		{
-			get { return mBaseSendPort; }
-			set { mBaseSendPort = value; }
-		}
-		*/
         public String Server
         {
             get { return mServer; }
@@ -91,7 +83,7 @@ namespace Wallet
             }
         }
 
-        public CollaborativeNotesClass(int listenPort, int serverListenPort, string server, string group)
+        public BlockchainNetwork(int listenPort, int serverListenPort, string server, string group)
         {
             mListenPort = listenPort;
             mServerListenPort  = serverListenPort;

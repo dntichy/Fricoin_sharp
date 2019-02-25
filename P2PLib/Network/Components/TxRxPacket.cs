@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace Engine.Network
+namespace P2PLib.Network.Components
 {
     public class TxRxPacket
     {

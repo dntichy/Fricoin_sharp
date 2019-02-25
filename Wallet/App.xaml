@@ -1,9 +1,9 @@
-﻿<Application x:Class="Wallet.App"
+﻿<Application x:Class="App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Wallet"
-             StartupUri="MainWindow.xaml">
+             StartupUri="LoaderWindow.xaml">
     <Application.Resources>
-         
+
     </Application.Resources>
 </Application>

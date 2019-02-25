@@ -1,7 +1,7 @@
 ﻿using System;
 using Engine.Network.MessageParser;
 
-namespace Engine.Network.Components.Interfaces
+namespace P2PLib.Network.Components.Interfaces
 {
     public interface IRegisterMessage : IMessage
     {

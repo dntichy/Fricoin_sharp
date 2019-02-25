@@ -1,6 +1,5 @@
 ﻿using System;
-using Engine.Network.Components;
-using Engine.Network.Components.Interfaces;
+using P2PLib.Network.Components.Interfaces;
 
 namespace Engine.Network.MessageParser
 {

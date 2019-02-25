@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Text;
 using System.Windows;
+using ChainUtils;
 
 namespace Wallet
 {
@@ -13,5 +14,8 @@ namespace Wallet
     /// </summary>
     public partial class App : Application
     {
+
+
+
     }
 }

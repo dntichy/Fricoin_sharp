@@ -1,6 +1,6 @@
 ﻿using P2PLib.Network.Components.Enums;
 
-namespace Engine.Network.Components.Interfaces
+namespace P2PLib.Network.Components.Interfaces
 {
     public interface IServer
     {

@@ -1,19 +1,9 @@
-﻿using System;
-using System.Drawing;
-using System.IO;
-using System.Net.Mime;
-using CSharpTest.Net.Collections;
-using CSharpTest.Net.Serialization;
-using Engine.Core;
-using Engine.Network;
-using Engine.Network.Components;
-using Engine.Network.Components.Interfaces;
-using Engine.Network.MessageParser;
-using Newtonsoft.Json;
+﻿using Engine.Network.MessageParser;
 using P2PLib.Network.Components.Enums;
+using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
-using Formatting = System.Xml.Formatting;
+using System;
 
 namespace Engine
 {

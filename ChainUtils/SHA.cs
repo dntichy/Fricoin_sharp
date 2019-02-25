@@ -3,20 +3,20 @@ using System.Text;
 
 namespace ChainUtils
 {
-    public static class SHA
+    public static class Sha
     {
 
-        public static string GenerateSHA256String(string inputString)
+        public static string GenerateSha256String(string inputString)
         {
-            SHA256 sha256 = SHA256Managed.Create();
+            SHA256 sha256 = SHA256.Create();
             byte[] bytes = Encoding.UTF8.GetBytes(inputString);
             byte[] hash = sha256.ComputeHash(bytes);
             return GetStringFromHash(hash);
         }
 
-        public static string GenerateSHA512String(string inputString)
+        public static string GenerateSha512String(string inputString)
         {
-            SHA512 sha512 = SHA512Managed.Create();
+            SHA512 sha512 = SHA512.Create();
             byte[] bytes = Encoding.UTF8.GetBytes(inputString);
             byte[] hash = sha512.ComputeHash(bytes);
             return GetStringFromHash(hash);

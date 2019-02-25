@@ -1,13 +1,12 @@
-﻿using System;
+﻿using P2PLib.Network.Components.Enums;
+using P2PLib.Network.Components.Interfaces;
+using System;
 using System.Text;
 using System.Xml;
-using Engine.Network;
-using Engine.Network.Components.Interfaces;
-using P2PLib.Network.Components.Enums;
 
 namespace P2PLib.Network.MessageParser.Messages
 {
-    public class FricoinMessage : IMessage
+    public class CommandMessage : IMessage
     {
         public int Type
         {
@@ -143,7 +142,7 @@ namespace P2PLib.Network.MessageParser.Messages
 
         public IMessage Clone()
         {
-            FricoinMessage result = new FricoinMessage();
+            CommandMessage result = new CommandMessage();
 
             result.Text = Text;
             return result;

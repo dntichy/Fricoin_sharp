@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Engine.Network.Components.Interfaces
+namespace P2PLib.Network.Components.Interfaces
 {
     public interface ICollaborativeClientDetails
     {

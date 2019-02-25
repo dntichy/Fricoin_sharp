@@ -14,14 +14,10 @@ using ECPoint = Org.BouncyCastle.Math.EC.ECPoint;
 
 namespace ChainUtils
 {
-
-
     public class Crypto
     {
-
-        
-        private static String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG"; 
-        private static bool RANDOM_NUMBER_ALGORITHM_PROVIDER = true; 
+        private static String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
+        private static bool RANDOM_NUMBER_ALGORITHM_PROVIDER = true;
 
         //public string PublicKeyBeforeSha256 { get; set; }
         //private string _privateKey;
@@ -38,8 +34,6 @@ namespace ChainUtils
 
         //    return pair;
         //}
-
-
 
 
         /**
@@ -76,10 +70,6 @@ namespace ChainUtils
 
             return privateKeyAttempt;
         }
-
-
-
-
 
 
         //public static string SignData(string msg, AsymmetricKeyParameter privKey)
@@ -171,8 +161,7 @@ namespace ChainUtils
                 catch (Exception e)
                 {
                     continue;
-                    Console.WriteLine(" Failed: GET recoveryID" );
-
+                    Console.WriteLine(" Failed: GET recoveryID");
                 }
             }
 
@@ -198,6 +187,7 @@ namespace ChainUtils
         //        return false;
         //    }
         //}
+
 
         /// <summary>
         /// NOT WORKING cause of SHA 256
@@ -241,7 +231,6 @@ namespace ChainUtils
         //    return result;
         //}
 
-
         //private static string ComputeSha256Hash(string rawData)
         //{
         //    // Create a SHA256   
@@ -260,7 +249,6 @@ namespace ChainUtils
         //        return builder.ToString();
         //    }
         //}
-
         private static byte[] ComputeSha256HashB(string rawData)
         {
             // Create a SHA256   
@@ -309,9 +297,10 @@ namespace ChainUtils
             {
                 BigInteger pointX = new BigInteger(1, sigR);
 
-                
-                byte[] compEnc = X9IntegerConverter.IntegerToBytes(pointX, 1 + X9IntegerConverter.GetByteLength(spec.Curve));
-                compEnc[0] = (byte)((sigV[0] & 1) == 1 ? 0x03 : 0x02);
+
+                byte[] compEnc =
+                    X9IntegerConverter.IntegerToBytes(pointX, 1 + X9IntegerConverter.GetByteLength(spec.Curve));
+                compEnc[0] = (byte) ((sigV[0] & 1) == 1 ? 0x03 : 0x02);
                 ECPoint pointR = spec.Curve.DecodePoint(compEnc);
                 if (!pointR.Multiply(pointN).IsInfinity)
                 {
@@ -329,10 +318,60 @@ namespace ChainUtils
             }
             catch (Exception e)
             {
-              
             }
 
             return new byte[0];
+        }
+
+
+        public static Boolean VerifyHashed(byte[] sigR, byte[] sigS, byte[] publicKey, byte[] message)
+        {
+            try
+            {
+                X9ECParameters spec = ECNamedCurveTable.GetByName("secp256k1");
+                ECDomainParameters domain = new ECDomainParameters(spec.Curve, spec.G, spec.N);
+                ECPublicKeyParameters publicKeyParams =
+                    new ECPublicKeyParameters(spec.Curve.DecodePoint(publicKey), domain);
+
+                ECDsaSigner signer = new ECDsaSigner();
+                signer.Init(false, publicKeyParams);
+                return signer.VerifySignature(message, new BigInteger(1, sigR), new BigInteger(1, sigS));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static Boolean VerifyHashed(byte[][] signature, byte[] publicKey, byte[] message)
+        {
+            var list = new List<byte[]>();
+            var arr = signature.ToArray();
+
+            foreach (var sigVal in arr)
+            {
+                list.Add(sigVal);
+            }
+
+            var sigR = list[0]; //r
+            var sigS = list[1]; //s
+
+
+            try
+            {
+                X9ECParameters spec = ECNamedCurveTable.GetByName("secp256k1");
+                ECDomainParameters domain = new ECDomainParameters(spec.Curve, spec.G, spec.N);
+                ECPublicKeyParameters publicKeyParams =
+                    new ECPublicKeyParameters(spec.Curve.DecodePoint(publicKey), domain);
+
+                ECDsaSigner signer = new ECDsaSigner();
+                signer.Init(false, publicKeyParams);
+                return signer.VerifySignature(message, new BigInteger(1, sigR), new BigInteger(1, sigS));
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

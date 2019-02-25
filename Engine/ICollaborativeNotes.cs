@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using Engine.Network.Components;
-using Engine.Network.Components.Interfaces;
-using Engine.Network.MessageParser;
+﻿using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
+using System;
+using System.Collections.ObjectModel;
 
 namespace Engine
 {

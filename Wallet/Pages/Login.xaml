@@ -1,0 +1,25 @@
+﻿<Page x:Class="Wallet.Pages.Login" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Login" Height="350" Width="525" Background="AliceBlue"
+      xmlns:local="clr-namespace:Wallet">
+    <Grid>
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="10,10,0,0" Name="LoginHeading" Text="Login:"
+                   VerticalAlignment="Top" FontSize="17" FontStretch="ExtraCondensed" />
+        <TextBlock Height="50" HorizontalAlignment="Left" Margin="24,48,0,0" x:Name="TextBlockHeading"
+                   VerticalAlignment="Top" FontSize="12" FontStyle="Italic" Padding="5"><!--line break--><!--end textblock as a hyperlink-->
+            <Run Text=" " />
+        </TextBlock>
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="58,85,0,0" Name="TextBlock1" Text="PubKey"
+                   VerticalAlignment="Top" Width="67" />
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="58,168,0,0" Name="TextBlock2" Text="Password"
+                   VerticalAlignment="Top" Width="77" />
+        <Label Height="63" HorizontalAlignment="Left" Margin="118,80,0,0" Name="PublicKeyBox"
+                 VerticalAlignment="Top" Width="382" />
+        <PasswordBox Height="23" HorizontalAlignment="Left" Margin="118,168,0,0" Name="PasswordBox1"
+                     VerticalAlignment="Top" Width="247" />
+        <Button Content="Login" Height="23" HorizontalAlignment="Left" Margin="118,211,0,0" Name="Button1"
+                VerticalAlignment="Top" Width="104" Click="button1_Click" />
+        <TextBlock Height="23" HorizontalAlignment="Left" x:Name="Errormessage" VerticalAlignment="Top" Width="247"
+                   Margin="118,253,0,0" OpacityMask="Crimson" Foreground="#FFE5572C" />
+    </Grid>
+</Page>
