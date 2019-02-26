@@ -1,4 +1,4 @@
-﻿namespace Engine.Core
+﻿namespace CoreLib
 {
     public class Transaction
     {

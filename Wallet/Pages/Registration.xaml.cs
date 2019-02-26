@@ -21,32 +21,13 @@ namespace Wallet.Pages
     /// </summary>
     public partial class Registration : Page
     {
-        private static ApplicationInputState _mCurrentState;
-        private readonly BlockchainNetwork _blockchainNetwork;
-
-        public enum ApplicationInputState
-        {
-            EmptyInput,
-            TextInput,
-            ImageInput,
-            StrokeInput
-        }
-
+    
         public Registration()
         {
             InitializeComponent();
 
 
-            //int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
-            //String server = ConfigurationManager.AppSettings["Server"];
-            //int serverListenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ServerListenPort"]);
-
-            //_blockchainNetwork = new BlockchainNetwork(listenPort, serverListenPort, server, "group11");
-            //_blockchainNetwork.OnReceiveMessage += new OnReceiveMessageDelegate(OnReceivePeerMessage);
-            //_mCurrentState = ApplicationInputState.EmptyInput;
-
-            //Console.Read();
-
+        
 
             //var privK = Crypto.GeneratePrivateKey();
             //var pubK = Crypto.GetPublicKey(privK);
@@ -100,59 +81,20 @@ namespace Wallet.Pages
             //var verificationOk = Crypto.VerifySignature(pubK, signature, "Traktr");
         }
 
-        private void CreateQrCode(string serializedPublic2)
-        {
-            string payload = serializedPublic2;
 
-            QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
-            QRCode qrCode = new QRCode(qrCodeData);
-            var qrCodeAsBitmap = qrCode.GetGraphic(20);
+    
 
-            //convert bitmap to datasource
-            //QrCodeAddress.Source = ConvertBitmapToBitmapImage(qrCodeAsBitmap);
-        }
-
-        private static void UpdateCurrentView(IMessage msg)
-        {
-            switch (msg.Type)
-            {
-                case ((int) MessageType.TextDataMessage):
-                {
-                    TextMessage rxMsg = (TextMessage) msg;
-                    break;
-                }
-            }
-        }
-
-        private static void OnReceivePeerMessage(object sender, CollaborativeNotesReceiveMessageEventArgs e)
-        {
-            UpdateCurrentView(e.Message);
-        }
-
-        private void SendMessage(object sender, RoutedEventArgs e)
-        {
-            TextMessage message = new TextMessage()
-            {
-                Text = "Hello"
-            };
-            _blockchainNetwork.BroadcastMessage(message);
-        }
+        //private void SendMessage(object sender, RoutedEventArgs e)
+        //{
+        //    TextMessage message = new TextMessage()
+        //    {
+        //        Text = "Hello"
+        //    };
+        //    _blockchainNetwork.BroadcastMessage(message);
+        //}
 
 
-        public BitmapImage ConvertBitmapToBitmapImage(Bitmap src)
-        {
-            MemoryStream ms = new MemoryStream();
-            src.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-
-            BitmapImage image = new BitmapImage();
-            image.BeginInit();
-            ms.Seek(0, SeekOrigin.Begin);
-            image.StreamSource = ms;
-            image.EndInit();
-            return image;
-        }
-
+    
 
         //nettwork layer
         public void CreateTransaction()
@@ -163,9 +105,7 @@ namespace Wallet.Pages
         }
 
 
-        private void Login_Click(object sender, RoutedEventArgs e)
-        {
-        }
+ 
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
@@ -181,9 +121,7 @@ namespace Wallet.Pages
             PasswordBoxConfirm.Password = "";
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-        }
+   
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {
@@ -274,6 +212,11 @@ namespace Wallet.Pages
             }
 
             //return true;
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

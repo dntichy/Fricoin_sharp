@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Engine.Core;
+using CoreLib;
 
 namespace Engine.Interfaces
 {

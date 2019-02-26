@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Engine.Core;
 
-namespace Engine
+namespace CoreLib.Interfaces
 {
     public interface IChain
     {

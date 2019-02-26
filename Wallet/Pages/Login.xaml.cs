@@ -32,7 +32,7 @@ namespace Wallet.Pages
 
             if (user != null)
             {
-                NavigationService?.Navigate(new Wallet());
+                NavigationService?.Navigate(new Wallet(user));
             }
             else
             {
@@ -40,8 +40,6 @@ namespace Wallet.Pages
             }
         }
 
-        private void buttonRegister_Click(object sender, RoutedEventArgs e)
-        {
-        }
+
     }
 }

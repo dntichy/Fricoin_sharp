@@ -8,6 +8,6 @@
         Title="LoaderWindow" Height="450" Width="800" Background="AliceBlue">
     <Frame        
         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-        Source="Loading.xaml" VerticalContentAlignment="Stretch" x:Name="MainFrame" Margin="0,0,0,0" NavigationUIVisibility="Hidden">
+        Source="Pages/Loading.xaml" VerticalContentAlignment="Stretch" x:Name="MainFrame" Margin="0,0,0,0" NavigationUIVisibility="Hidden">
     </Frame>
 </Window>

@@ -5,7 +5,7 @@ using System.Text;
 using Engine.Interfaces;
 using Newtonsoft.Json;
 
-namespace Engine.Core
+namespace CoreLib
 {
     public class Block : IBlock
     {

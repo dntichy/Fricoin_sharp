@@ -82,6 +82,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="QRCoder, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\QRCoder.1.3.5\lib\net40\QRCoder.dll</HintPath>
     </Reference>
@@ -186,6 +189,10 @@
     <ProjectReference Include="..\ChainUtils\ChainUtilsLib.csproj">
       <Project>{c43f0eb1-3761-4708-baa7-9e8f070a33af}</Project>
       <Name>ChainUtilsLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CoreLib\CoreLib.csproj">
+      <Project>{bc33a7da-b16a-4fcc-a925-6b3e6bb8bbcb}</Project>
+      <Name>CoreLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\DatabaseLib\DatabaseLib.csproj">
       <Project>{b1bb0ae7-d8ba-414b-9147-96baf86d7d12}</Project>

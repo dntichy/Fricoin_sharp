@@ -1,11 +1,12 @@
-﻿using Engine.Network.MessageParser;
+﻿using System;
+using Engine;
+using Engine.Network.MessageParser;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
-using System;
 
-namespace Engine
+namespace ConsoleWalletEngile
 {
     class Program
     {

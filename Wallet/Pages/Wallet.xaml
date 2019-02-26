@@ -1,14 +1,46 @@
 ﻿<Page x:Class="Wallet.Pages.Wallet"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Wallet"
-        mc:Ignorable="d"
-        Title="Wallet" Height="450" Width="800"
-        Background="AliceBlue">
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:local="clr-namespace:Wallet"
+      mc:Ignorable="d"
+      Title="Wallet" Height="450" Width="800"
+      Background="AliceBlue">
     <Grid>
-        <Label Content="Fricoin Wallet" FontSize="80" HorizontalAlignment="Left" Margin="135,10,0,0" VerticalAlignment="Top" Height="130" Width="610"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="6*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Label Grid.Row="0" Content="Fricoin Wallet" FontSize="70" HorizontalAlignment="Left" Margin="160,0,0,0"
+               VerticalAlignment="Top" Height="100" Width="610" />
+        <Grid Row="1" Height="292" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="8*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <Image Name="QrCodeAddressBox" Width="120" Height="120" Margin="0" />
+                <Label Padding="20 10 0 0" Name="FullName">Name:</Label>
+                <Label Padding="0 10 20 0" HorizontalAlignment="Right" Name="FullNameValueBox">xx</Label>
+                <Label Padding="20 10 0 0" Name="Email">Email:</Label>
+                <Label Padding="0 10 20 0" Name="EmailValueBox" HorizontalAlignment="Right">x</Label>
+                <Label Padding="20 10 0 0" Name="Balance">Balance:</Label>
+                <Label Padding="0 10 20 0" Name="BalanceValueBox" HorizontalAlignment="Right">x</Label>
+            </StackPanel>
+            <Grid Column="1">
+                <Button  Click="ButtonBase_OnClick" Margin="22,247,460,20" Content="Block explorer"/>
+                <Button  Click="ButtonBase_OnClick" Margin="352,27,130,240" Content="Send coins" RenderTransformOrigin="0.3,0.4"/>
+                <TextBox HorizontalAlignment="Left" Height="25" Margin="10,27,0,0" TextWrapping="Wrap" Text="&#xD;&#xA;" VerticalAlignment="Top" Width="90"/>
+                <TextBox HorizontalAlignment="Left" Height="25" Margin="127,27,0,0" TextWrapping="Wrap" Text="&#xA;" VerticalAlignment="Top" Width="200"/>
+                <Label Content="Amount&#xD;&#xA;" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="27"/>
+                <Label Content="Address&#xA;" HorizontalAlignment="Left" Margin="127,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="30"/>
+                <Button  Click="ButtonBase_OnClick" Margin="142,247,285,20" Content="Show registered users"/>
+                <Button  Click="ButtonBase_OnClick" Margin="352,72,130,195" Content="Start mining" RenderTransformOrigin="0.3,0.4"/>
+            </Grid>
+
+        </Grid>
 
     </Grid>
 </Page>

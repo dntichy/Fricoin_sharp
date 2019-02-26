@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using CoreLib.Interfaces;
 
-namespace Engine.Core
+namespace CoreLib
 {
     public class BlockChain : IChain
     {
@@ -19,7 +20,7 @@ namespace Engine.Core
 
         private void AddGenesisBlock()
         {
-            Chain.Add(new Block(DateTime.Now, null, new List<Transaction>()));
+            Chain.Add(new Block(DateTime.Parse("01.01.2019"), null, new List<Transaction>()));
         }
 
         public Block GetLatestBlock()
