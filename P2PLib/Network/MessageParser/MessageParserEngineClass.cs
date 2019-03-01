@@ -19,9 +19,8 @@ namespace P2PLib.Network.MessageParser
             mPossibleMessages[((int) MessageType.TextDataMessage)] = new TextMessage();
             mPossibleMessages[((int) MessageType.UnregisterMessage)] = new UnregisterMessage();
             mPossibleMessages[((int) MessageType.ResgisteredClientsListMessage)] = new RegisteredClientsListMessage();
+            mPossibleMessages[((int) MessageType.CommandMessage)] = new CommandMessage();
 
-
-            //TODO -> other initialization
         }
 
         public bool ContainsMessageType(int messageType)

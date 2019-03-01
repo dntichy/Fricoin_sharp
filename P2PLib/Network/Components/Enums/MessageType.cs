@@ -7,6 +7,7 @@
         UnregisterMessage,
         ResgisteredClientsListMessage,
         TextDataMessage,
+        CommandMessage,
         Message
     }
 }

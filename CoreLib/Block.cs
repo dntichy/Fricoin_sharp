@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using Engine.Interfaces;
+using CoreLib.Interfaces;
 using Newtonsoft.Json;
 
 namespace CoreLib
 {
+    [Serializable]
     public class Block : IBlock
     {
         public int Index { get; set; }
@@ -26,6 +29,10 @@ namespace CoreLib
             Transactions = transactions;
         }
 
+        public Block()
+        {
+        }
+
         public string CalculateHash()
         {
             SHA256 sha256 = SHA256.Create();
@@ -33,7 +40,7 @@ namespace CoreLib
                 Encoding.ASCII.GetBytes(
                     $"{TimeStamp} - {PreviousHash ?? ""} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
             byte[] outputBytes = sha256.ComputeHash(inputBytes);
-            
+
 
             return Convert.ToBase64String(outputBytes);
         }
@@ -46,6 +53,23 @@ namespace CoreLib
                 this.Nonce++;
                 this.Hash = this.CalculateHash();
             }
+        }
+
+        public byte[] Serialize()
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            bf.Serialize(ms, this);
+            return ms.ToArray();
+        }
+
+        public Block DeSerialize(byte[] fromBytes)
+        {
+            MemoryStream memStream = new MemoryStream();
+            BinaryFormatter binForm = new BinaryFormatter();
+            memStream.Write(fromBytes, 0, fromBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            return (Block) binForm.Deserialize(memStream);
         }
     }
 }

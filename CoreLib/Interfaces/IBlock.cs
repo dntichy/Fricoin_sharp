@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using CoreLib;
 
-namespace Engine.Interfaces
+namespace CoreLib.Interfaces
 {
     interface IBlock
     {
@@ -15,5 +14,8 @@ namespace Engine.Interfaces
 
         string CalculateHash();
         void Mine(int difficulty);
+
+        byte[] Serialize();
+        Block DeSerialize(byte[] fromBytes);
     }
 }

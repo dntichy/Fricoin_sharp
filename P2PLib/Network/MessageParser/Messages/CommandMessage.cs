@@ -27,7 +27,7 @@ namespace P2PLib.Network.MessageParser.Messages
 
 
         public String Text { get; set; }
-        public String Command { get; set; }
+        public CommandType Command { get; set; }
 
 
         public bool Parse(Byte[] data)

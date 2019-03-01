@@ -1,7 +1,7 @@
 ﻿using System;
 using P2PLib.Network.Components.Interfaces;
 
-namespace Engine.Network.MessageParser
+namespace P2PLib.Network.MessageParser
 {
     public class CollaborativeNotesReceiveMessageEventArgs : EventArgs
     {

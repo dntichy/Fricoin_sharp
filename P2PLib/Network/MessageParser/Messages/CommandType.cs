@@ -4,8 +4,7 @@
     {
        ClearTransactionPool,
        Chain,
-       Transaction
-
-
+       Transaction,
+       NewBlock
     }
 }

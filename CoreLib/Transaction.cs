@@ -1,5 +1,8 @@
-﻿namespace CoreLib
+﻿using System;
+
+namespace CoreLib
 {
+    [Serializable]
     public class Transaction
     {
         public string From { get; set; }
