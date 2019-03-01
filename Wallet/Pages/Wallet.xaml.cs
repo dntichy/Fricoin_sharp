@@ -22,17 +22,6 @@ namespace Wallet.Pages
     /// </summary>
     public partial class Wallet : Page
     {
-        private static ApplicationInputState _mCurrentState;
-        private readonly BlockchainNetwork _blockchainNetwork;
-
-        public enum ApplicationInputState
-        {
-            EmptyInput,
-            TextInput,
-            ImageInput,
-            StrokeInput
-        }
-
         public Wallet(User user)
         {
             InitializeComponent();
@@ -41,15 +30,7 @@ namespace Wallet.Pages
             FullNameValueBox.Content = user.FirstName + user.LastName;
 
 
-            //P2P stuff
-            int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
-            String server = ConfigurationManager.AppSettings["Server"];
-            int serverListenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ServerListenPort"]);
-            _blockchainNetwork = new BlockchainNetwork(listenPort, serverListenPort, server, "group11");
-            _blockchainNetwork.OnReceiveMessage += new OnReceiveMessageDelegate(OnReceivePeerMessage);
-            _mCurrentState = ApplicationInputState.EmptyInput;
-
-
+            var layer = new LayerBlockchainNetwork();
             //reconstruct blockchain from b+ tree 
             //if not exists, inicialize blockchain
             //send request for current blockchain
@@ -57,8 +38,8 @@ namespace Wallet.Pages
 
             BlockChain friCoin = new BlockChain();
             //Console.WriteLine(JsonConvert.SerializeObject(friCoin, Newtonsoft.Json.Formatting.Indented));
-            
-            
+
+
             Console.Read();
         }
 
@@ -89,26 +70,15 @@ namespace Wallet.Pages
         }
 
 
-        private static void UpdateCurrentView(IMessage msg)
-        {
-            switch (msg.Type)
-            {
-                case ((int) MessageType.TextDataMessage):
-                {
-                    TextMessage rxMsg = (TextMessage) msg;
-                    break;
-                }
-            }
-        }
 
-        private static void OnReceivePeerMessage(object sender, CollaborativeNotesReceiveMessageEventArgs e)
-        {
-            UpdateCurrentView(e.Message);
-        }
 
+        //private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        //{
+        //    Console.WriteLine(_blockchainNetwork.GroupClients.Count);
+        //}
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            Console.WriteLine(_blockchainNetwork.GroupClients.Count);
+            throw new NotImplementedException();
         }
     }
 }
