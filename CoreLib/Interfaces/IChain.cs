@@ -5,7 +5,7 @@ namespace CoreLib.Interfaces
     public interface IChain
     {
         int Difficulty { set; get; }
-        IList<Block> Chain { set; get; }
+        //IList<Block> Chain { set; get; }
 
         Block GetLatestBlock();
         void AddBlock(Block block);

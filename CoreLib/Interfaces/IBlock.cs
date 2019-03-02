@@ -8,11 +8,11 @@ namespace CoreLib.Interfaces
         int Index { get; set; }
         int Nonce { get; set; }
         DateTime TimeStamp { get; set; }
-        string PreviousHash { get; set; }
-        string Hash { get; set; }
-        IList<Transaction> Transactions { get; set; }
+        byte[] PreviousHash { get; set; }
+        byte[] Hash { get; set; }
+        IList<TransactionNewVersion> Transactions { get; set; }
 
-        string CalculateHash();
+        byte[] CalculateHash();
         void Mine(int difficulty);
 
         byte[] Serialize();

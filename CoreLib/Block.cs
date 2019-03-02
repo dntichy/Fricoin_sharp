@@ -15,11 +15,11 @@ namespace CoreLib
         public int Index { get; set; }
         public int Nonce { get; set; } = 0;
         public DateTime TimeStamp { get; set; }
-        public string PreviousHash { get; set; }
-        public string Hash { get; set; }
-        public IList<Transaction> Transactions { get; set; }
+        public byte[] PreviousHash { get; set; }
+        public byte[] Hash { get; set; }
+        public IList<TransactionNewVersion> Transactions { get; set; }
 
-        public Block(DateTime timeStamp, string previousHash, IList<Transaction> transactions)
+        public Block(DateTime timeStamp, byte[] previousHash, IList<TransactionNewVersion> transactions)
         {
             Index = 0;
             TimeStamp = timeStamp;
@@ -33,22 +33,23 @@ namespace CoreLib
         {
         }
 
-        public string CalculateHash()
+        public byte[] CalculateHash()
         {
             SHA256 sha256 = SHA256.Create();
             byte[] inputBytes =
                 Encoding.ASCII.GetBytes(
-                    $"{TimeStamp} - {PreviousHash ?? ""} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
+                    $"{TimeStamp} - {PreviousHash} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
             byte[] outputBytes = sha256.ComputeHash(inputBytes);
 
 
-            return Convert.ToBase64String(outputBytes);
+            return outputBytes;
         }
 
         public void Mine(int difficulty)
         {
             var leadingZeros = new string('0', difficulty);
-            while (this.Hash == null || this.Hash.Substring(0, difficulty) != leadingZeros)
+            while (this.Hash == null ||
+                   Convert.ToBase64String(this.Hash).Substring(0, difficulty) != leadingZeros)
             {
                 this.Nonce++;
                 this.Hash = this.CalculateHash();

@@ -16,5 +16,10 @@ namespace CoreLib
             To = to;
             Amount = amount;
         }
+
+        public Transaction()
+        {
+
+        }
     }
 }
