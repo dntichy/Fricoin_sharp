@@ -1,5 +1,8 @@
 ﻿using ChainUtils;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -10,7 +13,6 @@ namespace CoreLib
         public byte[] PrivateKey { get; set; }
         public byte[] PublicKey { get; set; }
         public byte[] PublicKeyHash { get; set; }
-
         public string Address { get; set; }
 
 
@@ -67,6 +69,54 @@ namespace CoreLib
             {
                 return false;
             }
+        }
+
+
+        public byte[][] SignMessage(string message)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(message);
+            var hash = Crypto.SignTransaction(bytes, PrivateKey);
+            return hash;
+        }
+
+        public byte[][] SignMessage(byte[] message)
+        {
+            var hash = Crypto.SignTransaction(message, PrivateKey);
+            return hash;
+        }
+
+        public bool VerifyHashedMessage(byte[][] hash, byte[] message)
+        {
+            var list = new List<byte[]>();
+            var arr = hash.ToArray();
+
+            foreach (var sigVal in arr)
+            {
+                list.Add(sigVal);
+            }
+
+            var recoveredKey = Crypto.RecoverPublicKey(list[0], list[1], list[2], message);
+            var isOk = Crypto.VerifyHashed(list[0], list[1], recoveredKey, message);
+
+            return isOk;
+        }
+
+
+        public bool VerifyHashedMessage(byte[][] hash, string message)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(message);
+            var list = new List<byte[]>();
+            var arr = hash.ToArray();
+
+            foreach (var sigVal in arr)
+            {
+                list.Add(sigVal);
+            }
+
+            var recoveredKey = Crypto.RecoverPublicKey(list[0], list[1], list[2], bytes);
+            var isOk = Crypto.VerifyHashed(list[0], list[1], recoveredKey, bytes);
+
+            return isOk;
         }
     }
 }

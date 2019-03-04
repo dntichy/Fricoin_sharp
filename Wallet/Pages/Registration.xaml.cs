@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -21,41 +24,12 @@ namespace Wallet.Pages
     /// </summary>
     public partial class Registration : Page
     {
-    
         public Registration()
         {
             InitializeComponent();
 
 
-        
-
-            //var privK = Crypto.GeneratePrivateKey();
-            //var pubK = Crypto.GetPublicKey(privK);
-
-            //Console.WriteLine("Private: " + privK);
-            //Console.WriteLine("Public: " + pubK);
-
-            //var str = "ahoj";
-            //byte[] bytes = Encoding.ASCII.GetBytes(str);
-
-            //var hash = Crypto.SignTransaction(bytes, privK);
-            //Console.WriteLine("Signature: " + hash);
-
-
-            //var list = new List<byte[]>();
-            //var arr = hash.ToArray();
-
-            //foreach (var sigVal in arr)
-            //{
-            //    list.Add(sigVal);
-            //}
-
-
-            //var recoveredKey = Crypto.RecoverPublicKey(list[0], list[1], list[2], bytes);
-            //if (StructuralComparisons.StructuralEqualityComparer.Equals(recoveredKey, pubK))
-            //{
-            //    Console.WriteLine("GOOD JOB");
-            //}
+            
 
             //string s1 = Encoding.UTF8.GetString(privK);
             //string s2 = Encoding.UTF8.GetString(pubK);
@@ -82,8 +56,6 @@ namespace Wallet.Pages
         }
 
 
-    
-
         //private void SendMessage(object sender, RoutedEventArgs e)
         //{
         //    TextMessage message = new TextMessage()
@@ -94,8 +66,6 @@ namespace Wallet.Pages
         //}
 
 
-    
-
         //nettwork layer
         public void CreateTransaction()
         {
@@ -104,8 +74,6 @@ namespace Wallet.Pages
             //_blockchainNetwork.BroadcastMessageAsync();
         }
 
-
- 
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
@@ -121,7 +89,6 @@ namespace Wallet.Pages
             PasswordBoxConfirm.Password = "";
         }
 
-   
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {

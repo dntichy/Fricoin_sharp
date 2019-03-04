@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,6 @@ namespace Wallet.Pages
 
         private void Loading_OnLoaded(object sender, RoutedEventArgs e)
         {
-
             //BlockChain b = new BlockChain();
 
 
@@ -37,12 +37,39 @@ namespace Wallet.Pages
             //}
 
 
+            //Console.WriteLine(a);
+            //Console.WriteLine(a.VerifyAddress(a.Address));
 
-            var a = new WalletCore();
-            
-            Console.WriteLine(a);
-            Console.WriteLine(a.VerifyAddress(a.Address));
-            
+
+            var wallet = new WalletCore();
+            var privK = wallet.PrivateKey;
+            var pubK = wallet.PublicKey;
+
+            var str = "ahoj";
+
+            var hash = wallet.SignMessage(str);
+            Console.WriteLine("Signature: " + hash);
+
+            Console.WriteLine(wallet.VerifyHashedMessage(hash, str));
+
+
+            //var list = new List<byte[]>();
+            //var arr = hash.ToArray();
+
+            //foreach (var sigVal in arr)
+            //{
+            //    list.Add(sigVal);
+            //}
+
+
+            //var recoveredKey = Crypto.RecoverPublicKey(list[0], list[1], list[2], bytes);
+            //if (StructuralComparisons.StructuralEqualityComparer.Equals(recoveredKey, pubK))
+            //{
+            //    Console.WriteLine("GOOD JOB");
+            //}
+
+            //var isOk = Crypto.VerifyHashed(list[0], list[1], recoveredKey, bytes);
+            //Console.WriteLine(isOk);
 
 
             //Console.WriteLine();
