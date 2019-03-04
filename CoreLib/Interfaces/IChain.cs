@@ -9,8 +9,8 @@ namespace CoreLib.Interfaces
 
         Block GetLatestBlock();
         void AddBlock(Block block);
-        void ProcessPendingTransactions(string minerAddress);
-        void CreateTransaction(Transaction transaction);
+        //void ProcessPendingTransactions(string minerAddress);
+        //void CreateTransaction(Transaction transaction);
         bool IsValid();
         float GetBalance(string address);
     }

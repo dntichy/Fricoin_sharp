@@ -10,7 +10,7 @@ namespace CoreLib.Interfaces
         DateTime TimeStamp { get; set; }
         byte[] PreviousHash { get; set; }
         byte[] Hash { get; set; }
-        IList<TransactionNewVersion> Transactions { get; set; }
+        IList<Transaction> Transactions { get; set; }
 
         byte[] CalculateHash();
         void Mine(int difficulty);

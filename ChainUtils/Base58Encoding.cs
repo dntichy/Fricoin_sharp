@@ -12,8 +12,6 @@ namespace ChainUtils
 
         public static byte[] AddCheckSum(byte[] data)
         {
-            //Contract.Requires<ArgumentNullException>(data != null);
-            //Contract.Ensures(Contract.Result<byte[]>().Length == data.Length + CheckSumSizeInBytes);
             byte[] checkSum = GetCheckSum(data);
             byte[] dataWithCheckSum = ArrayHelpers.ConcatArrays(data, checkSum);
             return dataWithCheckSum;
@@ -21,10 +19,7 @@ namespace ChainUtils
 
         //Returns null if the checksum is invalid
         public static byte[] VerifyAndRemoveCheckSum(byte[] data)
-        {
-            //Contract.Requires<ArgumentNullException>(data != null);
-            //Contract.Ensures(Contract.Result<byte[]>() == null ||
-                             //Contract.Result<byte[]>().Length + CheckSumSizeInBytes == data.Length);
+        {       
             byte[] result = ArrayHelpers.SubArray(data, 0, data.Length - CheckSumSizeInBytes);
             byte[] givenCheckSum = ArrayHelpers.SubArray(data, data.Length - CheckSumSizeInBytes);
             byte[] correctCheckSum = GetCheckSum(result);
@@ -68,16 +63,12 @@ namespace ChainUtils
 
         public static string EncodeWithCheckSum(byte[] data)
         {
-            //Contract.Requires<ArgumentNullException>(data != null);
-            //Contract.Ensures(Contract.Result<string>() != null);
             return Encode(AddCheckSum(data));
         }
 
         public static byte[] Decode(string s)
         {
-            //Contract.Requires<ArgumentNullException>(s != null);
-            //Contract.Ensures(Contract.Result<byte[]>() != null);
-
+        
             // Decode Base58 string to BigInteger 
             BigInteger intData = 0;
             for (int i = 0; i < s.Length; i++)
@@ -103,8 +94,6 @@ namespace ChainUtils
         // Throws `FormatException` if s is not a valid Base58 string, or the checksum is invalid
         public static byte[] DecodeWithCheckSum(string s)
         {
-            //Contract.Requires<ArgumentNullException>(s != null);
-            //Contract.Ensures(Contract.Result<byte[]>() != null);
             var dataWithCheckSum = Decode(s);
             var dataWithoutCheckSum = VerifyAndRemoveCheckSum(dataWithCheckSum);
             if (dataWithoutCheckSum == null)
@@ -114,9 +103,7 @@ namespace ChainUtils
 
         private static byte[] GetCheckSum(byte[] data)
         {
-            //Contract.Requires<ArgumentNullException>(data != null);
-            //Contract.Ensures(Contract.Result<byte[]>() != null);
-
+        
             SHA256 sha256 = new SHA256Managed();
             byte[] hash1 = sha256.ComputeHash(data);
             byte[] hash2 = sha256.ComputeHash(hash1);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -10,19 +11,21 @@ using Newtonsoft.Json;
 namespace CoreLib
 {
     [Serializable]
-    public class Block : IBlock
+    [JsonObject(MemberSerialization.OptOut)]
+
+    public class Block : IBlock, IEnumerable<Transaction>
     {
         public int Index { get; set; }
         public int Nonce { get; set; } = 0;
         public DateTime TimeStamp { get; set; }
         public byte[] PreviousHash { get; set; }
         public byte[] Hash { get; set; }
-        public IList<TransactionNewVersion> Transactions { get; set; }
+        public IList<Transaction> Transactions { get; set; }
 
-        public Block(DateTime timeStamp, byte[] previousHash, IList<TransactionNewVersion> transactions)
+        public Block(DateTime dateTime, byte[] previousHash, IList<Transaction> transactions)
         {
             Index = 0;
-            TimeStamp = timeStamp;
+            TimeStamp = dateTime;
             PreviousHash = previousHash;
 
             Hash = CalculateHash();
@@ -40,7 +43,6 @@ namespace CoreLib
                 Encoding.ASCII.GetBytes(
                     $"{TimeStamp} - {PreviousHash} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
             byte[] outputBytes = sha256.ComputeHash(inputBytes);
-
 
             return outputBytes;
         }
@@ -71,6 +73,30 @@ namespace CoreLib
             memStream.Write(fromBytes, 0, fromBytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
             return (Block) binForm.Deserialize(memStream);
+        }
+
+        public IEnumerator<Transaction> GetEnumerator()
+        {
+            foreach (var t in Transactions)
+            {
+                yield return t;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public static Block GenesisBlock()
+        {
+            var transactions = new List<Transaction>()
+            {
+                Transaction.CoinBaseTx("dusan", ""),
+                Transaction.CoinBaseTx("veronika", "")
+            };
+
+            return new Block(DateTime.Parse("1.1.2019"), null, transactions);
         }
     }
 }
