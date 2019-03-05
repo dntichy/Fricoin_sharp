@@ -65,6 +65,8 @@
   <ItemGroup>
     <Compile Include="ArrayHelpers.cs" />
     <Compile Include="Base58Encoding.cs" />
+    <Compile Include="ByteHelper.cs" />
+    <Compile Include="CryptoFinal.cs" />
     <Compile Include="Crypto.cs" />
     <Compile Include="HexadecimalEncoding.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

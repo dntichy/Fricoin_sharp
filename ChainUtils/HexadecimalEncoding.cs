@@ -8,8 +8,18 @@ namespace ChainUtils
         public static string ToHexString(string str)
         {
             var sb = new StringBuilder();
-
             var bytes = Encoding.Unicode.GetBytes(str);
+            foreach (var t in bytes)
+            {
+                sb.Append(t.ToString("X2"));
+            }
+
+            return sb.ToString();
+        }
+
+        public static string ToHexString(byte[] bytes)
+        {
+            var sb = new StringBuilder();
             foreach (var t in bytes)
             {
                 sb.Append(t.ToString("X2"));

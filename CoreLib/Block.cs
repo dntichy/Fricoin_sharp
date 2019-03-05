@@ -92,8 +92,8 @@ namespace CoreLib
         {
             var transactions = new List<Transaction>()
             {
-                Transaction.CoinBaseTx("dusan", ""),
-                Transaction.CoinBaseTx("veronika", "")
+                //Transaction.CoinBaseTx("dusan", ""),
+                //Transaction.CoinBaseTx("veronika", "")
             };
 
             return new Block(DateTime.Parse("1.1.2019"), null, transactions);

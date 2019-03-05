@@ -6,15 +6,18 @@ using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Utilities;
 using ECPoint = Org.BouncyCastle.Math.EC.ECPoint;
 
 
 namespace ChainUtils
 {
-    public class Crypto
+     class Crypto
     {
         private static String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
         private static bool RANDOM_NUMBER_ALGORITHM_PROVIDER = true;
@@ -73,19 +76,51 @@ namespace ChainUtils
 
 
         //public static string SignData(string msg, AsymmetricKeyParameter privKey)
-        public static byte[][] SignTransaction(byte[] data, byte[] privateKey)
+        //public static byte[][] SignTransaction(byte[] data, byte[] privateKey)
+        //{
+        //    try
+        //    {
+        //        //byte[] msgBytes = Encoding.UTF8.GetBytes(msg);
+
+        //        //ISigner signer = SignerUtilities.GetSigner("SHA384withECDSA");
+        //        //signer.Init(true, privKey);
+        //        //signer.BlockUpdate(msgBytes, 0, msgBytes.Length);
+        //        //byte[] sigBytes = signer.GenerateSignature();
+
+        //        //return Convert.ToBase64String(sigBytes);
+
+        //        X9ECParameters spec = ECNamedCurveTable.GetByName("secp256k1");
+
+        //        ECDsaSigner ecdsaSigner = new ECDsaSigner();
+        //        ECDomainParameters domain = new ECDomainParameters(spec.Curve, spec.G, spec.N);
+        //        ECPrivateKeyParameters privateKeyParms =
+        //            new ECPrivateKeyParameters(new BigInteger(1, privateKey), domain);
+        //        ParametersWithRandom paramxs = new ParametersWithRandom(privateKeyParms);
+        //        ecdsaSigner.Init(true, paramxs);
+        //        BigInteger[] sig = ecdsaSigner.GenerateSignature(data);
+        //        LinkedList<byte[]> sigData = new LinkedList<byte[]>();
+        //        byte[] publicKey = GetPublicKey(privateKey);
+        //        byte recoveryId = GetRecoveryId(sig[0].ToByteArray(), sig[1].ToByteArray(), data, publicKey);
+        //        foreach (var sigChunk in sig)
+        //        {
+        //            sigData.AddLast(sigChunk.ToByteArray());
+        //        }
+
+        //        sigData.AddLast(new byte[] {recoveryId});
+        //        return sigData.ToArray();
+        //    }
+        //    catch (Exception exc)
+        //    {
+        //        Console.WriteLine("Signing Failed: " + exc);
+        //        return null;
+        //    }
+        //}
+
+      
+        public static (byte[] r, byte[]s, byte[]v) SignTransaction(byte[] data, byte[] privateKey)
         {
             try
             {
-                //byte[] msgBytes = Encoding.UTF8.GetBytes(msg);
-
-                //ISigner signer = SignerUtilities.GetSigner("SHA384withECDSA");
-                //signer.Init(true, privKey);
-                //signer.BlockUpdate(msgBytes, 0, msgBytes.Length);
-                //byte[] sigBytes = signer.GenerateSignature();
-
-                //return Convert.ToBase64String(sigBytes);
-
                 X9ECParameters spec = ECNamedCurveTable.GetByName("secp256k1");
 
                 ECDsaSigner ecdsaSigner = new ECDsaSigner();
@@ -104,13 +139,30 @@ namespace ChainUtils
                 }
 
                 sigData.AddLast(new byte[] {recoveryId});
-                return sigData.ToArray();
+                return (sigData.ElementAt(0), sigData.ElementAt(1), sigData.ElementAt(2));
             }
             catch (Exception exc)
             {
                 Console.WriteLine("Signing Failed: " + exc);
-                return null;
+                return (null, null, null);
             }
+        }
+
+
+        public static BigInteger ExtractR(byte[] signature)
+        {
+            int startR = (signature[1] & 0x80) != 0 ? 3 : 2;
+            int lengthR = signature[startR + 1];
+            return new BigInteger(Arrays.CopyOfRange(signature, startR + 2, startR + 2 + lengthR));
+        }
+
+        public static BigInteger ExtractS(byte[] signature)
+        {
+            int startR = (signature[1] & 0x80) != 0 ? 3 : 2;
+            int lengthR = signature[startR + 1];
+            int startS = startR + 2 + lengthR;
+            int lengthS = signature[startS + 1];
+            return new BigInteger(Arrays.CopyOfRange(signature, startS + 2, startS + 2 + lengthS));
         }
 
         public static byte GetRecoveryId(byte[] sigR, byte[] sigS, byte[] message, byte[] publicKey)
@@ -249,17 +301,7 @@ namespace ChainUtils
         //        return builder.ToString();
         //    }
         //}
-        private static byte[] ComputeSha256HashB(string rawData)
-        {
-            // Create a SHA256   
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                // ComputeHash - returns byte array  
-                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-
-                return bytes;
-            }
-        }
+   
 
         /**
          * Converts a private key into its corresponding public key. 

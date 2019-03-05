@@ -1,8 +1,5 @@
 ﻿using ChainUtils;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -18,9 +15,9 @@ namespace CoreLib
 
         public WalletCore()
         {
-            PrivateKey = Crypto.GeneratePrivateKey();
-            PublicKey = Crypto.GetPublicKey(PrivateKey);
-            PublicKeyHash = PublicKeyHashed(GetStringFromBytes(PublicKey));
+            PrivateKey = CryptoFinal.GeneratePrivateKey();
+            PublicKey = CryptoFinal.GetPublicKey(PrivateKey);
+            PublicKeyHash = PublicKeyHashed(ByteHelper.GetStringFromBytes(PublicKey));
 
             var version = new byte[] {0x00};
             var versionHashed = ArrayHelpers.ConcatArrays(version, PublicKeyHash);
@@ -29,7 +26,7 @@ namespace CoreLib
             Address = address;
         }
 
-        public byte[] PublicKeyHashed(string pubK)
+        public static byte[] PublicKeyHashed(string pubK)
         {
             var pubHash = Sha.GenerateSha256String(pubK);
             var ripemd160 = new RIPEMD160Managed();
@@ -37,24 +34,21 @@ namespace CoreLib
             return ripemd160Hash;
         }
 
+        public static byte[] PublicKeyHashed(byte[] pubK)
+        {
+            var pubHash = Sha.GenerateSha256String(ByteHelper.GetStringFromBytes(pubK));
+            var ripemd160 = new RIPEMD160Managed();
+            var ripemd160Hash = ripemd160.ComputeHash(Encoding.UTF8.GetBytes(pubHash));
+            return ripemd160Hash;
+        }
 
         public override string ToString()
         {
-            return "PK: " + GetStringFromBytes(PublicKey) + "\n" +
-                   "PKHashed: " + GetStringFromBytes(PublicKeyHash) + "\n" +
+            return "PK: " + ByteHelper.GetStringFromBytes(PublicKey) + "\n" +
+                   "PKHashed: " + ByteHelper.GetStringFromBytes(PublicKeyHash) + "\n" +
                    "Address: " + Address;
         }
 
-        private static string GetStringFromBytes(byte[] hash)
-        {
-            StringBuilder result = new StringBuilder();
-            for (int i = 0; i < hash.Length; i++)
-            {
-                result.Append(hash[i].ToString("x"));
-            }
-
-            return result.ToString();
-        }
 
         public bool VerifyAddress(string address)
         {
@@ -62,7 +56,7 @@ namespace CoreLib
             var verify = Base58Encoding.VerifyAndRemoveCheckSum(pubKeyHash);
             if (verify != null)
             {
-                Console.WriteLine("PK hash " + GetStringFromBytes(verify));
+                Console.WriteLine("PK hash " + ByteHelper.GetStringFromBytes(verify));
                 return true;
             }
             else
@@ -71,52 +65,5 @@ namespace CoreLib
             }
         }
 
-
-        public byte[][] SignMessage(string message)
-        {
-            byte[] bytes = Encoding.ASCII.GetBytes(message);
-            var hash = Crypto.SignTransaction(bytes, PrivateKey);
-            return hash;
-        }
-
-        public byte[][] SignMessage(byte[] message)
-        {
-            var hash = Crypto.SignTransaction(message, PrivateKey);
-            return hash;
-        }
-
-        public bool VerifyHashedMessage(byte[][] hash, byte[] message)
-        {
-            var list = new List<byte[]>();
-            var arr = hash.ToArray();
-
-            foreach (var sigVal in arr)
-            {
-                list.Add(sigVal);
-            }
-
-            var recoveredKey = Crypto.RecoverPublicKey(list[0], list[1], list[2], message);
-            var isOk = Crypto.VerifyHashed(list[0], list[1], recoveredKey, message);
-
-            return isOk;
-        }
-
-
-        public bool VerifyHashedMessage(byte[][] hash, string message)
-        {
-            byte[] bytes = Encoding.ASCII.GetBytes(message);
-            var list = new List<byte[]>();
-            var arr = hash.ToArray();
-
-            foreach (var sigVal in arr)
-            {
-                list.Add(sigVal);
-            }
-
-            var recoveredKey = Crypto.RecoverPublicKey(list[0], list[1], list[2], bytes);
-            var isOk = Crypto.VerifyHashed(list[0], list[1], recoveredKey, bytes);
-
-            return isOk;
-        }
     }
 }
