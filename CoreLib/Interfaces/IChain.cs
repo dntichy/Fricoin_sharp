@@ -12,6 +12,6 @@ namespace CoreLib.Interfaces
         //void ProcessPendingTransactions(string minerAddress);
         //void CreateTransaction(Transaction transaction);
         bool IsValid();
-        float GetBalance(string address);
+        //float GetBalance(string address);
     }
 }

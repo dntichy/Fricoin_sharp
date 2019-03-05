@@ -106,24 +106,22 @@ namespace CoreLib
             return true;
         }
 
-        public float GetBalance(string address)
+
+
+
+        public float GetBalance(byte[] pubKeyHash)
         {
-            throw new NotImplementedException();
+            var balance = 0;
+            var UTXO = FindUTXO(pubKeyHash);
+
+            foreach (var output in UTXO)
+            {
+                balance += output.Value;
+            }
+
+            Console.WriteLine("Balance of " + ByteHelper.GetStringFromBytes(pubKeyHash) + ": " + balance);
+            return balance;
         }
-
-        //public float GetBalance(string address)
-        //{
-        //    var balance = 0;
-        //    var UTXO = FindUTXO(address);
-
-        //    foreach (var output in UTXO)
-        //    {
-        //        balance += output.Value;
-        //    }
-
-        //    Console.WriteLine("Balance of " + address + ": " + balance);
-        //    return balance;
-        //}
 
 
         public void Print()
@@ -137,118 +135,118 @@ namespace CoreLib
             }
         }
 
-        //public List<Transaction> FindUnspentTransactions(string address)
-        //{
-        //    List<Transaction> unspentTx = new List<Transaction>();
+        public List<Transaction> FindUnspentTransactions(byte[] pubKeyHash)
+        {
+            List<Transaction> unspentTx = new List<Transaction>();
 
-        //    var spentTxOs = new Dictionary<string, List<int>>();
+            var spentTxOs = new Dictionary<string, List<int>>();
 
-        //    foreach (var block in this)
-        //    {
-        //        foreach (var tx in block)
-        //        {
-        //            var tXId = tx.Id; //transaction ID
-        //            if (!spentTxOs.ContainsKey(ByteArrayToString(tXId)))
-        //                spentTxOs.Add(ByteArrayToString(tXId), new List<int>());
+            foreach (var block in this)
+            {
+                foreach (var tx in block)
+                {
+                    var tXId = tx.Id; //transaction ID
+                    if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
+                        spentTxOs.Add(HexadecimalEncoding.ToHexString(tXId), new List<int>());
 
-        //            var index = 0;
-        //            foreach (var output in tx.Outputs)
-        //            {
-        //                if (spentTxOs.ContainsKey(ByteArrayToString(tXId)))
-        //                {
-        //                    foreach (var spentOut in spentTxOs[ByteArrayToString(tXId)])
-        //                    {
-        //                        if (spentOut.Equals(index))
-        //                        {
-        //                            goto endOfTheLoop;
-        //                        }
-        //                    }
-        //                }
+                    var index = 0;
+                    foreach (var output in tx.Outputs)
+                    {
+                        if (spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
+                        {
+                            foreach (var spentOut in spentTxOs[HexadecimalEncoding.ToHexString(tXId)])
+                            {
+                                if (spentOut.Equals(index))
+                                {
+                                    goto endOfTheLoop;
+                                }
+                            }
+                        }
 
-        //                if (output.CanBeUnlocked(address))
-        //                {
-        //                    unspentTx.Add(tx);
-        //                }
+                        if (output.IsLockedWithKey(pubKeyHash))
+                        {
+                            unspentTx.Add(tx);
+                        }
 
-        //                endOfTheLoop:
-        //                {
-        //                }
-        //                index++;
-        //            }
+                    endOfTheLoop:
+                        {
+                        }
+                        index++;
+                    }
 
 
-        //            if (tx.IsCoinBase() == false)
-        //            {
-        //                foreach (var input in tx.Inputs)
-        //                {
-        //                    if (input.CanUnlock(address))
-        //                    {
-        //                        if (!spentTxOs.ContainsKey(ByteArrayToString(input.Id)))
-        //                            spentTxOs.Add(ByteArrayToString(input.Id), new List<int>());
-        //                        spentTxOs[ByteArrayToString(input.Id)].Add(input.Out);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
+                    if (tx.IsCoinBase() == false)
+                    {
+                        foreach (var input in tx.Inputs)
+                        {
+                            if (input.UsesKey(pubKeyHash))
+                            {
+                                if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(input.Id)))
+                                    spentTxOs.Add(HexadecimalEncoding.ToHexString(input.Id), new List<int>());
+                                spentTxOs[HexadecimalEncoding.ToHexString(input.Id)].Add(input.Out);
+                            }
+                        }
+                    }
+                }
+            }
 
-        //    return unspentTx;
-        //}
+            return unspentTx;
+        }
 
-        //public List<TxOutput> FindUTXO(string address)
-        //{
-        //    var UTXOs = new List<TxOutput>();
-        //    var unspentTransactions = FindUnspentTransactions(address);
+        public List<TxOutput> FindUTXO(byte[] pubKeyHash)
+        {
+            var UTXOs = new List<TxOutput>();
+            var unspentTransactions = FindUnspentTransactions(pubKeyHash);
 
-        //    foreach (var tx in unspentTransactions)
-        //    {
-        //        foreach (var output in tx.Outputs)
-        //        {
-        //            if (output.CanBeUnlocked(address))
-        //            {
-        //                UTXOs.Add(output);
-        //            }
-        //        }
-        //    }
+            foreach (var tx in unspentTransactions)
+            {
+                foreach (var output in tx.Outputs)
+                {
+                    if (output.IsLockedWithKey(pubKeyHash))
+                    {
+                        UTXOs.Add(output);
+                    }
+                }
+            }
 
-        //    return UTXOs;
-        //}
+            return UTXOs;
+        }
 
-        //public (Dictionary<byte[], List<int>>, int) FindSpendableOutputs(string address, int amount)
-        //{
-        //    var unspentOuts = new Dictionary<byte[], List<int>>();
-        //    var unspentTxs = FindUnspentTransactions(address);
-        //    var accumulated = 0;
+        public (Dictionary<byte[], List<int>>, int) FindSpendableOutputs(byte[] pubKeyHash, int amount)
+        {
+            var unspentOuts = new Dictionary<byte[], List<int>>();
+            var unspentTxs = FindUnspentTransactions(pubKeyHash);
+            var accumulated = 0;
 
-        //    foreach (var tx in unspentTxs)
-        //    {
-        //        var txid = tx.Id;
-        //        if (!unspentOuts.ContainsKey(txid)) unspentOuts.Add(txid, new List<int>());
+            foreach (var tx in unspentTxs)
+            {
+                var txid = tx.Id;
+                if (!unspentOuts.ContainsKey(txid)) unspentOuts.Add(txid, new List<int>());
 
-        //        var index = 0;
-        //        foreach (var output in tx.Outputs)
-        //        {
-        //            if (output.CanBeUnlocked(address) && accumulated < amount)
-        //            {
-        //                accumulated += output.Value;
-        //                unspentOuts[txid].Add(index);
+                var index = 0;
+                foreach (var output in tx.Outputs)
+                {
+                    if (output.IsLockedWithKey(pubKeyHash) && accumulated < amount)
+                    {
+                        accumulated += output.Value;
+                        unspentOuts[txid].Add(index);
 
-        //                if (accumulated >= amount)
-        //                {
-        //                    goto endOfLoop;
-        //                }
-        //            }
+                        if (accumulated >= amount)
+                        {
+                            goto endOfLoop;
+                        }
+                    }
 
-        //            index++;
-        //        }
-        //    }
+                    index++;
+                }
+            }
 
-        //    endOfLoop:
-        //    {
-        //    }
+        endOfLoop:
+            {
+            }
 
-        //    return (unspentOuts, accumulated);
-        //}
+            return (unspentOuts, accumulated);
+        }
 
 
         //todo move
@@ -276,11 +274,26 @@ namespace CoreLib
 
         public void SignTransaction(Transaction tx, byte[] privateKey)
         {
+            var prevTxs = new Dictionary<string, Transaction>();
+            foreach (var inp in tx.Inputs)
+            {
+                var prevTx = FindTransaction(inp.Id);
+                prevTxs[HexadecimalEncoding.ToHexString(prevTx.Id)] = prevTx;
+            }
+
+            tx.Sign(privateKey, prevTxs);
         }
 
         public bool VerifyTransaction(Transaction tx)
         {
-            return false;
+            var prevTxs = new Dictionary<string, Transaction>();
+            foreach (var inp in tx.Inputs)
+            {
+                var prevTx = FindTransaction(inp.Id);
+                prevTxs[HexadecimalEncoding.ToHexString(prevTx.Id)] = prevTx;
+            }
+
+            return tx.Verify(prevTxs);
         }
 
         public IEnumerator<Block> GetEnumerator()

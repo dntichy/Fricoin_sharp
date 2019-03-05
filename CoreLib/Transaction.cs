@@ -96,14 +96,18 @@ namespace CoreLib
                 txCopy.Inputs[index].PubKey = null;
 
                 var (r, s, v) = CryptoFinal.GetRSV(inp.Signature);
-                var recoveredKey = CryptoFinal.RecoverPublicKey(r.ToByteArray(),s.ToByteArray(), v.ToByteArray(), txCopy.Id);
+                var recoveredKey =
+                    CryptoFinal.RecoverPublicKey(r.ToByteArray(), s.ToByteArray(), v.ToByteArray(), txCopy.Id);
 
                 if (!CryptoFinal.VerifyHashed(inp.Signature, recoveredKey, txCopy.Id))
                 {
                     return false;
-                };
+                }
+
+                ;
                 index++;
             }
+
             return true;
         }
 
@@ -164,83 +168,80 @@ namespace CoreLib
             this.Id = outputBytes;
         }
 
-        //public static Transaction NewTransaction(string from, string to, int amount, BlockChain chain)
-        //{
-        //    var inputs = new List<TxInput>();
-        //    var outputs = new List<TxOutput>();
+        public static Transaction NewTransaction(string from, string to, int amount, BlockChain chain)
+        {
+            var inputs = new List<TxInput>();
+            var outputs = new List<TxOutput>();
 
-        //    var spendableOutputs = chain.FindSpendableOutputs(from, amount);
-        //    var account = spendableOutputs.Item2;
-        //    var validOutputs = spendableOutputs.Item1;
+            //todo getWallet...
+            var wallet = new WalletCore();
+            var pubKeyHash = wallet.PublicKeyHash;
 
-        //    if (account < amount)
-        //    {
-        //        Console.WriteLine("Insufficient funds");
-        //        return null;
-        //    }
-        //    else
-        //    {
-        //        foreach (var output in validOutputs.Keys)
-        //        {
-        //            var txId = output;
+            var spendableOutputs = chain.FindSpendableOutputs(pubKeyHash, amount);
+            var account = spendableOutputs.Item2;
+            var validOutputs = spendableOutputs.Item1;
 
-        //            foreach (var s in validOutputs[txId])
-        //            {
-        //                var input = new TxInput() {Id = txId, Out = s, Signature = from};
-        //                inputs.Add(input);
-        //            }
-        //        }
+            if (account < amount)
+            {
+                Console.WriteLine("Insufficient funds");
+                return null;
+            }
+            else
+            {
+                foreach (var output in validOutputs.Keys)
+                {
+                    var txId = output;
 
-        //        outputs.Add(new TxOutput() {PublicKey = to, Value = amount});
+                    foreach (var @out in validOutputs[txId])
+                    {
+                        var input = new TxInput() {Id = txId, Out = @out, Signature = null, PubKey = wallet.PublicKey};
+                        inputs.Add(input);
+                    }
+                }
 
-        //        if (account > amount)
-        //        {
-        //            outputs.Add(new TxOutput()
-        //            {
-        //                PublicKey = from,
-        //                Value = account - amount
-        //            });
-        //        }
-        //    }
+                outputs.Add(TxOutput.NewTxOutput(amount, to));
 
-        //    var tx = new Transaction()
-        //    {
-        //        Id = null,
-        //        Inputs = inputs,
-        //        Outputs = outputs
-        //    };
-        //    tx.SetId();
-        //    return tx;
-        //}
+                if (account > amount)
+                {
+                    outputs.Add(TxOutput.NewTxOutput(account - amount, from));
+                }
+            }
+
+            var tx = new Transaction()
+            {
+                Id = null,
+                Inputs = inputs,
+                Outputs = outputs
+            };
+            chain.SignTransaction(tx, wallet.PrivateKey);
+            return tx;
+        }
 
 
-        //    public static Transaction CoinBaseTx(string to, string data)
-        //    {
-        //        if (data == "") data = "Coins to " + to;
+        public static Transaction CoinBaseTx(string to, string data)
+        {
+            if (data == "") data = "Coins to " + to;
 
-        //        var txIn = new TxInput()
-        //        {
-        //            Id = new byte[] { }, // no referencing any output
-        //            Out = -1, // no referencing any output
-        //            Signature = data
-        //        };
+            var txIn = new TxInput()
+            {
+                Id = new byte[] { }, // no referencing any output
+                Out = -1, // no referencing any output
+                Signature = null,
+                PubKey = ByteHelper.GetBytesFromString(data)
+            };
 
-        //        var txOut = new TxOutput()
-        //        {
-        //            PublicKey = to,
-        //            Value = 100
-        //        };
+            var txOut = TxOutput.NewTxOutput(100, to);
 
-        //        var tx = new Transaction()
-        //        {
-        //            Id = null,
-        //            Outputs = new List<TxOutput> {txOut},
-        //            Inputs = new List<TxInput>() {txIn}
-        //        };
-        //        tx.SetId();
+            var tx = new Transaction()
+            {
+                Id = null,
+                Outputs = new List<TxOutput> {txOut},
+                Inputs = new List<TxInput>() {txIn}
+            };
+            tx.SetId();
 
-        //        return tx;
-        //    }
+            return tx;
+        }
     }
 
     [Serializable]
