@@ -5,6 +5,7 @@ using System.Text;
 
 namespace CoreLib
 {
+    [Serializable]
     public class WalletCore
     {
         public byte[] PrivateKey { get; set; }
@@ -42,14 +43,6 @@ namespace CoreLib
             return ripemd160Hash;
         }
 
-        public override string ToString()
-        {
-            return "PK: " + ByteHelper.GetStringFromBytes(PublicKey) + "\n" +
-                   "PKHashed: " + ByteHelper.GetStringFromBytes(PublicKeyHash) + "\n" +
-                   "Address: " + Address;
-        }
-
-
         public bool VerifyAddress(string address)
         {
             var pubKeyHash = Base58Encoding.Decode(address);
@@ -65,5 +58,11 @@ namespace CoreLib
             }
         }
 
+        public override string ToString()
+        {
+            return "PK: " + ByteHelper.GetStringFromBytes(PublicKey) + "\n" +
+                   "PKHashed: " + ByteHelper.GetStringFromBytes(PublicKeyHash) + "\n" +
+                   "Address: " + Address;
+        }
     }
 }

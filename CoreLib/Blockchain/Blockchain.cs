@@ -1,16 +1,12 @@
-﻿using CoreLib.Interfaces;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
 using System.Text;
 using ChainUtils;
-using Org.BouncyCastle.Crypto.Tls;
+using CoreLib.Interfaces;
+using Newtonsoft.Json;
 
-
-namespace CoreLib
+namespace CoreLib.Blockchain
 {
     public class BlockChain : IChain, IEnumerable<Block>
     {
@@ -25,13 +21,13 @@ namespace CoreLib
 
         public BlockChain()
         {
-            var lastHash = Db.Get(StringToByteArray("lh"));
-            //if exists lasthash retrieve it and set
-            if (lastHash != null)
-            {
-                LastHash = lastHash;
-            }
-            else
+            //var lastHash = Db.Get(StringToByteArray("lh"));
+            ////if exists lasthash retrieve it and set
+            //if (lastHash != null)
+            //{
+            //    LastHash = lastHash;
+            //}
+            //else
             {
                 //else create genesis block and set lasthash to the genesis
                 var genesis = Block.GenesisBlock();
@@ -75,14 +71,14 @@ namespace CoreLib
         //}
 
 
-        //public void Send(string from, string to, int amount)
-        //{
-        //    var tx = Transaction.NewTransaction(from, to, amount, this);
-        //    if (tx != null)
-        //    {
-        //        AddBlock(new Block(DateTime.Now, LastHash, new List<Transaction>() {tx}));
-        //    }
-        //}
+        public void Send(string from, string to, int amount)
+        {
+            var tx = Transaction.NewTransaction(from, to, amount, this);
+            if (tx != null)
+            {
+                AddBlock(new Block(DateTime.Now, LastHash, new List<Transaction>() { tx }));
+            }
+        }
 
         public bool IsValid()
         {
@@ -107,8 +103,6 @@ namespace CoreLib
         }
 
 
-
-
         public float GetBalance(byte[] pubKeyHash)
         {
             var balance = 0;
@@ -120,6 +114,22 @@ namespace CoreLib
             }
 
             Console.WriteLine("Balance of " + ByteHelper.GetStringFromBytes(pubKeyHash) + ": " + balance);
+            return balance;
+        }
+
+        public float GetBalance(string address)
+        {
+            var balance = 0;
+            var pubKeyHash = Base58Encoding.Decode(address);
+            pubKeyHash = ArrayHelpers.SubArray(pubKeyHash, 1, pubKeyHash.Length - 5);
+            var utxo = FindUTXO(pubKeyHash);
+
+            foreach (var output in utxo)
+            {
+                balance += output.Value;
+            }
+
+            Console.WriteLine("Balance of " + address + ": " + balance);
             return balance;
         }
 
@@ -168,7 +178,7 @@ namespace CoreLib
                             unspentTx.Add(tx);
                         }
 
-                    endOfTheLoop:
+                        endOfTheLoop:
                         {
                         }
                         index++;
@@ -241,7 +251,7 @@ namespace CoreLib
                 }
             }
 
-        endOfLoop:
+            endOfLoop:
             {
             }
 

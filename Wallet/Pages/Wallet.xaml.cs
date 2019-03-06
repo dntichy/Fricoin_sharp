@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using CoreLib;
+using CoreLib.Blockchain;
 using DatabaseLib;
 using Engine.Network.MessageParser;
 using Newtonsoft.Json;

@@ -155,8 +155,8 @@ namespace Wallet.Pages
 
         private bool SaveToDatabase(User newUser)
         {
-            var privK = Crypto.GeneratePrivateKey();
-            var pubK = Crypto.GetPublicKey(privK);
+            var privK = CryptoFinal.GeneratePrivateKey();
+            var pubK = CryptoFinal.GetPublicKey(privK);
 
             //create file with pub and private key
             File.WriteAllBytes("pub.dat", pubK);

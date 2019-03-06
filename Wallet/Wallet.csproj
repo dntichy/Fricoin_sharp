@@ -106,9 +106,6 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="leveldb-sharp, Version=1.2.0.0, Culture=neutral, PublicKeyToken=2ef8a852105250ad, processorArchitecture=MSIL">
-      <HintPath>..\packages\leveldb-sharp.1.0.0\lib\leveldb-sharp.dll</HintPath>
-    </Reference>
     <Reference Include="LightningDB, Version=0.10.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\LightningDB.0.10.0\lib\net45\LightningDB.dll</HintPath>
     </Reference>

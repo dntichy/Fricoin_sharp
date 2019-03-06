@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using ChainUtils;
+using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using ChainUtils;
+using CoreLib.Blockchain;
 
 namespace CoreLib
 {
@@ -25,22 +25,34 @@ namespace CoreLib
         public List<TxInput> Inputs { get; set; }
         public List<TxOutput> Outputs { get; set; }
 
-        public byte[] Serialize()
+        public Transaction()
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, this);
-            return ms.ToArray();
         }
 
-        public Transaction DeSerialize(byte[] fromBytes)
+        private static Transaction TransactionTrimmed(Transaction transaction)
         {
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            memStream.Write(fromBytes, 0, fromBytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            return (Transaction) binForm.Deserialize(memStream);
+            List<TxOutput> txOutputs = new List<TxOutput>();
+            List<TxInput> txInputs = new List<TxInput>();
+
+            foreach (var input in transaction.Inputs)
+            {
+                txInputs.Add(new TxInput() {Id = input.Id, Out = input.Out, Signature = null, PubKey = null});
+            }
+
+            foreach (var (output, index) in transaction.Outputs.Select((v, i) => (v, i)))
+            {
+                txOutputs.Add(new TxOutput() {PublicKeyHash = output.PublicKeyHash, Value = output.Value});
+            }
+
+            var txCopy = new Transaction()
+            {
+                Inputs = txInputs,
+                Outputs = txOutputs,
+                Id = transaction.Id
+            };
+            return txCopy;
         }
+
 
         public void Sign(byte[] privateKey, Dictionary<string, Transaction> prevTxs)
         {
@@ -92,7 +104,7 @@ namespace CoreLib
                 var prevTx = prevTxs[HexadecimalEncoding.ToHexString(inp.Id)];
                 txCopy.Inputs[index].Signature = null;
                 txCopy.Inputs[index].PubKey = prevTx.Outputs[inp.Out].PublicKeyHash;
-                txCopy.Id = CalculateHash();
+                txCopy.Id = txCopy.CalculateHash();
                 txCopy.Inputs[index].PubKey = null;
 
                 var (r, s, v) = CryptoFinal.GetRSV(inp.Signature);
@@ -104,40 +116,12 @@ namespace CoreLib
                     return false;
                 }
 
-                ;
                 index++;
             }
 
             return true;
         }
 
-        public Transaction()
-        {
-        }
-
-        private static Transaction TransactionTrimmed(Transaction transaction)
-        {
-            List<TxOutput> txOutputs = new List<TxOutput>();
-            List<TxInput> txInputs = new List<TxInput>();
-
-            foreach (var input in transaction.Inputs)
-            {
-                txInputs.Add(new TxInput() {Id = input.Id, Out = input.Out, Signature = null, PubKey = null});
-            }
-
-            foreach (var (output, index) in transaction.Outputs.Select((v, i) => (v, i)))
-            {
-                txOutputs.Add(new TxOutput() {PublicKeyHash = output.PublicKeyHash, Value = output.Value});
-            }
-
-            var txCopy = new Transaction()
-            {
-                Inputs = txInputs,
-                Outputs = txOutputs,
-                Id = transaction.Id
-            };
-            return txCopy;
-        }
 
         public byte[] CalculateHash()
         {
@@ -173,8 +157,8 @@ namespace CoreLib
             var inputs = new List<TxInput>();
             var outputs = new List<TxOutput>();
 
-            //todo getWallet...
-            var wallet = new WalletCore();
+            var walletBank = new WalletBank();
+            var wallet = walletBank.FindWallet(from);
             var pubKeyHash = wallet.PublicKeyHash;
 
             var spendableOutputs = chain.FindSpendableOutputs(pubKeyHash, amount);
@@ -213,10 +197,10 @@ namespace CoreLib
                 Inputs = inputs,
                 Outputs = outputs
             };
+            tx.Id = tx.CalculateHash();
             chain.SignTransaction(tx, wallet.PrivateKey);
             return tx;
         }
-
 
         public static Transaction CoinBaseTx(string to, string data)
         {
@@ -242,59 +226,23 @@ namespace CoreLib
 
             return tx;
         }
-    }
 
-    [Serializable]
-    public class TxOutput
-    {
-        public int Value { get; set; }
-        public byte[] PublicKeyHash { get; set; }
 
-        public static TxOutput NewTxOutput(int value, string address)
+        public byte[] Serialize()
         {
-            var txO = new TxOutput()
-            {
-                Value = value
-            };
-
-            txO.Lock(ByteHelper.GetBytesFromString(address));
-            return txO;
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            bf.Serialize(ms, this);
+            return ms.ToArray();
         }
 
-        //public bool CanBeUnlocked(string address)
-        //{
-        //    return address == PublicKey;
-        //}
-        public void Lock(byte[] address)
+        public Transaction DeSerialize(byte[] fromBytes)
         {
-            var pubKeyHashed = Base58Encoding.Decode(ByteHelper.GetStringFromBytes(address));
-            PublicKeyHash =
-                ArrayHelpers.SubArray(
-                    Base58Encoding.VerifyAndRemoveCheckSum(pubKeyHashed), 1); // remove version // remove checksum
-        }
-
-        public bool IsLockedWithKey(byte[] pubKeyHash)
-        {
-            return ArrayHelpers.ByteArrayCompare(PublicKeyHash, pubKeyHash);
-        }
-    }
-
-    [Serializable]
-    public class TxInput
-    {
-        public byte[] Id { get; set; }
-        public int Out { get; set; }
-        public byte[] Signature { get; set; }
-        public byte[] PubKey { get; set; }
-
-        //public bool CanUnlock(string address)
-        //{
-        //    return address == Signature;
-        //}
-        public bool UsesKey(byte[] pubKeyHash)
-        {
-            var lockingHash = WalletCore.PublicKeyHashed(PubKey);
-            return ArrayHelpers.ByteArrayCompare(lockingHash, pubKeyHash);
+            MemoryStream memStream = new MemoryStream();
+            BinaryFormatter binForm = new BinaryFormatter();
+            memStream.Write(fromBytes, 0, fromBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            return (Transaction) binForm.Deserialize(memStream);
         }
     }
 }
