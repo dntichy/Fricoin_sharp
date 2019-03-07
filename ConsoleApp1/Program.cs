@@ -15,17 +15,22 @@ namespace ConsoleApp1
             var startTime = DateTime.Now;
 
             var wBank = new WalletBank();
-            wBank.CreateWallet();
 
-            foreach (var wallet in wBank)
-            {
-                var isOk = wallet.VerifyAddress(wallet.Address);
-                Console.WriteLine(isOk);
-            }
+            for (var i = 0; i < 100; i++) wBank.CreateWallet();
+
+            
 
 
-            var blockChain = new BlockChain();
-            blockChain.Print();
+
+            //foreach (var wallet in wBank)
+            //{
+            //    var isOk = wallet.VerifyAddress(wallet.Address);
+            //    Console.WriteLine(isOk);
+            //}
+
+
+            //var blockChain = new BlockChain();
+            //blockChain.Print();
 
             var endTime = DateTime.Now;
             Console.WriteLine($"Duration: {endTime - startTime}");

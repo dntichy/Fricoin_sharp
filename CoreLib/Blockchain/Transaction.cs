@@ -1,15 +1,14 @@
-﻿using ChainUtils;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using CoreLib.Blockchain;
+using ChainUtils;
+using Newtonsoft.Json;
 
-namespace CoreLib
+namespace CoreLib.Blockchain
 {
     [Serializable]
     public class Transaction
@@ -70,12 +69,12 @@ namespace CoreLib
             var txCopy = TransactionTrimmed(this);
 
             var index = 0;
-            foreach (var inp in txCopy.Inputs)
+            foreach (var inp in Inputs)
             {
                 var prevTx = prevTxs[HexadecimalEncoding.ToHexString(inp.Id)];
                 txCopy.Inputs[index].Signature = null;
                 txCopy.Inputs[index].PubKey = prevTx.Outputs[inp.Out].PublicKeyHash;
-                txCopy.Id = CalculateHash();
+                txCopy.Id = txCopy.CalculateHash();
                 txCopy.Inputs[index].PubKey = null;
 
                 var signature = CryptoFinal.SignTransaction(txCopy.Id, privateKey);
@@ -99,7 +98,7 @@ namespace CoreLib
             var txCopy = TransactionTrimmed(this);
 
             var index = 0;
-            foreach (var inp in txCopy.Inputs)
+            foreach (var inp in Inputs)
             {
                 var prevTx = prevTxs[HexadecimalEncoding.ToHexString(inp.Id)];
                 txCopy.Inputs[index].Signature = null;
@@ -113,12 +112,13 @@ namespace CoreLib
 
                 if (!CryptoFinal.VerifyHashed(inp.Signature, recoveredKey, txCopy.Id))
                 {
+                    Console.WriteLine("verify failed");
                     return false;
                 }
 
                 index++;
             }
-
+            //Console.WriteLine("verify ok");
             return true;
         }
 
@@ -128,7 +128,7 @@ namespace CoreLib
             SHA256 sha256 = SHA256.Create();
 
             var copyOfTx = new Transaction(this);
-            copyOfTx.Id = null;
+            copyOfTx.Id = new byte[]{};
             byte[] inputBytes = copyOfTx.Serialize();
             byte[] outputBytes = sha256.ComputeHash(inputBytes);
 
@@ -175,7 +175,7 @@ namespace CoreLib
                 foreach (var output in validOutputs.Keys)
                 {
                     var txId = output;
-
+                    
                     foreach (var @out in validOutputs[txId])
                     {
                         var input = new TxInput() {Id = txId, Out = @out, Signature = null, PubKey = wallet.PublicKey};

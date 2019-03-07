@@ -112,6 +112,7 @@ namespace P2PLib.Network.Server
                 mListenerSocket.Bind(localIP);
                 mListenerSocket.Listen(50); //TODO -> ponder which is the best value to use here
                 mListenerSocket.BeginAccept(new AsyncCallback(OnHandleClientConnection), null);
+                
             }
             catch (SocketException ex)
             {

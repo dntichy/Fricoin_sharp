@@ -54,6 +54,35 @@ namespace CoreLib.Blockchain
             LastHash = block.Hash;
         }
 
+        public void AddBlock(List<Transaction> transactions)
+        {
+            foreach (var tx in transactions)
+            {
+                if (VerifyTransaction(tx) != true)
+                {
+                    Console.WriteLine("problem addblock, invalid tx");
+                    return;
+                }
+            }
+
+            Block latestBlock = GetLatestBlock();
+
+            var newBlock = new Block()
+            {
+                TimeStamp = DateTime.Now,
+                PreviousHash = LastHash,
+                Transactions = transactions
+                
+            };
+            newBlock.Index = latestBlock.Index + 1;
+            newBlock.Mine(Difficulty);
+
+            Db.Put(newBlock.Hash, newBlock.Serialize());
+            Db.Put(StringToByteArray("lh"), newBlock.Hash);
+            LastHash = newBlock.Hash;
+        }
+
+
         //todo delete, redo
         //public void ProcessPendingTransactions(string minerAddress)
         //{
@@ -76,7 +105,7 @@ namespace CoreLib.Blockchain
             var tx = Transaction.NewTransaction(from, to, amount, this);
             if (tx != null)
             {
-                AddBlock(new Block(DateTime.Now, LastHash, new List<Transaction>() { tx }));
+                AddBlock(new List<Transaction>(){tx});
             }
         }
 
@@ -103,19 +132,19 @@ namespace CoreLib.Blockchain
         }
 
 
-        public float GetBalance(byte[] pubKeyHash)
-        {
-            var balance = 0;
-            var UTXO = FindUTXO(pubKeyHash);
+        //public float GetBalance(byte[] pubKeyHash)
+        //{
+        //    var balance = 0;
+        //    var UTXO = FindUTXO(pubKeyHash);
 
-            foreach (var output in UTXO)
-            {
-                balance += output.Value;
-            }
+        //    foreach (var output in UTXO)
+        //    {
+        //        balance += output.Value;
+        //    }
 
-            Console.WriteLine("Balance of " + ByteHelper.GetStringFromBytes(pubKeyHash) + ": " + balance);
-            return balance;
-        }
+        //    Console.WriteLine("Balance of " + ByteHelper.GetStringFromBytes(pubKeyHash) + ": " + balance);
+        //    return balance;
+        //}
 
         public float GetBalance(string address)
         {
@@ -189,6 +218,7 @@ namespace CoreLib.Blockchain
                     {
                         foreach (var input in tx.Inputs)
                         {
+                           
                             if (input.UsesKey(pubKeyHash))
                             {
                                 if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(input.Id)))

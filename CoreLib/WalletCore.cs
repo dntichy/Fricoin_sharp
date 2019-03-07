@@ -18,7 +18,7 @@ namespace CoreLib
         {
             PrivateKey = CryptoFinal.GeneratePrivateKey();
             PublicKey = CryptoFinal.GetPublicKey(PrivateKey);
-            PublicKeyHash = PublicKeyHashed(ByteHelper.GetStringFromBytes(PublicKey));
+            PublicKeyHash = PublicKeyHashed(PublicKey);
 
             var version = new byte[] {0x00};
             var versionHashed = ArrayHelpers.ConcatArrays(version, PublicKeyHash);
@@ -27,13 +27,13 @@ namespace CoreLib
             Address = address;
         }
 
-        public static byte[] PublicKeyHashed(string pubK)
-        {
-            var pubHash = Sha.GenerateSha256String(pubK);
-            var ripemd160 = new RIPEMD160Managed();
-            var ripemd160Hash = ripemd160.ComputeHash(Encoding.UTF8.GetBytes(pubHash));
-            return ripemd160Hash;
-        }
+        //public static byte[] PublicKeyHashed(string pubK)
+        //{
+        //    var pubHash = Sha.GenerateSha256String(pubK);
+        //    var ripemd160 = new RIPEMD160Managed();
+        //    var ripemd160Hash = ripemd160.ComputeHash(Encoding.UTF8.GetBytes(pubHash));
+        //    return ripemd160Hash;
+        //}
 
         public static byte[] PublicKeyHashed(byte[] pubK)
         {
@@ -60,9 +60,10 @@ namespace CoreLib
 
         public override string ToString()
         {
-            return "PK: " + ByteHelper.GetStringFromBytes(PublicKey) + "\n" +
-                   "PKHashed: " + ByteHelper.GetStringFromBytes(PublicKeyHash) + "\n" +
-                   "Address: " + Address;
+            return 
+                "---WALLET INFO----"+"\nPK: " + Convert.ToBase64String(PublicKey) + "\n" +
+                   "PKHashed: " + Convert.ToBase64String(PublicKeyHash) + "\n" +
+                   "Address: " + Address+ "\n-- - WALLET INFO END----";
         }
     }
 }

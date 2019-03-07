@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using CoreLib.Blockchain;
 using CoreLib.Interfaces;
 using Newtonsoft.Json;
 
@@ -92,8 +93,8 @@ namespace CoreLib
         {
             var transactions = new List<Transaction>()
             {
-                Transaction.CoinBaseTx("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", ""),
-                Transaction.CoinBaseTx("16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", "")
+                Transaction.CoinBaseTx("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", ""),
+                Transaction.CoinBaseTx("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "")
             };
 
             return new Block(DateTime.Parse("1.1.2019"), null, transactions);

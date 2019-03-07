@@ -20,15 +20,11 @@ namespace CoreLib
             return txO;
         }
 
-        //public bool CanBeUnlocked(string address)
-        //{
-        //    return address == PublicKey;
-        //}
+
         public void Lock(byte[] address)
         {
             var pubKeyHashed = Base58Encoding.Decode(ByteHelper.GetStringFromBytes(address));
             pubKeyHashed = ArrayHelpers.SubArray(pubKeyHashed, 1, pubKeyHashed.Length - 5);
-
             PublicKeyHash = pubKeyHashed;
         }
 

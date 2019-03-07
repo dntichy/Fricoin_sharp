@@ -1,11 +1,9 @@
 ﻿using ChainUtils;
 using CoreLib;
+using CoreLib.Blockchain;
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using CoreLib.Blockchain;
-using Org.BouncyCastle.Asn1;
 
 
 namespace Wallet.Pages
@@ -25,32 +23,49 @@ namespace Wallet.Pages
         {
             BlockChain b = new BlockChain();
 
-            b.Print();
+            
             var wb = new WalletBank();
-            wb.CreateWallet();
 
-            var user1 = wb.FindWallet("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu");
-            var user2 = wb.FindWallet("16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP");
+            var user1 = wb.FindWallet("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC");
+            var user2 = wb.FindWallet("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG");
+
+            Console.WriteLine(user1);
+            Console.WriteLine(" should be equal prev " + Convert.ToBase64String(WalletCore.PublicKeyHashed(user1.PublicKey)));
+
+       //decode address
+        var address = user1.Address;;
+        var addressToPkHash = Base58Encoding.Decode(address);
+        addressToPkHash = ArrayHelpers.SubArray(addressToPkHash, 1, addressToPkHash.Length - 5);
+        Console.WriteLine("address to pkhash: "+Convert.ToBase64String(addressToPkHash));
+            
+        //public key to publicHashKey
+        var pkHas = WalletCore.PublicKeyHashed(user1.PublicKey);
+        Console.WriteLine("PK hash "+Convert.ToBase64String(pkHas));
+            
+        
+            b.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", 20);
+            b.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", 20);
+
+            b.GetBalance("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC");
+            b.GetBalance("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG");
+
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
+            b.Send("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", 20);
 
 
+         
 
-           
-            //b.GetBalance("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu");
-            //b.GetBalance("16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP");
+            b.GetBalance("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC");
+            b.GetBalance("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG");
 
-           
-            b.Send("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", "16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", 20);
-            b.Send("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", "16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", 20);
-            b.Send("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", "16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", 20);
-            b.Send("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", "16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", 20);
-            b.Send("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", "16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", 20);
-            b.Send("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu", "16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP", 20);
-
-
-
-            b.GetBalance("1KA9k2mZ8B2Umqy4KXDktTqzbnvfqKRGPu");
-            b.GetBalance("16gMe1thjrpqFmdfRZNswQQFB8ijmAFFCP");
-            b.Print();
 
 
 
