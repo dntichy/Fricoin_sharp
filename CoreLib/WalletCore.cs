@@ -27,14 +27,6 @@ namespace CoreLib
             Address = address;
         }
 
-        //public static byte[] PublicKeyHashed(string pubK)
-        //{
-        //    var pubHash = Sha.GenerateSha256String(pubK);
-        //    var ripemd160 = new RIPEMD160Managed();
-        //    var ripemd160Hash = ripemd160.ComputeHash(Encoding.UTF8.GetBytes(pubHash));
-        //    return ripemd160Hash;
-        //}
-
         public static byte[] PublicKeyHashed(byte[] pubK)
         {
             var pubHash = Sha.GenerateSha256String(ByteHelper.GetStringFromBytes(pubK));

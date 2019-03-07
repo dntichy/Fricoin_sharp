@@ -165,8 +165,8 @@
     <Compile Include="Pages\Loading.xaml.cs">
       <DependentUpon>Loading.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Wallet.xaml.cs">
-      <DependentUpon>Wallet.xaml</DependentUpon>
+    <Compile Include="Pages\WalletPage.xaml.cs">
+      <DependentUpon>WalletPage.xaml</DependentUpon>
     </Compile>
     <Page Include="LoaderWindow.xaml">
       <SubType>Designer</SubType>
@@ -197,7 +197,7 @@
       <DependentUpon>Registration.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Pages\Wallet.xaml">
+    <Page Include="Pages\WalletPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -262,6 +262,10 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Pictures\logo.PNG" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\LevelDB.Standard.2.1.5\build\net4\LevelDB.Standard.targets" Condition="Exists('..\packages\LevelDB.Standard.2.1.5\build\net4\LevelDB.Standard.targets')" />

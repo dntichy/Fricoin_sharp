@@ -70,6 +70,18 @@ namespace CoreLib
             }
         }
 
+        public List<string> GetAddresses()
+        {
+            var addressList = new List<string>();
+
+            foreach (var wallet in _wallets)
+            {
+                addressList.Add(wallet.Address);
+            }
+
+            return addressList;
+        }
+
         private List<WalletCore> Deserialize(byte[] fromBytes)
         {
             MemoryStream memStream = new MemoryStream();

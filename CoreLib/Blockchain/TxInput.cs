@@ -11,17 +11,11 @@ namespace CoreLib.Blockchain
         public byte[] Signature { get; set; }
         public byte[] PubKey { get; set; }
 
-        //public bool CanUnlock(string address)
-        //{
-        //    return address == Signature;
-        //}
         public bool UsesKey(byte[] pubKeyHash)
         {
             var lockingHash = WalletCore.PublicKeyHashed(PubKey);
-
             //Console.WriteLine("lockin hash "+ Convert.ToBase64String(lockingHash));
             //Console.WriteLine("pkHash " + Convert.ToBase64String(pubKeyHash));
-
             return ArrayHelpers.ByteArrayCompare(lockingHash, pubKeyHash);
         }
     }

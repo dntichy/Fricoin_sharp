@@ -9,17 +9,27 @@
                    VerticalAlignment="Top" FontSize="12" FontStyle="Italic" Padding="5"><!--line break--><!--end textblock as a hyperlink-->
             <Run Text=" " />
         </TextBlock>
-        <TextBlock Height="23" HorizontalAlignment="Left" Margin="58,85,0,0" Name="TextBlock1" Text="PubKey"
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="58,85,0,0" Name="TextBlock1" Text="Address"
                    VerticalAlignment="Top" Width="67" />
-        <TextBlock Height="23" HorizontalAlignment="Left" Margin="58,168,0,0" Name="TextBlock2" Text="Password"
+
+        <ComboBox IsEditable="True" Name="AddressComboBox" Margin="125,85,75,242"/>
+
+        <TextBlock Height="23" HorizontalAlignment="Left" Margin="58,135,0,0" Name="TextBlock2" Text="Password"
                    VerticalAlignment="Top" Width="77" />
-        <Label Height="63" HorizontalAlignment="Left" Margin="118,80,0,0" Name="PublicKeyBox"
-                 VerticalAlignment="Top" Width="382" />
-        <PasswordBox Height="23" HorizontalAlignment="Left" Margin="118,168,0,0" Name="PasswordBox1"
-                     VerticalAlignment="Top" Width="247" />
-        <Button Content="Login" Height="23" HorizontalAlignment="Left" Margin="118,211,0,0" Name="Button1"
-                VerticalAlignment="Top" Width="104" Click="button1_Click" />
-        <TextBlock Height="23" HorizontalAlignment="Left" x:Name="Errormessage" VerticalAlignment="Top" Width="247"
-                   Margin="118,253,0,0" OpacityMask="Crimson" Foreground="#FFE5572C" />
+        <PasswordBox Height="23" HorizontalAlignment="Left" Margin="125,135,0,0" Name="PasswordBox1"
+                     VerticalAlignment="Top" Width="325" />
+        <Button Content="Login" Height="23" HorizontalAlignment="Left" Margin="118,180,0,0" Name="Button1"
+                VerticalAlignment="Top" Width="104" Click="LoginButtonClicked" />
+        <TextBlock Height="41" HorizontalAlignment="Left" x:Name="Errormessage" VerticalAlignment="Top" Width="332"
+                   Margin="118,235,0,0" OpacityMask="Crimson" Foreground="#FFE5572C" />
+
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="Import wallet"/>
+                </MenuItem>
+            </Menu>
+            <StackPanel></StackPanel>
+        </DockPanel>
     </Grid>
 </Page>

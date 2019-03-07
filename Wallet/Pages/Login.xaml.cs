@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using ChainUtils;
+using CoreLib;
 using DatabaseLib;
 
 namespace Wallet.Pages
@@ -13,30 +14,33 @@ namespace Wallet.Pages
     /// </summary>
     public partial class Login : Page
     {
-        public Login()
+        public Login(User newUser)
         {
             InitializeComponent();
-
-            var pubKey = File.ReadAllBytes("pub.dat");
-            PublicKeyBox.Content = Convert.ToBase64String(pubKey);
+            var walletBank = new WalletBank();
+            AddressComboBox.ItemsSource = walletBank.GetAddresses();
+            if (newUser != null)
+            {
+                AddressComboBox.Text = newUser.Address;
+            }
         }
 
 
-        private void button1_Click(object sender, RoutedEventArgs e)
+        private void LoginButtonClicked(object sender, RoutedEventArgs e)
         {
-            string pk = PublicKeyBox.Content as string;
+            string address = AddressComboBox.Text; ;
             string hashPw = Sha.GenerateSha256String(PasswordBox1.Password);
 
             var context = new UserContext();
-            var user = context.Users.FirstOrDefault(n => n.PublicKey == pk && n.Password == hashPw);
+            var user = context.Users.FirstOrDefault(n => n.Address == address && n.Password == hashPw);
 
             if (user != null)
             {
-                NavigationService?.Navigate(new Wallet(user));
+                NavigationService?.Navigate(new WalletPage(user));
             }
             else
             {
-                Errormessage.Text = "Passwords doesnt match or internet connection lost";
+                Errormessage.Text = "Passwords doesn't match or connection is lost";
             }
         }
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wallet"
         mc:Ignorable="d"
-        Title="LoaderWindow" Height="450" Width="800" Background="AliceBlue">
+        Title="LoaderWindow" Height="650" Width="1100" Background="AliceBlue">
     <Frame        
         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch"
         Source="Pages/Loading.xaml" VerticalContentAlignment="Stretch" x:Name="MainFrame" Margin="0,0,0,0" NavigationUIVisibility="Hidden">

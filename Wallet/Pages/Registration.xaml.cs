@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using ChainUtils;
+using CoreLib;
 using DatabaseLib;
 using Engine.Network.MessageParser;
 using P2PLib.Network.Components.Enums;
@@ -28,50 +29,6 @@ namespace Wallet.Pages
         {
             InitializeComponent();
 
-
-            
-
-            //string s1 = Encoding.UTF8.GetString(privK);
-            //string s2 = Encoding.UTF8.GetString(pubK);
-            //string s1 = Convert.ToBase64String(privK); // gsjqFw==
-            //string s2 = Convert.ToBase64String(pubK); // gsjqFw==
-
-
-            //Console.WriteLine("Private base64: " + s1);
-            //Console.WriteLine("Public base64: " + s2);
-            //var x = SHA.GenerateSHA256String(s1);
-            //var result = Base58Encoding.Encode(Encoding.ASCII.GetBytes(x));
-            //Console.WriteLine("Public base58: " + result);
-
-            //CreateQrCode(s1);
-
-
-            //other
-            //Console.WriteLine("Public: " + serializedPublic2);
-            //Console.WriteLine("Private: " + serializedPrivate2);
-            //var signature = Crypto.SignData("Traktor", priK);
-            //Console.WriteLine("Signature: " + signature);
-
-            //var verificationOk = Crypto.VerifySignature(pubK, signature, "Traktr");
-        }
-
-
-        //private void SendMessage(object sender, RoutedEventArgs e)
-        //{
-        //    TextMessage message = new TextMessage()
-        //    {
-        //        Text = "Hello"
-        //    };
-        //    _blockchainNetwork.BroadcastMessage(message);
-        //}
-
-
-        //nettwork layer
-        public void CreateTransaction()
-        {
-            //broadcast, when all recieves, add to transaction pool
-
-            //_blockchainNetwork.BroadcastMessageAsync();
         }
 
 
@@ -128,8 +85,6 @@ namespace Wallet.Pages
                 else
                 {
                     Errormessage.Text = "";
-
-
                     User newUser = new User()
                     {
                         Pass = password,
@@ -143,27 +98,29 @@ namespace Wallet.Pages
                     if (SaveToDatabase(newUser))
                     {
                         Errormessage.Text = "You have Registered successfully.";
-
-                        byte[] pk = Encoding.ASCII.GetBytes(newUser.PublicKey);
-
-                        NavigationService?.Navigate(new Login());
+                        RedirectToLoginPage(newUser);
                         Reset();
                     }
                 }
             }
         }
 
+        private void RedirectToLoginPage(User newUser)
+        {
+            NavigationService?.Navigate(new Login(newUser));
+        }
+
         private bool SaveToDatabase(User newUser)
         {
-            var privK = CryptoFinal.GeneratePrivateKey();
-            var pubK = CryptoFinal.GetPublicKey(privK);
 
-            //create file with pub and private key
-            File.WriteAllBytes("pub.dat", pubK);
-            File.WriteAllBytes("pri.dat", privK);
+            WalletBank wBank = new WalletBank();
+            var wallet = wBank.CreateWallet();
 
-            newUser.PublicKey = Convert.ToBase64String(pubK);
+            newUser.PublicKey = Convert.ToBase64String(wallet.PublicKey);
+            newUser.PublicKeyHashed = Convert.ToBase64String(wallet.PublicKeyHash);
+            newUser.Address= wallet.Address;
 
+           
             //save to Database
             UserContext context = new UserContext();
             context.Users.Add(newUser);
@@ -175,10 +132,9 @@ namespace Wallet.Pages
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
+                return false;
             }
 
-            //return true;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
