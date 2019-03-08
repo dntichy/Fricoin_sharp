@@ -13,15 +13,13 @@ namespace CoreLib.Blockchain
         public int Difficulty { set; get; } = 2;
         public byte[] LastHash { get; set; }
 
-        public Persistence Db = new Persistence();
+        public PersistenceChain ChainDb = new PersistenceChain();
 
-        //private IList<Transaction>
-        //    _transactionPool = new List<Transaction>(); //todo delete, persist
 
 
         public BlockChain()
         {
-            //var lastHash = Db.Get(StringToByteArray("lh"));
+            //var lastHash = ChainDb.Get(StringToByteArray("lh"));
             ////if exists lasthash retrieve it and set
             //if (lastHash != null)
             //{
@@ -31,8 +29,8 @@ namespace CoreLib.Blockchain
             {
                 //else create genesis block and set lasthash to the genesis
                 var genesis = Block.GenesisBlock();
-                Db.Put(StringToByteArray("lh"), genesis.Hash);
-                Db.Put(genesis.Hash, genesis.Serialize());
+                ChainDb.Put(ByteHelper.GetBytesFromString("lh"), genesis.Hash);
+                ChainDb.Put(genesis.Hash, genesis.Serialize());
                 LastHash = genesis.Hash;
             }
         }
@@ -40,7 +38,7 @@ namespace CoreLib.Blockchain
 
         public Block GetLatestBlock()
         {
-            return (new Block()).DeSerialize(Db.Get(LastHash));
+            return (new Block()).DeSerialize(ChainDb.Get(LastHash));
         }
 
         public void AddBlock(Block block)
@@ -49,8 +47,8 @@ namespace CoreLib.Blockchain
             block.Index = latestBlock.Index + 1;
             block.Mine(this.Difficulty);
 
-            Db.Put(block.Hash, block.Serialize());
-            Db.Put(StringToByteArray("lh"), block.Hash);
+            ChainDb.Put(block.Hash, block.Serialize());
+            ChainDb.Put(ByteHelper.GetBytesFromString("lh"), block.Hash);
             LastHash = block.Hash;
         }
 
@@ -77,8 +75,8 @@ namespace CoreLib.Blockchain
             newBlock.Index = latestBlock.Index + 1;
             newBlock.Mine(Difficulty);
 
-            Db.Put(newBlock.Hash, newBlock.Serialize());
-            Db.Put(StringToByteArray("lh"), newBlock.Hash);
+            ChainDb.Put(newBlock.Hash, newBlock.Serialize());
+            ChainDb.Put(ByteHelper.GetBytesFromString("lh"), newBlock.Hash);
             LastHash = newBlock.Hash;
         }
 
@@ -120,7 +118,7 @@ namespace CoreLib.Blockchain
 
                 if (block.PreviousHash != null)
                 {
-                    var prevBlock = new Block().DeSerialize(Db.Get(block.PreviousHash));
+                    var prevBlock = new Block().DeSerialize(ChainDb.Get(block.PreviousHash));
                     if (block.PreviousHash != prevBlock.CalculateHash())
                     {
                         return false;
@@ -168,7 +166,7 @@ namespace CoreLib.Blockchain
             var currentHash = LastHash;
             while (currentHash != null)
             {
-                var block = new Block().DeSerialize(Db.Get(currentHash));
+                var block = new Block().DeSerialize(ChainDb.Get(currentHash));
                 currentHash = block.PreviousHash;
                 Console.WriteLine(JsonConvert.SerializeObject(block, Newtonsoft.Json.Formatting.Indented));
             }
@@ -288,12 +286,7 @@ namespace CoreLib.Blockchain
             return (unspentOuts, accumulated);
         }
 
-
-        //todo move
-        public byte[] StringToByteArray(string str)
-        {
-            return Encoding.ASCII.GetBytes(str);
-        }
+        
 
 
         public Transaction FindTransaction(byte[] id)
@@ -342,7 +335,7 @@ namespace CoreLib.Blockchain
 
             while (currentHash != null)
             {
-                var block = new Block().DeSerialize(Db.Get(currentHash));
+                var block = new Block().DeSerialize(ChainDb.Get(currentHash));
                 currentHash = block.PreviousHash;
                 yield return block;
             }

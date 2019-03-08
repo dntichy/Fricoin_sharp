@@ -70,7 +70,9 @@
   <ItemGroup>
     <Compile Include="Blockchain\Block.cs" />
     <Compile Include="Blockchain\Blockchain.cs" />
-    <Compile Include="Persistence.cs" />
+    <Compile Include="Blockchain\TxOutputs.cs" />
+    <Compile Include="PersistenceTransaction.cs" />
+    <Compile Include="PersistenceChain.cs" />
     <Compile Include="Blockchain\Transaction.cs" />
     <Compile Include="Interfaces\IBlock.cs" />
     <Compile Include="Interfaces\IChain.cs" />

@@ -10,7 +10,7 @@ namespace ChainUtils
     {
         public static byte[] GetBytesFromString(string str)
         {
-            return System.Text.Encoding.UTF8.GetBytes(str);
+            return Encoding.UTF8.GetBytes(str);
 
             //byte[] bytes = new byte[str.Length * sizeof(char)];
             //System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
@@ -23,7 +23,21 @@ namespace ChainUtils
             //System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
             //return new string(chars);
 
-            return System.Text.Encoding.UTF8.GetString(bytes);
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        public static string GetStringFromBytesASCI(byte[] bytes)
+        {
+            //char[] chars = new char[bytes.Length / sizeof(char)];
+            //System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+            //return new string(chars);
+
+            return Encoding.ASCII.GetString(bytes);
+        }
+
+        public static byte[] GetBytesFromStringASCI(string ascistr)
+        {
+            return Encoding.ASCII.GetBytes(ascistr);
         }
     }
 }

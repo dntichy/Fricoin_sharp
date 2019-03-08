@@ -1,7 +1,7 @@
 ﻿<Page x:Class="Wallet.Pages.Registration"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Registration" Height="387" Width="528" Background="AliceBlue"
+        Title="Registration" Height="650" Width="1100" Background="White"
         xmlns:local="clr-namespace:Wallet">
     <Grid Height="350" Width="525">
         <TextBlock Height="23" HorizontalAlignment="Left" Margin="10,5,0,0" Name="TextBlockHeading"

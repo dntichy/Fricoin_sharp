@@ -4,6 +4,7 @@ using QRCoder;
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -25,6 +26,11 @@ namespace Wallet.Pages
             Email.Content ="Email: "+ user.Email;
            FullName.Content = "Name: "+user.FirstName + user.LastName;
            Balance.Content = "Balance: "+friCoin.GetBalance(user.Address);
+
+
+            var context = new UserContext();
+            var listUsers = context.Users.ToList();
+           listBox1.ItemsSource = listUsers;
 
 
             //var layer = new LayerBlockchainNetwork();
