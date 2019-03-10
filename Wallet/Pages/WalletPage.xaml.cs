@@ -8,6 +8,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using CoreLib;
+using Microsoft.Win32;
 
 namespace Wallet.Pages
 {
@@ -16,33 +18,34 @@ namespace Wallet.Pages
     /// </summary>
     public partial class WalletPage : Page
     {
+        private readonly BlockChain _friChain;
+        private User _loggedUser;
+        private WalletCore _loggedUserWallet;
+
         public WalletPage(User user)
         {
             InitializeComponent();
-            BlockChain friCoin = new BlockChain();
-            friCoin.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
+            _friChain = new BlockChain();
+            _loggedUser = user;
+            var bank = new WalletBank();
+            _loggedUserWallet = bank.FindWallet(user.Address);
+
+            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
+            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+
             CreateQrCode(user.Address);
             Address.Content =  user.Address;
             Email.Content ="Email: "+ user.Email;
-           FullName.Content = "Name: "+user.FirstName + user.LastName;
-           Balance.Content = "Balance: "+friCoin.GetBalance(user.Address);
+            FullName.Content = "Name: "+user.FirstName + user.LastName;
+            Balance.Content = "Balance: "+_friChain.GetBalance(user.Address);
 
-
+            //DISPLAY LIST OF USERS
             var context = new UserContext();
             var listUsers = context.Users.ToList();
-           listBox1.ItemsSource = listUsers;
+            listBox1.ItemsSource = listUsers;
 
-
-            //var layer = new LayerBlockchainNetwork();
-            //reconstruct blockchain from b+ tree 
-            //if not exists, inicialize blockchain
-            //send request for current blockchain
-            //if there are changes, obtain new blockchain
-
-
-
-
-            Console.Read();
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -74,6 +77,18 @@ namespace Wallet.Pages
         private void Send(object sender, RoutedEventArgs e)
         {
             throw new NotImplementedException();
+        }
+
+        private void ExportWalletCoreClick(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog file = new SaveFileDialog();
+            file.ShowDialog();
+
+            if (file.FileName != "")
+            {
+                File.WriteAllBytes(file.FileName, _loggedUserWallet.Serialize());
+            }
+
         }
     }
 }

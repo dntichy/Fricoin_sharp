@@ -1,5 +1,7 @@
 ﻿using ChainUtils;
 using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -56,6 +58,40 @@ namespace CoreLib
                 "---WALLET INFO----"+"\nPK: " + Convert.ToBase64String(PublicKey) + "\n" +
                    "PKHashed: " + Convert.ToBase64String(PublicKeyHash) + "\n" +
                    "Address: " + Address+ "\n-- - WALLET INFO END----";
+        }
+
+        public static byte[] TransferAddressToPkHash(string address)
+        {
+            var pubKeyHash = Base58Encoding.Decode(address);
+            pubKeyHash = ArrayHelpers.SubArray(pubKeyHash, 1, pubKeyHash.Length - 5);
+            return pubKeyHash;
+        }
+
+        public byte[] Serialize()
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            bf.Serialize(ms, this);
+            return ms.ToArray();
+        }
+
+        public static WalletCore DeSerialize(byte[] fromBytes)
+        {
+            MemoryStream memStream = new MemoryStream();
+            BinaryFormatter binForm = new BinaryFormatter();
+            memStream.Write(fromBytes, 0, fromBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            return (WalletCore)binForm.Deserialize(memStream);
+        }
+
+
+        //makes sure, that wallet is valid, its public and private keys are ok 
+        public bool IsValid()
+        {
+            var testMessage = "this is my test message to be signed";
+            var signature = CryptoFinal.SignTransaction(ByteHelper.GetBytesFromString(testMessage), PrivateKey);
+            var isOk = CryptoFinal.VerifyHashed(signature, PublicKey, ByteHelper.GetBytesFromString(testMessage));
+            return isOk;
         }
     }
 }

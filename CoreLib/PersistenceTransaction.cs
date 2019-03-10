@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChainUtils;
+﻿using ChainUtils;
 using LightningDB;
+using System;
+using System.Collections.Generic;
 
 namespace CoreLib
 {
+    //todo inheritance with Persistence chain, if there is time 
     public class PersistenceTransaction
     {
         private const string DbName = "fricoinTransactions";
@@ -88,6 +86,35 @@ namespace CoreLib
                 {
                     tx.Put(db, key, value);
                     tx.Commit();
+                }
+            }
+        }
+
+        public void DeleteKeys(List<byte[]> keysToDelete)
+        {
+            foreach (var key in keysToDelete)
+            {
+                Delete(key);
+            }
+        }
+
+        public IEnumerable<KeyValuePair<byte[], byte[]>> Cursor()
+        {
+            using (var env = new LightningEnvironment(DbEnv))
+            {
+                env.MaxDatabases = 2;
+                env.Open();
+
+                using (var tx = env.BeginTransaction())
+
+                using (var _db = tx.OpenDatabase(DbName, new DatabaseConfiguration { Flags = DatabaseOpenFlags.Create }))
+                    
+                using (var cur = tx.CreateCursor(_db))
+                {
+                    while (cur.MoveNext())
+                    {
+                        yield return cur.Current;
+                    }
                 }
             }
         }

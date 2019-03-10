@@ -103,5 +103,15 @@ namespace CoreLib
         {
             return GetEnumerator();
         }
+
+        public bool AddWallet(WalletCore wallet)
+        {
+            var wall = FindWallet(wallet.Address);
+            if (wall != null) return false;
+
+            _wallets.Add(wallet);
+            PersistWalletBank();
+            return true;
+        }
     }
 }

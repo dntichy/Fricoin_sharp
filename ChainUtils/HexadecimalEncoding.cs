@@ -28,7 +28,7 @@ namespace ChainUtils
             return sb.ToString();
         }
 
-        public static string FromHexString(string hexString)
+        public static byte[] FromHexStringToByte(string hexString)
         {
             var bytes = new byte[hexString.Length / 2];
             for (var i = 0; i < bytes.Length; i++)
@@ -36,7 +36,7 @@ namespace ChainUtils
                 bytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
             }
 
-            return Encoding.Unicode.GetString(bytes);
+            return bytes;
         }
     }
 }

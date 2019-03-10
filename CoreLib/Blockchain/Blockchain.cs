@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ChainUtils;
 using CoreLib.Interfaces;
@@ -14,8 +15,7 @@ namespace CoreLib.Blockchain
         public byte[] LastHash { get; set; }
 
         public PersistenceChain ChainDb = new PersistenceChain();
-
-
+        public PersistenceTransaction TransactionDB = new PersistenceTransaction();
 
         public BlockChain()
         {
@@ -32,6 +32,7 @@ namespace CoreLib.Blockchain
                 ChainDb.Put(ByteHelper.GetBytesFromString("lh"), genesis.Hash);
                 ChainDb.Put(genesis.Hash, genesis.Serialize());
                 LastHash = genesis.Hash;
+                ReindexUTXO();
             }
         }
 
@@ -52,14 +53,14 @@ namespace CoreLib.Blockchain
             LastHash = block.Hash;
         }
 
-        public void AddBlock(List<Transaction> transactions)
+        public Block AddBlock(List<Transaction> transactions)
         {
             foreach (var tx in transactions)
             {
                 if (VerifyTransaction(tx) != true)
                 {
                     Console.WriteLine("problem addblock, invalid tx");
-                    return;
+                    return null;
                 }
             }
 
@@ -78,33 +79,32 @@ namespace CoreLib.Blockchain
             ChainDb.Put(newBlock.Hash, newBlock.Serialize());
             ChainDb.Put(ByteHelper.GetBytesFromString("lh"), newBlock.Hash);
             LastHash = newBlock.Hash;
+
+            return newBlock;
         }
 
 
-        //todo delete, redo
-        //public void ProcessPendingTransactions(string minerAddress)
-        //{
-        //    Block block = new Block(DateTime.Now, GetLatestBlock().Hash, _transactionPool);
-        //    AddBlock(block); // pridaj block
+        public void ReindexUTXO()
+        {
+            var utxoSet = new UTXOSet(this);
+            utxoSet.ReIndex();
 
-        //    _transactionPool = new List<Transaction>(); // reset TransactionPool
-        //    //CreateTransaction(new Transaction(null, minerAddress, 1)); //pridaj odmenovú transakciu
-        //}
-
-        //todo redo
-        //public void CreateTransaction(Transaction transaction)
-        //{
-        //    _transactionPool.Add(transaction);
-        //}
-
+            var countTxs = utxoSet.CountTransactions();
+            Console.WriteLine("DONE, there is: "+ countTxs +" transactions");
+        }
 
         public void Send(string from, string to, int amount)
         {
-            var tx = Transaction.NewTransaction(from, to, amount, this);
-            if (tx != null)
+            var utxoSet = new UTXOSet(this); 
+
+            var tx = Transaction.NewTransaction(from, to, amount, utxoSet);
+            if (tx == null)
             {
-                AddBlock(new List<Transaction>(){tx});
+                return;
             }
+            
+              var block = AddBlock(new List<Transaction>(){tx});
+              utxoSet.Update(block);
         }
 
         public bool IsValid()
@@ -129,28 +129,12 @@ namespace CoreLib.Blockchain
             return true;
         }
 
-
-        //public float GetBalance(byte[] pubKeyHash)
-        //{
-        //    var balance = 0;
-        //    var UTXO = FindUTXO(pubKeyHash);
-
-        //    foreach (var output in UTXO)
-        //    {
-        //        balance += output.Value;
-        //    }
-
-        //    Console.WriteLine("Balance of " + ByteHelper.GetStringFromBytes(pubKeyHash) + ": " + balance);
-        //    return balance;
-        //}
-
         public float GetBalance(string address)
         {
             var balance = 0;
-            var pubKeyHash = Base58Encoding.Decode(address);
-            pubKeyHash = ArrayHelpers.SubArray(pubKeyHash, 1, pubKeyHash.Length - 5);
-            var utxo = FindUTXO(pubKeyHash);
-
+            var pubKeyHash = WalletCore.TransferAddressToPkHash(address);
+            var utxoSet = new UTXOSet(this);
+            var utxo = FindUnspentTransactionsOutputs(pubKeyHash);
             foreach (var output in utxo)
             {
                 balance += output.Value;
@@ -161,7 +145,7 @@ namespace CoreLib.Blockchain
         }
 
 
-        public void Print()
+        public void PrintWholeBlockChain()
         {
             var currentHash = LastHash;
             while (currentHash != null)
@@ -172,17 +156,131 @@ namespace CoreLib.Blockchain
             }
         }
 
-        public List<Transaction> FindUnspentTransactions(byte[] pubKeyHash)
-        {
-            List<Transaction> unspentTx = new List<Transaction>();
+        //ver0
+        //public List<Transaction> FindUnspentTransactionsOutputs(byte[] pubKeyHash)
+        //{
+        //    List<Transaction> unspentTx = new List<Transaction>();
 
+        //    var spentTxOs = new Dictionary<string, List<int>>();
+
+        //    foreach (var block in this)
+        //    {
+        //        foreach (var tx in block)
+        //        {
+        //            var tXId = tx.Id; //transaction ID
+        //            if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
+        //                spentTxOs.Add(HexadecimalEncoding.ToHexString(tXId), new List<int>());
+
+        //            var index = 0;
+        //            foreach (var output in tx.Outputs)
+        //            {
+        //                if (spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
+        //                {
+        //                    foreach (var spentOut in spentTxOs[HexadecimalEncoding.ToHexString(tXId)])
+        //                    {
+        //                        if (spentOut.Equals(index))
+        //                        {
+        //                            goto endOfTheLoop;
+        //                        }
+        //                    }
+        //                }
+
+        //                if (output.IsLockedWithKey(pubKeyHash))
+        //                {
+        //                    unspentTx.Add(tx);
+        //                }
+
+        //                endOfTheLoop:
+        //                {
+        //                }
+        //                index++;
+        //            }
+
+
+        //            if (tx.IsCoinBase() == false)
+        //            {
+        //                foreach (var input in tx.Inputs)
+        //                {
+
+        //                    if (input.UsesKey(pubKeyHash))
+        //                    {
+        //                        if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(input.Id)))
+        //                            spentTxOs.Add(HexadecimalEncoding.ToHexString(input.Id), new List<int>());
+        //                        spentTxOs[HexadecimalEncoding.ToHexString(input.Id)].Add(input.Out);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    return unspentTx;
+        //}
+
+        //ver1
+        public List<TxOutput> FindUnspentTransactionsOutputs(byte[] pubKeyHash)
+        {
+            var UTXOs = new List<TxOutput>();
+
+            var cursor = TransactionDB.Cursor();
+            foreach (var current in cursor)
+            {
+                var outs = TxOutputs.DeSerialize(current.Value);
+                foreach (var output in outs.Outputs)
+                {
+                    if (output.IsLockedWithKey(pubKeyHash))
+                    {
+                        UTXOs.Add(output);
+                    }
+                }
+            }
+
+            return UTXOs;
+        }
+
+
+
+        //ver0
+        //public List<TxOutput> FindUtxo(byte[] pubKeyHash)
+        //{
+        //    var UTXOs = new List<TxOutput>();
+        //    var unspentTransactions = FindUnspentTransactionsOutputs(pubKeyHash);
+
+        //    foreach (var tx in unspentTransactions)
+        //    {
+        //        foreach (var output in tx.Outputs)
+        //        {
+        //            if (output.IsLockedWithKey(pubKeyHash))
+        //            {
+        //                UTXOs.Add(output);
+        //            }
+        //        }
+        //    }
+
+        //    return UTXOs;
+        //}
+
+        //ver1
+        public Dictionary<string, TxOutputs> FindUtxo()
+        {
+            var UTXOs = new Dictionary<string, TxOutputs>();
+            
             var spentTxOs = new Dictionary<string, List<int>>();
+
 
             foreach (var block in this)
             {
                 foreach (var tx in block)
                 {
                     var tXId = tx.Id; //transaction ID
+
+                    //pokus
+                    var hex = HexadecimalEncoding.ToHexString(tXId);
+                    var backToBytes = HexadecimalEncoding.FromHexStringToByte(hex);
+                    
+
+                    //endpokus
+
+
                     if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
                         spentTxOs.Add(HexadecimalEncoding.ToHexString(tXId), new List<int>());
 
@@ -200,10 +298,12 @@ namespace CoreLib.Blockchain
                             }
                         }
 
-                        if (output.IsLockedWithKey(pubKeyHash))
-                        {
-                            unspentTx.Add(tx);
-                        }
+                        if (!UTXOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
+                            UTXOs.Add(HexadecimalEncoding.ToHexString(tXId), new TxOutputs());
+
+                        var outs = UTXOs[HexadecimalEncoding.ToHexString(tXId)];
+                   outs.Outputs.Add(output);
+                   UTXOs[HexadecimalEncoding.ToHexString(tXId)] = outs;
 
                         endOfTheLoop:
                         {
@@ -216,77 +316,101 @@ namespace CoreLib.Blockchain
                     {
                         foreach (var input in tx.Inputs)
                         {
-                           
-                            if (input.UsesKey(pubKeyHash))
-                            {
+
+
                                 if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(input.Id)))
                                     spentTxOs.Add(HexadecimalEncoding.ToHexString(input.Id), new List<int>());
                                 spentTxOs[HexadecimalEncoding.ToHexString(input.Id)].Add(input.Out);
-                            }
+
                         }
                     }
                 }
             }
 
-            return unspentTx;
-        }
 
-        public List<TxOutput> FindUTXO(byte[] pubKeyHash)
-        {
-            var UTXOs = new List<TxOutput>();
-            var unspentTransactions = FindUnspentTransactions(pubKeyHash);
-
-            foreach (var tx in unspentTransactions)
-            {
-                foreach (var output in tx.Outputs)
-                {
-                    if (output.IsLockedWithKey(pubKeyHash))
-                    {
-                        UTXOs.Add(output);
-                    }
-                }
-            }
+            //var unspentTransactions = FindUnspentTransactionsOutputs(pubKeyHash);
+            //foreach (var tx in unspentTransactions)
+            //{
+            //    foreach (var output in tx.Outputs)
+            //    {
+            //        if (output.IsLockedWithKey(pubKeyHash))
+            //        {
+            //            UTXOs.Add(output);
+            //        }
+            //    }
+            //}
 
             return UTXOs;
         }
 
-        public (Dictionary<byte[], List<int>>, int) FindSpendableOutputs(byte[] pubKeyHash, int amount)
-        {
-            var unspentOuts = new Dictionary<byte[], List<int>>();
-            var unspentTxs = FindUnspentTransactions(pubKeyHash);
-            var accumulated = 0;
+        //ver0
+        //public (Dictionary<byte[], List<int>>, int) FindSpendableOutputs(byte[] pubKeyHash, int amount)
+        //{
+        //    var unspentOuts = new Dictionary<byte[], List<int>>();
+        //    var unspentTxs = FindUnspentTransactionsOutputs(pubKeyHash);
+        //    var accumulated = 0;
 
-            foreach (var tx in unspentTxs)
-            {
-                var txid = tx.Id;
-                if (!unspentOuts.ContainsKey(txid)) unspentOuts.Add(txid, new List<int>());
+        //    foreach (var tx in unspentTxs)
+        //    {
+        //        var txid = tx.Id;
+        //        if (!unspentOuts.ContainsKey(txid)) unspentOuts.Add(txid, new List<int>());
 
-                var index = 0;
-                foreach (var output in tx.Outputs)
-                {
-                    if (output.IsLockedWithKey(pubKeyHash) && accumulated < amount)
-                    {
-                        accumulated += output.Value;
-                        unspentOuts[txid].Add(index);
+        //        var index = 0;
+        //        foreach (var output in tx.Outputs)
+        //        {
+        //            if (output.IsLockedWithKey(pubKeyHash) && accumulated < amount)
+        //            {
+        //                accumulated += output.Value;
+        //                unspentOuts[txid].Add(index);
 
-                        if (accumulated >= amount)
-                        {
-                            goto endOfLoop;
-                        }
-                    }
+        //                if (accumulated >= amount)
+        //                {
+        //                    goto endOfLoop;
+        //                }
+        //            }
 
-                    index++;
-                }
-            }
+        //            index++;
+        //        }
+        //    }
 
-            endOfLoop:
-            {
-            }
+        //    endOfLoop:
+        //    {
+        //    }
 
-            return (unspentOuts, accumulated);
-        }
+        //    return (unspentOuts, accumulated);
+        //}
 
-        
+        //ver1
+        //public (Dictionary<string, List<int>>, int) FindSpendableOutputs(byte[] pubKeyHash, int amount)
+        //{
+        //    var unspentOuts = new Dictionary<string, List<int>>();
+        //    var accumulated = 0;
+
+        //    var cursor = TransactionDB.Cursor();
+        //    while (cursor.MoveNext())
+        //    {
+        //        var key = cursor.Current.Key;
+        //        var value = cursor.Current.Value;
+
+        //        var txId = HexadecimalEncoding.ToHexString(key);
+        //        var outs = TxOutputs.DeSerialize(value);
+
+        //        foreach (var (output, index) in outs.Outputs.Select((v, i) => (v, i)))
+        //        {
+                    
+                
+        //        if (output.IsLockedWithKey(pubKeyHash) && accumulated < amount)
+        //        {
+        //            accumulated += output.Value;
+        //            unspentOuts[txId].Add(index);
+
+        //        }
+        //        }
+        //    }
+
+        //    return (unspentOuts, accumulated);
+        //}
+
 
 
         public Transaction FindTransaction(byte[] id)
