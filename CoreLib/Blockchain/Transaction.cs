@@ -141,16 +141,6 @@ namespace CoreLib.Blockchain
             return Inputs.Count == 1 && Inputs[0].Id.Length == 0 && Inputs[0].Out == -1;
         }
 
-        public void SetId()
-        {
-            SHA256 sha256 = SHA256.Create();
-            byte[] inputBytes =
-                Encoding.ASCII.GetBytes(
-                    $"{Id} - {JsonConvert.SerializeObject(Inputs)} - {JsonConvert.SerializeObject(Outputs)}");
-            byte[] outputBytes = sha256.ComputeHash(inputBytes);
-
-            this.Id = outputBytes;
-        }
 
         //public static Transaction NewTransaction(string from, string to, int amount, BlockChain chain)
         //{
@@ -275,7 +265,7 @@ namespace CoreLib.Blockchain
                 Outputs = new List<TxOutput> {txOut},
                 Inputs = new List<TxInput>() {txIn}
             };
-            tx.SetId();
+            tx.Id = tx.CalculateHash();
 
             return tx;
         }

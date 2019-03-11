@@ -5,11 +5,11 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using CoreLib.Blockchain;
+using CoreLib.DataStructures.MerkleTree;
 using CoreLib.Interfaces;
 using Newtonsoft.Json;
 
-namespace CoreLib
+namespace CoreLib.Blockchain
 {
     [Serializable]
     [JsonObject(MemberSerialization.OptOut)]
@@ -21,6 +21,7 @@ namespace CoreLib
         public DateTime TimeStamp { get; set; }
         public byte[] PreviousHash { get; set; }
         public byte[] Hash { get; set; }
+        public byte[] MerkleRoot { get; set; }
         public IList<Transaction> Transactions { get; set; }
 
         public Block(DateTime dateTime, byte[] previousHash, IList<Transaction> transactions)
@@ -51,13 +52,20 @@ namespace CoreLib
         public void Mine(int difficulty)
         {
             var leadingZeros = new string('0', difficulty);
-            while (this.Hash == null ||
-                   Convert.ToBase64String(this.Hash).Substring(0, difficulty) != leadingZeros)
+            while (Hash == null ||
+                   Convert.ToBase64String(Hash).Substring(0, difficulty) != leadingZeros)
             {
-                this.Nonce++;
-                this.Hash = this.CalculateHash();
+                Nonce++;
+                Hash = CalculateHash();
             }
         }
+
+        internal void SetMerkleRoot()
+        {
+            var merkle = new MerkleTree(Transactions);
+            MerkleRoot = merkle.RootNode.Data;
+        }
+
 
         public byte[] Serialize()
         {
@@ -94,10 +102,13 @@ namespace CoreLib
             var transactions = new List<Transaction>()
             {
                 Transaction.CoinBaseTx("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", ""),
-                Transaction.CoinBaseTx("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", "")
+                Transaction.CoinBaseTx("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", ""),
+                Transaction.CoinBaseTx("19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", "")
             };
+            var genesis = new Block(DateTime.Parse("1.1.2019"), null, transactions);
+            genesis.SetMerkleRoot();
 
-            return new Block(DateTime.Parse("1.1.2019"), null, transactions);
+            return genesis;
         }
     }
 }

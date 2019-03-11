@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChainUtils;
+﻿using ChainUtils;
 using CoreLib.Interfaces;
 using Newtonsoft.Json;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace CoreLib.Blockchain
 {
@@ -37,23 +35,23 @@ namespace CoreLib.Blockchain
         }
 
 
-        public Block GetLatestBlock()
+        private Block GetLatestBlock()
         {
             return (new Block()).DeSerialize(ChainDb.Get(LastHash));
         }
 
-        public void AddBlock(Block block)
-        {
-            Block latestBlock = GetLatestBlock();
-            block.Index = latestBlock.Index + 1;
-            block.Mine(this.Difficulty);
+        //public void AddBlock(Block block)
+        //{
+        //    Block latestBlock = GetLatestBlock();
+        //    block.Index = latestBlock.Index + 1;
+        //    block.Mine(this.Difficulty);
 
-            ChainDb.Put(block.Hash, block.Serialize());
-            ChainDb.Put(ByteHelper.GetBytesFromString("lh"), block.Hash);
-            LastHash = block.Hash;
-        }
+        //    ChainDb.Put(block.Hash, block.Serialize());
+        //    ChainDb.Put(ByteHelper.GetBytesFromString("lh"), block.Hash);
+        //    LastHash = block.Hash;
+        //}
 
-        public Block AddBlock(List<Transaction> transactions)
+        private Block AddBlock(List<Transaction> transactions)
         {
             foreach (var tx in transactions)
             {
@@ -74,6 +72,10 @@ namespace CoreLib.Blockchain
                 
             };
             newBlock.Index = latestBlock.Index + 1;
+
+            //set Merkle root
+            newBlock.SetMerkleRoot();
+            //MINE IT
             newBlock.Mine(Difficulty);
 
             ChainDb.Put(newBlock.Hash, newBlock.Serialize());
@@ -82,6 +84,7 @@ namespace CoreLib.Blockchain
 
             return newBlock;
         }
+
 
 
         public void ReindexUTXO()
@@ -152,7 +155,7 @@ namespace CoreLib.Blockchain
             {
                 var block = new Block().DeSerialize(ChainDb.Get(currentHash));
                 currentHash = block.PreviousHash;
-                Console.WriteLine(JsonConvert.SerializeObject(block, Newtonsoft.Json.Formatting.Indented));
+                Console.WriteLine(JsonConvert.SerializeObject(block, Formatting.Indented));
             }
         }
 

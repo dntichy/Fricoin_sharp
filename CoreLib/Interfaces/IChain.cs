@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CoreLib.Blockchain;
 
 namespace CoreLib.Interfaces
 {
@@ -6,8 +7,8 @@ namespace CoreLib.Interfaces
     {
         int Difficulty { set; get; }
 
-        Block GetLatestBlock();
-        void AddBlock(Block block);
+        //Block GetLatestBlock();
+        //void AddBlock(Block block);
         //void ProcessPendingTransactions(string minerAddress);
         //void CreateTransaction(Transaction transaction);
         bool IsValid();

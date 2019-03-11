@@ -25,16 +25,24 @@ namespace Wallet.Pages
         public WalletPage(User user)
         {
             InitializeComponent();
+
+            //INITIALIZE CHAIN, ETC
             _friChain = new BlockChain();
             _loggedUser = user;
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
 
-            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
-            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
-            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
-            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
+            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
 
+            _friChain.PrintWholeBlockChain();
+
+
+
+
+            //SET GUI PROPERTIES 
             CreateQrCode(user.Address);
             Address.Content =  user.Address;
             Email.Content ="Email: "+ user.Email;
