@@ -2,5 +2,5 @@
 
 namespace P2PLib.Network.MessageParser
 {
-    public delegate void OnReceiveMessageDelegate(object sender, CollaborativeNotesReceiveMessageEventArgs e);
+    public delegate void OnReceiveMessageDelegate(object sender, ReceiveMessageEventArgs e);
 }

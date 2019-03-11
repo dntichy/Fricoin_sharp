@@ -3,7 +3,7 @@ using P2PLib.Network.Components.Interfaces;
 
 namespace Engine.Network.MessageParser
 {
-    public class CollaborativeClientDetails : ICollaborativeClientDetails
+    public class ClientDetails : IClientDetails
     {
         private String mClientName;
         private String mClientIPAddress;
@@ -35,9 +35,9 @@ namespace Engine.Network.MessageParser
             if (GetType() != obj.GetType())
                 return false;
 
-            return (mClientListenPort == ((CollaborativeClientDetails) obj).ClientListenPort &&
-                    mClientIPAddress == ((CollaborativeClientDetails) obj).ClientIPAddress &&
-                    mClientName == ((CollaborativeClientDetails) obj).ClientName); //base.Equals(obj);
+            return (mClientListenPort == ((ClientDetails) obj).ClientListenPort &&
+                    mClientIPAddress == ((ClientDetails) obj).ClientIPAddress &&
+                    mClientName == ((ClientDetails) obj).ClientName); //base.Equals(obj);
         }
 
         public override int GetHashCode()

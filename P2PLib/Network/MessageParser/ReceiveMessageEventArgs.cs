@@ -3,7 +3,7 @@ using P2PLib.Network.Components.Interfaces;
 
 namespace P2PLib.Network.MessageParser
 {
-    public class CollaborativeNotesReceiveMessageEventArgs : EventArgs
+    public class ReceiveMessageEventArgs : EventArgs
     {
         private IMessage mMessage;
 
@@ -12,7 +12,7 @@ namespace P2PLib.Network.MessageParser
             get { return mMessage; }
         }
 
-        public CollaborativeNotesReceiveMessageEventArgs(IMessage newMessage)
+        public ReceiveMessageEventArgs(IMessage newMessage)
         {
             mMessage = newMessage;
         }

@@ -15,8 +15,8 @@ namespace P2PLib.Network.MessageParser.Messages
             get { return (int)MessageType.ResgisteredClientsListMessage; }
         }
 
-        private Collection<ICollaborativeClientDetails> mClients;
-        public Collection<ICollaborativeClientDetails> Clients
+        private Collection<IClientDetails> mClients;
+        public Collection<IClientDetails> Clients
         {
             get { return mClients; }
             set { mClients = value; }
@@ -37,7 +37,7 @@ namespace P2PLib.Network.MessageParser.Messages
             textResult += "<type>" + Type + "</type>";
             textResult += "<group>" + Group + "</group>";
             textResult += "<clientslist>";
-            foreach (ICollaborativeClientDetails CurrentClient in mClients)
+            foreach (IClientDetails CurrentClient in mClients)
             {
                 textResult += "<clientdetails><name>" + CurrentClient.ClientName + "</name><ipaddress>" + CurrentClient.ClientIPAddress + "</ipaddress><listenport>" + CurrentClient.ClientListenPort + "</listenport></clientdetails>";
             }
@@ -104,13 +104,13 @@ namespace P2PLib.Network.MessageParser.Messages
                 }
                 else if (node.Name == "clientslist")
                 {
-                    this.mClients = new Collection<ICollaborativeClientDetails>();
+                    this.mClients = new Collection<IClientDetails>();
 
                     foreach (XmlNode clientNode in node.ChildNodes)
                     {
                         if (clientNode.Name == "clientdetails")
                         {
-                            CollaborativeClientDetails currClient = new CollaborativeClientDetails();
+                            ClientDetails currClient = new ClientDetails();
                             foreach (XmlNode detailsNode in clientNode.ChildNodes)
                             {
                                 if (detailsNode.Name == "name")
@@ -142,11 +142,11 @@ namespace P2PLib.Network.MessageParser.Messages
         {
             RegisteredClientsListMessage result = new RegisteredClientsListMessage();
             result.Group = this.mGroup;
-            result.Clients = new Collection<ICollaborativeClientDetails>();
+            result.Clients = new Collection<IClientDetails>();
             foreach (var collaborativeClientDetails in mClients)
             {
-                var currClient = (CollaborativeClientDetails) collaborativeClientDetails;
-                var newClient = new CollaborativeClientDetails();
+                var currClient = (ClientDetails) collaborativeClientDetails;
+                var newClient = new ClientDetails();
                 newClient.ClientIPAddress = currClient.ClientIPAddress;
                 newClient.ClientListenPort = currClient.ClientListenPort;
                 result.Clients.Add(newClient);

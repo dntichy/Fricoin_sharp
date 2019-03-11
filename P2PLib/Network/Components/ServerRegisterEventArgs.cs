@@ -5,14 +5,14 @@ namespace P2PLib.Network.Components
 {
     public class ServerRegisterEventArgs : EventArgs
     {
-        private ICollaborativeClientDetails mNewClient;
+        private IClientDetails mNewClient;
 
-        public ICollaborativeClientDetails NewClient
+        public IClientDetails NewClient
         {
             get { return mNewClient; }
         }
 
-        public ServerRegisterEventArgs(ICollaborativeClientDetails newClient)
+        public ServerRegisterEventArgs(IClientDetails newClient)
         {
             mNewClient = newClient;
         }

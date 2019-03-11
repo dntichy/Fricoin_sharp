@@ -8,8 +8,8 @@ namespace Engine.Network.MessageParser
 {
     public class RegisterMessage : IRegisterMessage
     {
-        private CollaborativeClientDetails mClient;
-        public CollaborativeClientDetails Client
+        private ClientDetails mClient;
+        public ClientDetails Client
         {
             get { return mClient; }
             set { mClient = value; }
@@ -88,7 +88,7 @@ namespace Engine.Network.MessageParser
             // The real data parsing
             this.mGroup = "";
             this.mClient = null;
-            this.mClient = new CollaborativeClientDetails();
+            this.mClient = new ClientDetails();
 
             foreach (XmlNode node in messageElement.ChildNodes)
             {
@@ -124,7 +124,7 @@ namespace Engine.Network.MessageParser
         {
             RegisterMessage result = new RegisterMessage();
             result.Group = this.mGroup;
-            result.Client = new CollaborativeClientDetails();
+            result.Client = new ClientDetails();
             result.Client.ClientIPAddress = this.mClient.ClientIPAddress;
             result.Client.ClientListenPort = this.mClient.ClientListenPort;
             return result;

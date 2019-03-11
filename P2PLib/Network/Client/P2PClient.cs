@@ -87,7 +87,7 @@ namespace P2PLib.Network.Client
                 //register on the server
                 RegisterMessage regMessage = new RegisterMessage();
                 regMessage.Group = mGroup;
-                regMessage.Client = new CollaborativeClientDetails();
+                regMessage.Client = new ClientDetails();
                 regMessage.Client.ClientIPAddress = localAddress.ToString();
                 regMessage.Client.ClientListenPort = mListenPort;
 

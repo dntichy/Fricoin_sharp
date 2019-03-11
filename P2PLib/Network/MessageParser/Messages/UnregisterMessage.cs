@@ -9,8 +9,8 @@ namespace P2PLib.Network.MessageParser.Messages
 {
     public class UnregisterMessage : IRegisterMessage
     {
-        private CollaborativeClientDetails mClient;
-        public CollaborativeClientDetails Client
+        private ClientDetails mClient;
+        public ClientDetails Client
         {
             get { return mClient; }
             set { mClient = value; }
@@ -89,7 +89,7 @@ namespace P2PLib.Network.MessageParser.Messages
             // The real data parsing
             this.mGroup = "";
             this.mClient = null;
-            this.mClient = new CollaborativeClientDetails();
+            this.mClient = new ClientDetails();
 
             foreach (XmlNode node in messageElement.ChildNodes)
             {

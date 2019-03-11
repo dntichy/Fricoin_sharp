@@ -2,7 +2,7 @@
 
 namespace P2PLib.Network.Components.Interfaces
 {
-    public interface ICollaborativeClientDetails
+    public interface IClientDetails
     {
         String ClientName { get; set; }
 

@@ -84,7 +84,7 @@ namespace Wallet
             _blockchainNetwork.BroadcastMessageAsync(message);
         }
 
-        private static void OnReceivePeerMessage(object sender, CollaborativeNotesReceiveMessageEventArgs e)
+        private static void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
             //todo add from whom the message has come for reply
             ProcessMessage(e.Message);

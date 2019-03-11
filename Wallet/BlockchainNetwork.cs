@@ -24,15 +24,14 @@ namespace Wallet
 
         private int mServerListenPort;
 
-        //private int mBaseSendPort;
         private String mServer;
         private String mGroup;
         private Collection<IMessage> mInboundMessages;
-        private Collection<ICollaborativeClientDetails> mGroupClients;
+        private Collection<IClientDetails> mGroupClients;
 
         private IServer mListener;
         private P2PClient mClient;
-        private Dictionary<ICollaborativeClientDetails, IClient> mClientConnections;
+        private Dictionary<IClientDetails, IClient> mClientConnections;
 
         public int ListenPort
         {
@@ -63,7 +62,7 @@ namespace Wallet
             get { return mInboundMessages; }
         }
 
-        public Collection<ICollaborativeClientDetails> GroupClients
+        public Collection<IClientDetails> GroupClients
         {
             get
             {
@@ -90,7 +89,7 @@ namespace Wallet
             mServer = server;
             mGroup = group;
             mInboundMessages = new Collection<IMessage>();
-            mGroupClients = new Collection<ICollaborativeClientDetails>();
+            mGroupClients = new Collection<IClientDetails>();
             //////////////////////////////////////////////////////////////////////////
             mListener = new P2PServer(listenPort, group);
             //mListener.ListenPort = listenPort;
@@ -103,11 +102,11 @@ namespace Wallet
             mClient = new P2PClient(listenPort, server, serverListenPort, group);
             mClient.Initialize();
             //////////////////////////////////////////////////////////////////////////
-            mClientConnections = new Dictionary<ICollaborativeClientDetails, IClient>();
+            mClientConnections = new Dictionary<IClientDetails, IClient>();
         }
 
 
-        private void OnReceivePeerMessage(object sender, CollaborativeNotesReceiveMessageEventArgs e)
+        private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
             if (mOnReceiveMessage != null)
                 mOnReceiveMessage.Invoke(sender, e);
@@ -117,7 +116,7 @@ namespace Wallet
         {
             UnregisterMessage msg = new UnregisterMessage();
             msg.Group = this.Group;
-            msg.Client = new CollaborativeClientDetails();
+            msg.Client = new ClientDetails();
             msg.Client.ClientIPAddress = ((P2PServer) mListener).LocalIPAddress;
             msg.Client.ClientListenPort = mListenPort;
             mClient.SendMessageAsync(msg);
@@ -125,7 +124,7 @@ namespace Wallet
             System.Threading.Thread.Sleep(100); //Sleep required due to the use of asynchronous methods
         }
 
-        public void SendMessage(IMessage message, ICollaborativeClientDetails details)
+        public void SendMessage(IMessage message, IClientDetails details)
         {
             if (message == null)
             {
@@ -136,7 +135,7 @@ namespace Wallet
             if (details == null)
             {
                 //throw a null reference exception
-                throw new NullReferenceException("The supplied ICollaborativeClientDetails object is null!");
+                throw new NullReferenceException("The supplied IClientDetails object is null!");
             }
 
             IClient currClient = null;
@@ -172,7 +171,46 @@ namespace Wallet
                 throw new Exception("The supplied name is invalid!");
             }
 
-            ICollaborativeClientDetails details = null;
+            IClientDetails details = null;
+
+            if (this.GroupClients == null)
+            {
+                throw new NullReferenceException("The clients list is null!");
+            }
+
+            if (this.GroupClients.Count == 0)
+            {
+                throw new Exception("There are no clients available!");
+            }
+
+            for (int i = 0; i < GroupClients.Count; ++i)
+            {
+                if (GroupClients[i].ClientName == name)
+                {
+                    details = GroupClients[i];
+                    break;
+                }
+            }
+
+            SendMessage(message, details);
+        }
+
+        //todo
+        public void SendMessageToAddress(IMessage message, String address)
+        {
+            if (name == null)
+            {
+                //throw a null reference exception
+                throw new NullReferenceException("The supplied name is null!");
+            }
+
+            if (name.Length == 0)
+            {
+                //throw an exception
+                throw new Exception("The supplied name is invalid!");
+            }
+
+            IClientDetails details = null;
 
             if (this.GroupClients == null)
             {
@@ -200,7 +238,7 @@ namespace Wallet
         {
             for (int i = 0; i < mGroupClients.Count; ++i)
             {
-                ICollaborativeClientDetails currClientDetails = mGroupClients[i];
+                IClientDetails currClientDetails = mGroupClients[i];
                 IClient currClient = null;
                 if (mClientConnections.ContainsKey(currClientDetails))
                 {
@@ -222,7 +260,7 @@ namespace Wallet
             }
         }
 
-        public void SendMessageAsync(IMessage message, ICollaborativeClientDetails details)
+        public void SendMessageAsync(IMessage message, IClientDetails details)
         {
             if (message == null)
             {
@@ -233,7 +271,7 @@ namespace Wallet
             if (details == null)
             {
                 //throw a null reference exception
-                throw new NullReferenceException("The supplied ICollaborativeClientDetails object is null!");
+                throw new NullReferenceException("The supplied IClientDetails object is null!");
             }
 
             IClient currClient = null;
@@ -269,7 +307,46 @@ namespace Wallet
                 throw new Exception("The supplied name is invalid!");
             }
 
-            ICollaborativeClientDetails details = null;
+            IClientDetails details = null;
+
+            if (this.GroupClients == null)
+            {
+                throw new NullReferenceException("The clients list is null!");
+            }
+
+            if (this.GroupClients.Count == 0)
+            {
+                throw new Exception("There are no clients available!");
+            }
+
+            for (int i = 0; i < GroupClients.Count; ++i)
+            {
+                if (GroupClients[i].ClientName == name)
+                {
+                    details = GroupClients[i];
+                    break;
+                }
+            }
+
+            SendMessageAsync(message, details);
+        }
+
+        //todo
+        public void SendMessageToAddressAsync(IMessage message, String address)
+        {
+            if (name == null)
+            {
+                //throw a null reference exception
+                throw new NullReferenceException("The supplied name is null!");
+            }
+
+            if (name.Length == 0)
+            {
+                //throw an exception
+                throw new Exception("The supplied name is invalid!");
+            }
+
+            IClientDetails details = null;
 
             if (this.GroupClients == null)
             {
@@ -297,7 +374,7 @@ namespace Wallet
         {
             for (int i = 0; i < mGroupClients.Count; ++i)
             {
-                ICollaborativeClientDetails currClientDetails = mGroupClients[i];
+                IClientDetails currClientDetails = mGroupClients[i];
                 IClient currClient = null;
                 if (mClientConnections.ContainsKey(currClientDetails))
                 {

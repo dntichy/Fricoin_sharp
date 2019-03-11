@@ -14,9 +14,9 @@ namespace P2PLib.Network.Server
 {
     public class P2PServer : IServer
     {
-        private Collection<ICollaborativeClientDetails> _mGroupClientsDetails;
+        private Collection<IClientDetails> _mGroupClientsDetails;
 
-        public Collection<ICollaborativeClientDetails> GroupClientsDetails
+        public Collection<IClientDetails> GroupClientsDetails
         {
             get { return _mGroupClientsDetails; }
             set { _mGroupClientsDetails = value; }
@@ -261,7 +261,7 @@ namespace P2PLib.Network.Server
                             mIncomingMessageQueue.Add(rxMessage);
                             if (mOnReceiveMessage != null)
                                 mOnReceiveMessage.Invoke(this,
-                                    new CollaborativeNotesReceiveMessageEventArgs(rxMessage));
+                                    new ReceiveMessageEventArgs(rxMessage));
                         }
 
                         break;

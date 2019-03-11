@@ -5,7 +5,7 @@ namespace P2PLib.Network.Components.Interfaces
 {
     public interface IRegisterMessage : IMessage
     {
-        CollaborativeClientDetails Client { get; set; }
+        ClientDetails Client { get; set; }
 
         String Group { get; set; }
     }
