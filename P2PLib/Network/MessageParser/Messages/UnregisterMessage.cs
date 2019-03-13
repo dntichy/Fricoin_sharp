@@ -123,7 +123,11 @@ namespace P2PLib.Network.MessageParser.Messages
 
         public IMessage Clone()
         {
-            throw new NotImplementedException();
+            var clone = new UnregisterMessage();
+            clone.Group = Group;
+            clone.Client = Client;
+
+            return clone;
         }
     }
 }

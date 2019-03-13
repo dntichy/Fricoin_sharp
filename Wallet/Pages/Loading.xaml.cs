@@ -1,10 +1,7 @@
-﻿using ChainUtils;
-using CoreLib;
-using CoreLib.Blockchain;
-using System;
+﻿using P2PLib.Network.MessageParser.Messages;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-
 
 namespace Wallet.Pages
 {
@@ -13,15 +10,18 @@ namespace Wallet.Pages
     /// </summary>
     public partial class Loading : Page
     {
+
+
         public Loading()
         {
             InitializeComponent();
             Loaded += Loading_OnLoaded;
+         
+
         }
 
         private void Loading_OnLoaded(object sender, RoutedEventArgs e)
         {
-
 
 
             //BlockChain friCoin = new BlockChain();
@@ -64,6 +64,7 @@ namespace Wallet.Pages
 
         }
 
+
         private void GoToRegistration(object sender, RoutedEventArgs e)
         {
             NavigationService?.Navigate(new Registration());
@@ -73,5 +74,8 @@ namespace Wallet.Pages
         {
             NavigationService?.Navigate(new Login(null));
         }
+
     }
+
+  
 }

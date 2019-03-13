@@ -17,6 +17,7 @@ namespace P2PLib.Network.Client
         private int mServerPort;
         private string mServer;
         private string mGroup;
+        private IPAddress localAddress;
 
         public int ListenPort
         {
@@ -56,6 +57,15 @@ namespace P2PLib.Network.Client
                 mClientSocket.Close();
         }
 
+
+        public ClientDetails ClientDetails() {
+            var details = new ClientDetails();
+            details.ClientIPAddress = localAddress.ToString();
+            details.ClientListenPort = mListenPort;
+            return details;
+
+        }
+
         public InitState Initialize()
         {
             if (mListenPort <= 0 || mListenPort >= 65536)
@@ -72,7 +82,7 @@ namespace P2PLib.Network.Client
             if (hostEntry.AddressList.Length <= 0)
                 return InitState.ErrorNoAvailableIPAddress;
 
-            IPAddress localAddress = null;
+             localAddress = null;
             for (int i = 0; i < hostEntry.AddressList.Length; ++i)
             {
                 if (hostEntry.AddressList[i].AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)

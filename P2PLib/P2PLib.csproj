@@ -59,20 +59,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockchainNetwork.cs" />
+    <Compile Include="IBlockchainNetwork.cs" />
     <Compile Include="Network\Client\P2PClient.cs" />
     <Compile Include="Network\Components\Enums\InitState.cs" />
     <Compile Include="Network\Components\Enums\MessageType.cs" />
     <Compile Include="Network\Components\Interfaces\IClient.cs" />
-    <Compile Include="Network\Components\Interfaces\ICollaborativeClientDetails.cs" />
+    <Compile Include="Network\Components\Interfaces\IClientDetails.cs" />
     <Compile Include="Network\Components\Interfaces\IMessage.cs" />
     <Compile Include="Network\Components\Interfaces\IMessageParserEngine.cs" />
     <Compile Include="Network\Components\Interfaces\IRegisterMessage.cs" />
     <Compile Include="Network\Components\Interfaces\IServer.cs" />
-    <Compile Include="Network\Components\ServerRegisterEvent.cs" />
-    <Compile Include="Network\Components\ServerRegisterEventArgs.cs" />
+    <Compile Include="Network\MessageParser\Events and Args\Events.cs" />
     <Compile Include="Network\Components\TxRxPacket.cs" />
-    <Compile Include="Network\MessageParser\CollaborativeClientDetails.cs" />
-    <Compile Include="Network\MessageParser\CollaborativeNotesReceiveMessageEventArgs.cs" />
+    <Compile Include="Network\MessageParser\ClientDetails.cs" />
+    <Compile Include="Network\MessageParser\Events and Args\EventArgs.cs" />
     <Compile Include="Network\MessageParser\MessageParserEngineClass.cs" />
     <Compile Include="Network\MessageParser\Messages\CommandType.cs" />
     <Compile Include="Network\MessageParser\Messages\RegisteredClientsListMessage.cs" />
@@ -80,7 +81,6 @@
     <Compile Include="Network\MessageParser\Messages\CommandMessage.cs" />
     <Compile Include="Network\MessageParser\Messages\TextMessage.cs" />
     <Compile Include="Network\MessageParser\Messages\UnregisterMessage.cs" />
-    <Compile Include="Network\MessageParser\OnReceiveMessageDelegate.cs" />
     <Compile Include="Network\Server\P2PServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

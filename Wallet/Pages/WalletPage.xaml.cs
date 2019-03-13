@@ -10,6 +10,11 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using CoreLib;
 using Microsoft.Win32;
+using System.ComponentModel;
+using P2PLib.Network.MessageParser.Messages;
+using P2PLib.Network.MessageParser;
+using P2PLib.Network.Components.Interfaces;
+using System.Collections.ObjectModel;
 
 namespace Wallet.Pages
 {
@@ -21,10 +26,27 @@ namespace Wallet.Pages
         private readonly BlockChain _friChain;
         private User _loggedUser;
         private WalletCore _loggedUserWallet;
+        LayerBlockchainNetwork nettwork = new LayerBlockchainNetwork();
+
+
 
         public WalletPage(User user)
         {
             InitializeComponent();
+
+            //NETTWORK STUFF
+
+            nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
+            nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
+
+
+
+
+
+
+
+            //REGISTER CLOSING EVENET
+            Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing); 
 
             //INITIALIZE CHAIN, ETC
             _friChain = new BlockChain();
@@ -32,11 +54,13 @@ namespace Wallet.Pages
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
 
+
+
+            //CHAIN GAMES
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
-
             _friChain.PrintWholeBlockChain();
 
 
@@ -54,6 +78,29 @@ namespace Wallet.Pages
             var listUsers = context.Users.ToList();
             listBox1.ItemsSource = listUsers;
 
+        }
+
+        private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
+        {
+            Console.WriteLine("typek UNREGISTERED");
+            //set list of peers
+            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);
+        }
+
+        private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
+        {
+            Console.WriteLine("typek REGISTERED");
+            //set list of peers
+            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);
+        }
+
+        private void SetListOfPeers(Collection<IClientDetails> groupClients)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                PeersListBox.ItemsSource = groupClients;
+            });
+          
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -96,6 +143,39 @@ namespace Wallet.Pages
             {
                 File.WriteAllBytes(file.FileName, _loggedUserWallet.Serialize());
             }
+
+        }
+
+
+
+        private void SendClick(object sender, RoutedEventArgs e)
+        {
+            var message = new TextMessage()
+            {
+                Client = nettwork._blockchainNetwork.ClientDetails(),
+                Text = "nazdaaaro"
+            };
+            var CmDmessage = new CommandMessage()
+            {
+                Client = nettwork._blockchainNetwork.ClientDetails(),
+                Command = CommandType.NewBlock
+            };
+
+            nettwork._blockchainNetwork.BroadcastMessage(CmDmessage);
+        }
+
+        private void SetListOfPeers()
+        {
+
+        }
+
+
+        void AppClosing(object sender, CancelEventArgs e)
+        {
+            System.Console.WriteLine("shit");
+            nettwork._blockchainNetwork.Close();
+            e.Cancel = true;
+            Application.Current.Shutdown();
 
         }
     }

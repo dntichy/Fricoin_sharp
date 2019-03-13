@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Engine.Network.MessageParser;
+﻿using P2PLib.Network;
+using P2PLib.Network.Components;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
+using System;
+using System.Configuration;
 
 namespace Wallet
 {
     class LayerBlockchainNetwork
     {
         private static ApplicationInputState _mCurrentState;
-        private readonly BlockchainNetwork _blockchainNetwork;
+        public  BlockchainNetwork _blockchainNetwork;
 
         public enum ApplicationInputState
         {
@@ -27,15 +24,22 @@ namespace Wallet
 
         public LayerBlockchainNetwork()
         {
-            //P2P stuff
+            //P2P CONFIGURATIONS
             int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
             String server = ConfigurationManager.AppSettings["Server"];
             int serverListenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ServerListenPort"]);
+
+            //CREATE BLOCKCHAIN OBJECT
             _blockchainNetwork = new BlockchainNetwork(listenPort, serverListenPort, server, "group11");
-            _blockchainNetwork.OnReceiveMessage += new OnReceiveMessageDelegate(OnReceivePeerMessage);
+
+            //REGISTER recievers
+            _blockchainNetwork.OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
+            
             _mCurrentState = ApplicationInputState.EmptyInput;
         }
 
+
+        //MAIN PROCESSING MESSAGE LOGIC
         private static void ProcessMessage(IMessage msg)
         {
             switch (msg.Type)
@@ -64,29 +68,32 @@ namespace Wallet
                 }
             }
         }
-
+        //METHODS, SENDING MESSAGES
         public void CheckForUpdates()
         {   
             var message = new CommandMessage();
             message.Command = CommandType.Chain;
-            _blockchainNetwork.SendMessageAsync(message, _blockchainNetwork.GroupClients[0]);
+            message.Client = _blockchainNetwork.ClientDetails();
+            if (_blockchainNetwork.GroupClients.Count != 0) _blockchainNetwork.SendMessageAsync(message, _blockchainNetwork.GroupClients[0]);
+            
         }
         public void SendTransactionPool()
         {
             var message = new CommandMessage();
             message.Command = CommandType.ClearTransactionPool;
+            message.Client = _blockchainNetwork.ClientDetails();
             _blockchainNetwork.BroadcastMessageAsync(message);
         }
         public void PublishMinedBlock()
         {
             var message = new CommandMessage();
             message.Command = CommandType.NewBlock;
+            message.Client = _blockchainNetwork.ClientDetails();
             _blockchainNetwork.BroadcastMessageAsync(message);
         }
 
         private static void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
-            //todo add from whom the message has come for reply
             ProcessMessage(e.Message);
         }
     }

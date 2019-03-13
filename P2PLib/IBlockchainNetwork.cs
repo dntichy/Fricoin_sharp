@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using P2PLib.Network.Components;
 using P2PLib.Network.Components.Interfaces;
-using P2PLib.Network.MessageParser;
+using System;
+using System.Collections.ObjectModel;
 
-namespace Wallet
+namespace P2PLib.Network
 {
     public interface IBlockchainNetwork
     {
@@ -41,7 +41,7 @@ namespace Wallet
             get;
         }
 
-        event OnReceiveMessageDelegate OnReceiveMessage;
+        event OnReceiveMessageEvent OnReceiveMessage;
 
         void BroadcastMessage(IMessage message);
         void SendMessage(IMessage message, IClientDetails details);

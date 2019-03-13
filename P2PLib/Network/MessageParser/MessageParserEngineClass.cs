@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Engine.Network.MessageParser;
+﻿using Engine.Network.MessageParser;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser.Messages;
+using System;
+using System.Collections.Generic;
 
 namespace P2PLib.Network.MessageParser
 {
@@ -14,7 +14,6 @@ namespace P2PLib.Network.MessageParser
         public MessageParserEngineClass()
         {
             mPossibleMessages = new Dictionary<int, IMessage>();
-            //add the standard messages
             mPossibleMessages[((int) MessageType.RegisterMessage)] = new RegisterMessage();
             mPossibleMessages[((int) MessageType.TextDataMessage)] = new TextMessage();
             mPossibleMessages[((int) MessageType.UnregisterMessage)] = new UnregisterMessage();
@@ -79,7 +78,7 @@ namespace P2PLib.Network.MessageParser
                     return messageByType.Value.Clone();
             }
 
-            return null; //TODO -> use this instead? : new EmptyMessage();
+            return null; 
         }
     }
 }

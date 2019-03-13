@@ -2,7 +2,7 @@
 
 namespace P2PLib.Network.Components.Interfaces
 {
-    public interface IClientDetails
+    public interface IClientDetails : IComparable<IClientDetails>
     {
         String ClientName { get; set; }
 

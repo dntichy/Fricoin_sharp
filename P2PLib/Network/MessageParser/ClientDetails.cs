@@ -1,5 +1,5 @@
-﻿using System;
-using P2PLib.Network.Components.Interfaces;
+﻿using P2PLib.Network.Components.Interfaces;
+using System;
 
 namespace Engine.Network.MessageParser
 {
@@ -27,6 +27,12 @@ namespace Engine.Network.MessageParser
             set { mClientListenPort = value; }
         }
 
+        public int CompareTo(IClientDetails other)
+        {
+            if (Equals(other)) return 0;
+            else return 1;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -35,11 +41,9 @@ namespace Engine.Network.MessageParser
             if (GetType() != obj.GetType())
                 return false;
 
-            return (mClientListenPort == ((ClientDetails) obj).ClientListenPort &&
-                    mClientIPAddress == ((ClientDetails) obj).ClientIPAddress &&
-                    mClientName == ((ClientDetails) obj).ClientName); //base.Equals(obj);
+            return (mClientListenPort == ((IClientDetails)obj).ClientListenPort &&
+                    mClientIPAddress.Equals(((IClientDetails)obj).ClientIPAddress));
         }
-
         public override int GetHashCode()
         {
             return base.GetHashCode();

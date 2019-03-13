@@ -1,4 +1,5 @@
-﻿using P2PLib.Network.Components.Enums;
+﻿using Engine.Network.MessageParser;
+using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
 using System;
 using System.Text;
@@ -10,9 +11,14 @@ namespace P2PLib.Network.MessageParser.Messages
     {
         public int Type
         {
-            get { return (int) MessageType.Message; }
+            get { return (int) MessageType.CommandMessage; }
         }
-
+        private ClientDetails mClient;
+        public ClientDetails Client
+        {
+            get { return mClient; }
+            set { mClient = value; }
+        }
 
         public Byte[] GetMessagePacket()
         {
@@ -20,6 +26,7 @@ namespace P2PLib.Network.MessageParser.Messages
             textResult += "<message>";
             textResult += "<type>" + Type + "</type>";
             textResult += "<command>" + Command + "</command>";
+            textResult += "<clientdetails><name>" + mClient.ClientName + "</name><ipaddress>" + mClient.ClientIPAddress + "</ipaddress><listenport>" + mClient.ClientListenPort + "</listenport></clientdetails>";
             textResult += "</message>";
 
             return ASCIIEncoding.UTF8.GetBytes(textResult);
@@ -68,7 +75,7 @@ namespace P2PLib.Network.MessageParser.Messages
                 }
             }
 
-            if (type != MessageType.TextDataMessage)
+            if (type != MessageType.CommandMessage)
             {
                 System.Diagnostics.Debug.WriteLine("The supplied data was the wrong message type!");
                 return false;
@@ -145,6 +152,7 @@ namespace P2PLib.Network.MessageParser.Messages
             CommandMessage result = new CommandMessage();
 
             result.Text = Text;
+            result.Client = Client;
             return result;
         }
     }

@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Net;
-using System.Net.Sockets;
-using Engine.Network.MessageParser;
+﻿using Engine.Network.MessageParser;
 using P2PLib.Network.Client;
 using P2PLib.Network.Components;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
+using System;
+using System.Collections.ObjectModel;
+using System.Net;
+using System.Net.Sockets;
 
 namespace P2PLib.Network.Server
 {
@@ -41,7 +41,6 @@ namespace P2PLib.Network.Server
         }
 
         private Collection<IMessage> mIncomingMessageQueue;
-
         public Collection<IMessage> IncomingMessageQueue
         {
             get { return mIncomingMessageQueue; }
@@ -55,29 +54,39 @@ namespace P2PLib.Network.Server
             set { mListenPort = value; }
         }
 
-        private event ServerRegisterEvent mOnRegisterClient;
 
+
+        private event OnReceiveMessageEvent mOnReceiveMessage;
+        public event OnReceiveMessageEvent OnReceiveMessage
+        {
+            add { mOnReceiveMessage += value; }
+            remove { mOnReceiveMessage -= value; }
+        }
+
+        private event ServerRegisterEvent mOnRegisterClient;
         public event ServerRegisterEvent OnRegisterClient
         {
             add { mOnRegisterClient += value; }
             remove { mOnRegisterClient -= value; }
         }
 
-        private IMessageParserEngine mMessageParser;
+        private event ServerUnRegisterEvent mOnUnRegisterClient;
+        public event ServerUnRegisterEvent OnUnRegisterClient
+        {
+            add { mOnUnRegisterClient += value; }
+            remove { mOnUnRegisterClient -= value; }
+        }
 
+
+
+
+        private IMessageParserEngine mMessageParser;
         public IMessageParserEngine MessageParser
         {
             get { return mMessageParser; }
         }
 
-        private event OnReceiveMessageDelegate mOnReceiveMessage;
-
-        public event OnReceiveMessageDelegate OnReceiveMessage
-        {
-            add { mOnReceiveMessage += value; }
-            remove { mOnReceiveMessage -= value; }
-        }
-
+    
 
         public InitState Initialize()
         {
@@ -182,17 +191,10 @@ namespace P2PLib.Network.Server
             {
                 TxRxPacket dataStatus = (TxRxPacket) asyncResult.AsyncState;
 
-                /*int countRx =*/
+             
                 dataStatus.mCurrentSocket.EndReceive(asyncResult);
                 dataStatus.StoreCurrentData();
-                /*
-				String rxMsgText = Encoding.UTF8.GetString(dataStatus.mStoredBuffer / *, 0, countRx* /);
-
-				//parse the message
-				IMessage rxMessage = null;
-
-				rxMessage = ParseMessage(rxMsgText, dataStatus);
-				*/
+  
 
                 IMessage rxMessage = mMessageParser.ParseMessage(dataStatus.mStoredBuffer);
 
@@ -203,8 +205,7 @@ namespace P2PLib.Network.Server
                         SocketFlags.None, new AsyncCallback(OnHandleClientData), dataStatus);
                     return;
                 }
-
-                //handle the message (which can either be register or unregister)
+                 //handle the message (which can either be register or unregister)
                 //send response message if needed
                 switch (rxMessage.Type)
                 {
@@ -234,7 +235,8 @@ namespace P2PLib.Network.Server
                         if (!(_mGroupClientsDetails.IndexOf(((RegisterMessage) rxMessage).Client) >= 0))
                         {
                             _mGroupClientsDetails.Add(((RegisterMessage) rxMessage).Client);
-                            if (mOnRegisterClient != null && mGroup == ((RegisterMessage) rxMessage).Group)
+
+                                if (mOnRegisterClient != null && mGroup == ((RegisterMessage) rxMessage).Group)
                                 mOnRegisterClient.Invoke(this,
                                     new ServerRegisterEventArgs(((RegisterMessage) rxMessage).Client));
                         }
@@ -246,14 +248,22 @@ namespace P2PLib.Network.Server
                         if ((_mGroupClientsDetails.IndexOf(((UnregisterMessage) rxMessage).Client) >= 0))
                         {
                             _mGroupClientsDetails.Remove(((UnregisterMessage) rxMessage).Client);
-                            if (mOnRegisterClient != null && mGroup == ((UnregisterMessage) rxMessage).Group)
-                                mOnRegisterClient.Invoke(this,
+
+                                if (mOnUnRegisterClient != null && mGroup == ((UnregisterMessage) rxMessage).Group)
+                                    mOnUnRegisterClient.Invoke(this,
                                     new ServerRegisterEventArgs(((UnregisterMessage) rxMessage).Client));
                         }
 
                         break;
                     }
-
+                    case ((int)MessageType.CommandMessage):
+                        {
+                            mIncomingMessageQueue.Add(rxMessage);
+                            if (mOnReceiveMessage != null)
+                                mOnReceiveMessage.Invoke(this,
+                                    new ReceiveMessageEventArgs(rxMessage));
+                            break;
+                        }
                     default:
                     {
                         if (rxMessage.Type != ((int) MessageType.EmptyMessage))

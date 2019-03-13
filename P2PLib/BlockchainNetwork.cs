@@ -1,27 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Engine.Network.MessageParser;
+﻿using Engine.Network.MessageParser;
 using P2PLib.Network.Client;
+using P2PLib.Network.Components;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
 using P2PLib.Network.Server;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
-namespace Wallet
+namespace P2PLib.Network
 {
     public class BlockchainNetwork : IBlockchainNetwork
     {
-        private event OnReceiveMessageDelegate mOnReceiveMessage;
-
-        public event OnReceiveMessageDelegate OnReceiveMessage
+        private event OnReceiveMessageEvent mOnReceiveMessage;
+        public event OnReceiveMessageEvent OnReceiveMessage
         {
             add { mOnReceiveMessage += value; }
             remove { mOnReceiveMessage -= value; }
         }
 
-        private int mListenPort;
+        private event ServerRegisterEvent mOnRegisterClient;
+        public event ServerRegisterEvent OnRegisterClient
+        {
+            add { mOnRegisterClient += value; }
+            remove { mOnRegisterClient -= value; }
+        }
 
+        private event ServerUnRegisterEvent mOnUnRegisterClient;
+        public event ServerUnRegisterEvent OnUnRegisterClient
+        {
+            add { mOnUnRegisterClient += value; }
+            remove { mOnUnRegisterClient -= value; }
+        }
+
+
+        private int mListenPort;
         private int mServerListenPort;
 
         private String mServer;
@@ -45,6 +59,10 @@ namespace Wallet
             set { mServer = value; }
         }
 
+        public ClientDetails ClientDetails()
+        {
+            return mClient.ClientDetails();
+        }
         public int ServerListenPort
         {
             get { return mServerListenPort; }
@@ -96,7 +114,11 @@ namespace Wallet
             //((CollaborativeNotesServer)mListener).Group = group;
             ((P2PServer) mListener).IncomingMessageQueue = mInboundMessages;
             ((P2PServer) mListener).GroupClientsDetails = mGroupClients;
-            ((P2PServer) mListener).OnReceiveMessage += new OnReceiveMessageDelegate(OnReceivePeerMessage);
+            ((P2PServer) mListener).OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
+            ((P2PServer) mListener).OnRegisterClient += new ServerRegisterEvent(OnRegisterPeer);
+            ((P2PServer) mListener).OnUnRegisterClient += new ServerUnRegisterEvent(OnUnRegisterPeer);
+
+
             mListener.Initialize();
             //////////////////////////////////////////////////////////////////////////
             mClient = new P2PClient(listenPort, server, serverListenPort, group);
@@ -108,10 +130,17 @@ namespace Wallet
 
         private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
-            if (mOnReceiveMessage != null)
-                mOnReceiveMessage.Invoke(sender, e);
+            if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(sender, e);
         }
 
+        private void OnRegisterPeer(object sender, ServerRegisterEventArgs e)
+        {
+            if (mOnRegisterClient != null) mOnRegisterClient.Invoke(sender, e);
+        }
+        private void OnUnRegisterPeer(object sender, ServerRegisterEventArgs e)
+        {
+            if (mOnUnRegisterClient != null) mOnUnRegisterClient.Invoke(sender, e);
+        }
         public void Close()
         {
             UnregisterMessage msg = new UnregisterMessage();
@@ -195,19 +224,18 @@ namespace Wallet
             SendMessage(message, details);
         }
 
-        //todo
         public void SendMessageToAddress(IMessage message, String address)
         {
-            if (name == null)
+            if (address == null)
             {
                 //throw a null reference exception
-                throw new NullReferenceException("The supplied name is null!");
+                throw new NullReferenceException("The supplied address is null!");
             }
 
-            if (name.Length == 0)
+            if (address.Length == 0)
             {
                 //throw an exception
-                throw new Exception("The supplied name is invalid!");
+                throw new Exception("The supplied address is invalid!");
             }
 
             IClientDetails details = null;
@@ -224,7 +252,7 @@ namespace Wallet
 
             for (int i = 0; i < GroupClients.Count; ++i)
             {
-                if (GroupClients[i].ClientName == name)
+                if (GroupClients[i].ClientIPAddress == address)
                 {
                     details = GroupClients[i];
                     break;
@@ -331,19 +359,18 @@ namespace Wallet
             SendMessageAsync(message, details);
         }
 
-        //todo
         public void SendMessageToAddressAsync(IMessage message, String address)
         {
-            if (name == null)
+            if (address == null)
             {
                 //throw a null reference exception
-                throw new NullReferenceException("The supplied name is null!");
+                throw new NullReferenceException("The supplied address is null!");
             }
 
-            if (name.Length == 0)
+            if (address.Length == 0)
             {
                 //throw an exception
-                throw new Exception("The supplied name is invalid!");
+                throw new Exception("The supplied address is invalid!");
             }
 
             IClientDetails details = null;
@@ -360,7 +387,7 @@ namespace Wallet
 
             for (int i = 0; i < GroupClients.Count; ++i)
             {
-                if (GroupClients[i].ClientName == name)
+                if (GroupClients[i].ClientIPAddress == address)
                 {
                     details = GroupClients[i];
                     break;

@@ -12,9 +12,25 @@ namespace P2PLib.Network.MessageParser
             get { return mMessage; }
         }
 
+
         public ReceiveMessageEventArgs(IMessage newMessage)
         {
             mMessage = newMessage;
+
         }
     }
+
+    public class ServerRegisterEventArgs : EventArgs
+    {
+        private IClientDetails mNewClient;
+        public IClientDetails NewClient
+        {
+            get { return mNewClient; }
+        }
+
+        public ServerRegisterEventArgs(IClientDetails newClient)
+        {
+            mNewClient = newClient;
+        }
+    };
 }

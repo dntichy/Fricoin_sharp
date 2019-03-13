@@ -1,9 +1,9 @@
-﻿using System;
-using System.Text;
-using System.Xml;
-using Engine.Network;
+﻿using Engine.Network.MessageParser;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
+using System;
+using System.Text;
+using System.Xml;
 
 namespace P2PLib.Network.MessageParser.Messages
 {
@@ -11,7 +11,12 @@ namespace P2PLib.Network.MessageParser.Messages
     {
         private String mText;
 
-
+        private ClientDetails mClient;
+        public ClientDetails Client
+        {
+            get { return mClient; }
+            set { mClient = value; }
+        }
         public /*MessageType*/ int Type
         {
             get { return (int) MessageType.TextDataMessage; }
@@ -24,6 +29,7 @@ namespace P2PLib.Network.MessageParser.Messages
             textResult += "<message>";
             textResult += "<type>" + Type + "</type>";
             textResult += "<text>" + Text + "</text>";
+            textResult += "<clientdetails><name>" + mClient.ClientName + "</name><ipaddress>" + mClient.ClientIPAddress + "</ipaddress><listenport>" + mClient.ClientListenPort + "</listenport></clientdetails>";
             textResult += "</message>";
 
             return ASCIIEncoding.UTF8.GetBytes(textResult);
@@ -150,7 +156,7 @@ namespace P2PLib.Network.MessageParser.Messages
         public IMessage Clone()
         {
             TextMessage result = new TextMessage();
-
+            result.Client = Client;
             result.Text = mText;
             return result;
         }

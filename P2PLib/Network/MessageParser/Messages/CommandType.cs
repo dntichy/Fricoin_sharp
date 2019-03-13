@@ -5,6 +5,8 @@
        ClearTransactionPool,
        Chain,
        Transaction,
-       NewBlock
+       NewBlock,
+       Version,
+
     }
 }
