@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using P2PLib.Network.Components.Interfaces;
 
 namespace P2PLib.Network.MessageParser
@@ -33,4 +34,18 @@ namespace P2PLib.Network.MessageParser
             mNewClient = newClient;
         }
     };
+
+    public class ReceiveListOfClientsEventArgs 
+    {
+        private Collection<IClientDetails> mListOfClients;
+        public Collection<IClientDetails> ListOfClients
+        {
+            get { return mListOfClients; }
+        }
+
+        public ReceiveListOfClientsEventArgs (Collection<IClientDetails> listOfClients)
+        {
+            mListOfClients = listOfClients;
+        }
+    }
 }

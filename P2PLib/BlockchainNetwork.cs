@@ -34,6 +34,13 @@ namespace P2PLib.Network
             remove { mOnUnRegisterClient -= value; }
         }
 
+        private event OnRecieveListOfClientsEvent mOnRecieveListOfClients;
+        public event OnRecieveListOfClientsEvent OnRecieveListOfClients
+        {
+            add { mOnRecieveListOfClients += value; }
+            remove { mOnRecieveListOfClients -= value; }
+        }
+
 
         private int mListenPort;
         private int mServerListenPort;
@@ -117,6 +124,7 @@ namespace P2PLib.Network
             ((P2PServer) mListener).OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
             ((P2PServer) mListener).OnRegisterClient += new ServerRegisterEvent(OnRegisterPeer);
             ((P2PServer) mListener).OnUnRegisterClient += new ServerUnRegisterEvent(OnUnRegisterPeer);
+            ((P2PServer) mListener).OnRecieveListOfClients += new OnRecieveListOfClientsEvent(OnRecieveListPeers);
 
 
             mListener.Initialize();
@@ -127,6 +135,10 @@ namespace P2PLib.Network
             mClientConnections = new Dictionary<IClientDetails, IClient>();
         }
 
+        private void OnRecieveListPeers(object sender, ReceiveListOfClientsEventArgs e)
+        {
+            if (mOnRecieveListOfClients != null) mOnRecieveListOfClients.Invoke(sender, e);
+        }
 
         private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
@@ -141,6 +153,8 @@ namespace P2PLib.Network
         {
             if (mOnUnRegisterClient != null) mOnUnRegisterClient.Invoke(sender, e);
         }
+
+
         public void Close()
         {
             UnregisterMessage msg = new UnregisterMessage();

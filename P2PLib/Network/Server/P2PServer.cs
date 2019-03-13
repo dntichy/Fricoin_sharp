@@ -77,6 +77,12 @@ namespace P2PLib.Network.Server
             remove { mOnUnRegisterClient -= value; }
         }
 
+        private event OnRecieveListOfClientsEvent mOnRecieveListOfClients;
+        public event OnRecieveListOfClientsEvent OnRecieveListOfClients
+        {
+            add { mOnRecieveListOfClients += value; }
+            remove { mOnRecieveListOfClients -= value; }
+        }
 
 
 
@@ -225,8 +231,11 @@ namespace P2PLib.Network.Server
                                     rxClientList.Clients[i].ClientListenPort, mGroup);
                                 client.Initialize();
                                 client = null;
+                                }
+
+                                if (mOnRecieveListOfClients != null && mGroup == ((RegisteredClientsListMessage)rxMessage).Group)
+                                    mOnRecieveListOfClients.Invoke(this, new ReceiveListOfClientsEventArgs(((RegisteredClientsListMessage)rxMessage).Clients));
                             }
-                        }
 
                         break;
                     }

@@ -38,6 +38,7 @@ namespace Wallet.Pages
 
             nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
             nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
+            nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
 
 
 
@@ -80,6 +81,11 @@ namespace Wallet.Pages
 
         }
 
+        private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
+        {
+            SetListOfPeers(e.ListOfClients);
+        }
+
         private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
         {
             Console.WriteLine("typek UNREGISTERED");
@@ -99,6 +105,7 @@ namespace Wallet.Pages
             Dispatcher.Invoke(() =>
             {
                 PeersListBox.ItemsSource = groupClients;
+                PeersListBox.Items.Refresh();
             });
           
         }
