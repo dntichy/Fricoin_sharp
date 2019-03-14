@@ -15,6 +15,8 @@ using P2PLib.Network.MessageParser.Messages;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.Components.Interfaces;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using ChainUtils;
 
 namespace Wallet.Pages
 {
@@ -35,7 +37,6 @@ namespace Wallet.Pages
             InitializeComponent();
 
             //NETTWORK STUFF
-
             nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
             nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
             nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
@@ -47,7 +48,7 @@ namespace Wallet.Pages
 
 
             //REGISTER CLOSING EVENET
-            Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing); 
+            Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
 
             //INITIALIZE CHAIN, ETC
             _friChain = new BlockChain();
@@ -58,21 +59,47 @@ namespace Wallet.Pages
 
 
             //CHAIN GAMES
-            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
-            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
+            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             _friChain.PrintWholeBlockChain();
 
 
+            //todo register this on Item added....
+            var collectionOfHeaders = new Collection<BlockHeader>();
+            foreach (var block in _friChain)
+            {
+
+                var bHash = Convert.ToBase64String(block.Hash);
+                var MerkleRoot = Convert.ToBase64String(block.MerkleRoot);
+                string PreviousHash = "-1";
+                if (block.PreviousHash != null)
+                {
+                    PreviousHash = Convert.ToBase64String(block.PreviousHash);
+                }
+
+                var bH = new BlockHeader()
+                {
+                    Hash = bHash,
+                    Index = block.Index,
+                    MerkleRoot = MerkleRoot,
+                    Nonce = block.Nonce,
+                    PreviousHash = PreviousHash,
+                    TimeStamp = block.TimeStamp
+                };
+                collectionOfHeaders.Add(bH);
+            }
+            SetListBlocksHeader(collectionOfHeaders);
+
 
 
             //SET GUI PROPERTIES 
             CreateQrCode(user.Address);
-            Address.Content =  user.Address;
-            Email.Content ="Email: "+ user.Email;
-            FullName.Content = "Name: "+user.FirstName + user.LastName;
-            Balance.Content = "Balance: "+_friChain.GetBalance(user.Address);
+            Address.Content = user.Address;
+            Email.Content = "Email: " + user.Email;
+            FullName.Content = "Name: " + user.FirstName + user.LastName;
+            Balance.Content = "Balance: " + _friChain.GetBalance(user.Address);
 
             //DISPLAY LIST OF USERS
             var context = new UserContext();
@@ -89,15 +116,13 @@ namespace Wallet.Pages
         private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
         {
             Console.WriteLine("typek UNREGISTERED");
-            //set list of peers
-            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);
+            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);//set list of peers
         }
 
         private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
         {
             Console.WriteLine("typek REGISTERED");
-            //set list of peers
-            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);
+            SetListOfPeers(nettwork._blockchainNetwork.GroupClients); //set list of peers
         }
 
         private void SetListOfPeers(Collection<IClientDetails> groupClients)
@@ -107,7 +132,17 @@ namespace Wallet.Pages
                 PeersListBox.ItemsSource = groupClients;
                 PeersListBox.Items.Refresh();
             });
-          
+
+        }
+
+        private void SetListBlocksHeader(Collection<BlockHeader> blocks)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                BlockHeaderListBox.ItemsSource = blocks;
+                BlockHeaderListBox.Items.Refresh();
+            });
+
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -171,18 +206,41 @@ namespace Wallet.Pages
             nettwork._blockchainNetwork.BroadcastMessage(CmDmessage);
         }
 
-        private void SetListOfPeers()
-        {
-
-        }
-
-
         void AppClosing(object sender, CancelEventArgs e)
         {
-            System.Console.WriteLine("shit");
             nettwork._blockchainNetwork.Close();
             e.Cancel = true;
             Application.Current.Shutdown();
+
+        }
+
+        private void LogoutClick(object sender, RoutedEventArgs e)
+        {
+            nettwork._blockchainNetwork.Close();            
+            NavigationService?.Navigate(new Loading());
+        }
+
+        private void BlockHeaderListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var txList = new List<TransactionHeader>();
+            var blockHeader = BlockHeaderListBox.SelectedItem as BlockHeader;
+
+            var blockBytes = _friChain.ChainDb.Get(Convert.FromBase64String(blockHeader.Hash));
+            var block = new Block().DeSerialize(blockBytes);
+
+            foreach (var tx in block.Transactions)
+            {
+                txList.Add(new TransactionHeader()
+                {
+                    Id = Convert.ToBase64String(tx.Id)
+                });
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                TxListBox.ItemsSource = txList;
+                TxListBox.Items.Refresh();
+            });
 
         }
     }

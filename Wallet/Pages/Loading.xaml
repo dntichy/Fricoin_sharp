@@ -7,18 +7,14 @@
       mc:Ignorable="d" 
       d:DesignHeight="650" d:DesignWidth="1100"
       Title="Loading"
-      Background="White"
+      Background="#ebebeb"
       >
 
     <Grid >
-
-
-
         <StackPanel Width="300" VerticalAlignment="Center">
-            <Image Source="../Pictures/logo.PNG"  Height="190" HorizontalAlignment="Center" Margin="0 0 0 10"/>
-            <Button Background="MediumSlateBlue" FontSize="20" Width="200" Click="GoToRegistration" Margin="50,0,50,10" Height="47">REGISTRATION</Button>
-            <Button Background="MediumSlateBlue" FontSize="20" Click="GoToLoginPage" Height="45" Margin="50,0">LOGIN</Button>
+            <Image Source="../Pictures/logo.png"  Height="190" HorizontalAlignment="Center" Margin="0 0 0 10"/>
+            <Button Background="DarkSlateGray" BorderBrush="Black" FontSize="18" Width="200" Click="GoToRegistration" Margin="50,0,50,10" Height="40">REGISTRATION</Button>
+            <Button Background="DarkSlateGray" BorderBrush="Black" FontSize="18" Click="GoToLoginPage" Height="40" Margin="50,0">LOGIN</Button>
         </StackPanel>
-        <Button Content="sendMessage&#xD;&#xA;" HorizontalAlignment="Left" Margin="167,73,0,0" VerticalAlignment="Top" Width="75"/>
     </Grid>
 </Page>

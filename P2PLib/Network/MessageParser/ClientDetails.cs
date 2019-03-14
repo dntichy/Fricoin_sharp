@@ -32,7 +32,6 @@ namespace Engine.Network.MessageParser
             if (Equals(other)) return 0;
             else return 1;
         }
-
         public override bool Equals(object obj)
         {
             if (obj == null)

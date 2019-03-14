@@ -1,22 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using CoreLib;
+using DatabaseLib;
+using System;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
-using ChainUtils;
-using CoreLib;
-using DatabaseLib;
-using Engine.Network.MessageParser;
-using P2PLib.Network.Components.Enums;
-using P2PLib.Network.Components.Interfaces;
-using P2PLib.Network.MessageParser.Messages;
-using QRCoder;
 
 namespace Wallet.Pages
 {
@@ -139,7 +126,7 @@ namespace Wallet.Pages
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            Application.Current.Shutdown();
         }
     }
 }

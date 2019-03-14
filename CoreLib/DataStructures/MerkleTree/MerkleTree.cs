@@ -13,20 +13,20 @@ namespace CoreLib.DataStructures.MerkleTree
         public MerkleTree(IList<Transaction> transactionList)
         {
             var merkleNodeList = TransformList(transactionList);
-            BuildTree(merkleNodeList);        
+            BuildTree(merkleNodeList);
         }
 
         private IList<MerkleNode> RepairList(IList<MerkleNode> transactionList)
         {
-             transactionList.Add(transactionList[transactionList.Count - 1]);
-             return transactionList;
+            transactionList.Add(transactionList[transactionList.Count - 1]);
+            return transactionList;
         }
 
         private List<MerkleNode> TransformList(IList<Transaction> transactionList)
         {
             var firstLevel = new List<MerkleNode>();
             //create leaves hashes
-            foreach(var tx in transactionList)
+            foreach (var tx in transactionList)
             {
                 firstLevel.Add(new MerkleNode(null, null, CalculateHash(tx.Serialize())));
             }
@@ -38,9 +38,9 @@ namespace CoreLib.DataStructures.MerkleTree
         {
             var newLevel = new List<MerkleNode>();
 
-            if(level.Count ==1)
+            if (level.Count == 1)
             {
-                RootNode = newLevel[0];
+                RootNode = level[0];
                 return;
             }
 
@@ -51,14 +51,14 @@ namespace CoreLib.DataStructures.MerkleTree
                 newLevel.Clear();
 
                 for (var i = 0; i < level.Count - 1; i += 2)
-                { 
+                {
                     var leftHash = CalculateHash(level[i].Data);
                     var rightHash = CalculateHash(level[i + 1].Data);
-                    var parent = new MerkleNode(level[i], level[i+1], CalculateHash(ArrayHelpers.ConcatArrays(leftHash, rightHash)));
-                    newLevel.Add(parent);    
+                    var parent = new MerkleNode(level[i], level[i + 1], CalculateHash(ArrayHelpers.ConcatArrays(leftHash, rightHash)));
+                    newLevel.Add(parent);
                 }
-                
-                level =  new List<MerkleNode>(newLevel);
+
+                level = new List<MerkleNode>(newLevel);
             }
 
             RootNode = newLevel[0];
@@ -73,7 +73,7 @@ namespace CoreLib.DataStructures.MerkleTree
 
         public void LevelOrder()
         {
-            
+
             var nextlevel = new List<MerkleNode>();
             nextlevel.Add(RootNode);
 
@@ -83,23 +83,24 @@ namespace CoreLib.DataStructures.MerkleTree
                 {
                     var node = nextlevel[i];
                     Console.Write(node + " ");
-                    if(node.Left!= null) { 
-                    nextlevel.Add(node.Left);
-                    nextlevel.Add(node.Right);
+                    if (node.Left != null)
+                    {
+                        nextlevel.Add(node.Left);
+                        nextlevel.Add(node.Right);
                     }
 
                     nextlevel.RemoveAt(i);
                 }
 
-              
-               
+
+
 
             } while ((nextlevel.Count != 0));
 
 
 
         }
-        
-        
+
+
     }
 }

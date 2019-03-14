@@ -5,107 +5,164 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Wallet"
       mc:Ignorable="d"
-      Title="WalletPage" Height="650" Width="1100"
-      Background="White">
+      Title="WalletPage"
+       Background="#ebebeb" d:DesignWidth="1211.35" d:DesignHeight="661">
 
 
-    <Grid Margin="0,0,0,0" VerticalAlignment="Top" Height="611">
+    <Grid Margin="0,0,0,0" VerticalAlignment="Top">
         <Grid.RowDefinitions>
-            <RowDefinition Height="1*" />
-            <RowDefinition Height="4*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="5*" />
             <RowDefinition Height="18*" />
             <RowDefinition Height="2*" />
-            <!--<RowDefinition Height="*" />-->
         </Grid.RowDefinitions>
+        
+        <Menu Grid.Row="0" Background="#ec4237" Height="30">
+            <MenuItem Header="_File" VerticalAlignment="Center">
+                <MenuItem Header="Export wallet" Click="ExportWalletCoreClick"/>
+                <MenuItem Header="Logout" Click="LogoutClick"/>
+            </MenuItem>
+        </Menu>
 
-        <DockPanel Grid.Row="0">
-            <Menu DockPanel.Dock="Top">
-                <MenuItem Header="_File">
-                    <MenuItem Header="Export wallet" Click="ExportWalletCoreClick"/>
-                    <MenuItem Header="Logout"/>
-                </MenuItem>
-            </Menu>
-        </DockPanel>
+        <Grid Grid.Row="1" Background="#ebebeb">
+            <Image Source="../Pictures/logo.PNG"  Height="140"></Image>
+        </Grid>
 
-        <Image Grid.Row="1" Width="200" Source="../Pictures/logo.PNG" HorizontalAlignment="Right"></Image>
-        <Grid Row="2"  VerticalAlignment="Top">
+        <Grid Row="2" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="4*" />
                 <ColumnDefinition Width="12*" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Orientation="Vertical" >
-                <Image Name="QrCodeAddressBox" Height="130" Width="130"/>
-                <Label Padding="20 10 0 0" Name="Address" HorizontalAlignment="Center"></Label>
-                <Label Padding="10 10 0 0" Name="FullName">Name:</Label>
-                <Label Padding="10 10 0 0" Name="Email">Email:</Label>
-                <Label Padding="10 10 0 0" Name="Balance">Balance:</Label>
-
-            </StackPanel>
+            <Grid Grid.Column="0">
+                <StackPanel Grid.Column="0" Orientation="Vertical" Margin="-10,0,10,0" >
+                    <Image Name="QrCodeAddressBox" Height="130" Width="130"/>
+                    <Label Padding="20 10 0 0" Name="Address" HorizontalAlignment="Center"></Label>
+                    <Label Padding="10 10 0 0" Name="FullName">Name:</Label>
+                    <Label Padding="10 10 0 0" Name="Email">Email:</Label>
+                    <Label Padding="10 10 0 0" Name="Balance">Balance:</Label>
+                    <Button  Click="Send" Width="100" Background="DarkSlateGray" BorderBrush="Black" HorizontalAlignment="Center" Margin="0 20 0 0" Content="MINE" />
+                </StackPanel>
+            </Grid>
             <Grid Column="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="73*"/>
-                    <ColumnDefinition Width="98*"/>
+                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
-                <Button  Click="Send" Margin="275,27,35,298" Content="Send" RenderTransformOrigin="0.3,0.4"/>
-                <TextBox HorizontalAlignment="Left" Height="25" Margin="10,27,0,0" TextWrapping="Wrap" Text="&#xD;&#xA;" VerticalAlignment="Top" Width="53"/>
-                <TextBox HorizontalAlignment="Left" Height="25" Margin="70,27,0,0" TextWrapping="Wrap" Text="&#xA;" VerticalAlignment="Top" Width="200"/>
-                <Label Content="Amount&#xD;&#xA;" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="27"/>
-                <Label Content="Address&#xA;" HorizontalAlignment="Left" Margin="70,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="30"/>
-                <Button  Click="Send" Margin="10,59,179,265" Content="Start mining" RenderTransformOrigin="0.3,0.4"/>
+                <Grid Grid.Column="1">
+                    <Button  Click="Send" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" Margin="165,57,10,291" />
+                    <TextBox HorizontalAlignment="Left" Height="25" Margin="10,27,0,0" TextWrapping="Wrap" Text="&#xD;&#xA;" VerticalAlignment="Top" Width="53"/>
+                    <TextBox HorizontalAlignment="Left" Height="25" Margin="75,27,0,0" TextWrapping="Wrap" Text="&#xA;" VerticalAlignment="Top" Width="190"/>
+                    <Label Content="Amount&#xD;&#xA;" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="27"/>
+                    <Label Content="Address&#xA;" HorizontalAlignment="Left" Margin="70,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="30"/>
 
-                <TabControl HorizontalAlignment="Left" Height="215" Margin="10,105,0,0" VerticalAlignment="Top" Width="565" Grid.ColumnSpan="2">
-                    <TabItem Header="Users">
-                        <Grid Background="#FFE5E5E5">
-                            <Grid.Resources>
-                                <DataTemplate x:Key="listBoxTemplate">
-                                    <StackPanel Margin="3">
-                                        <DockPanel>
-                                            <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                            <TextBlock Text="" />
-                                            <TextBlock Text="{Binding FirstName}" Foreground="Green" FontWeight="Bold" />
-                                            <TextBlock Text=" " />
-                                            <TextBlock Text="{Binding LastName}" Foreground="Green" FontWeight="Bold" />
-                                        </DockPanel>
-                                        <DockPanel>
-                                            <TextBlock FontWeight="Bold" Text="Address:" Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
-                                            <TextBlock Text="{Binding Address}" />
-                                        </DockPanel>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Grid.Resources>
-                            <ListBox  
+                </Grid>
+                <Grid Grid.Column="0" Grid.ColumnSpan="2" >
+                    <TabControl HorizontalAlignment="Left" Height="346" VerticalAlignment="Top" Width="540" Margin="0,10,0,0">
+                        <TabItem Header="Users">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.Resources>
+                                    <DataTemplate x:Key="listBoxTemplate">
+                                        <StackPanel Margin="3">
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="" />
+                                                <TextBlock Text="{Binding FirstName}" Foreground="Green" FontWeight="Bold" />
+                                                <TextBlock Text=" " />
+                                                <TextBlock Text="{Binding LastName}" Foreground="Green" FontWeight="Bold" />
+                                            </DockPanel>
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Address:" Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
+                                                <TextBlock Text="{Binding Address}" />
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Grid.Resources>
+                                <ListBox  
                                      Name="listBox1" 
                                      ItemTemplate="{StaticResource listBoxTemplate}" />
-</Grid>
-                    </TabItem>
-                    <TabItem Header="Blocks">
-                        <Grid Background="#FFE5E5E5"/>
-                    </TabItem>
-                    <TabItem Header="Transactions">
-                        <Grid Background="#FFE5E5E5"/>
-                    </TabItem>
-                    <TabItem Header="Peers">
-                        <Grid Background="#FFE5E5E5">
-                            <Grid.Resources>
-                                <DataTemplate x:Key="peerTemplate">
-                                    <StackPanel Margin="3">
-                                        <DockPanel>
-                                            <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                            <TextBlock Text="" />
-                                            <TextBlock Text="{Binding ClientIPAddress}" Foreground="Green" FontWeight="Bold" />
-                                            <TextBlock Text=": " />
-                                            <TextBlock Text="{Binding ClientListenPort}" Foreground="Green" FontWeight="Bold" />
-                                        </DockPanel>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Grid.Resources>
-                            <ListBox  
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Blocks">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.Resources>
+                                    <DataTemplate x:Key="blockHeaderTemplate" >
+                                        <StackPanel Margin="3">
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Index: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="{Binding Index}" Foreground="Green" FontWeight="Bold" />
+                                            </DockPanel>
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Nonce: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="{Binding Nonce}"  FontWeight="Bold" />
+                                            </DockPanel>
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Timestamp: " Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
+                                                <TextBlock Text="{Binding TimeStamp }" />
+                                            </DockPanel>
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Merkle root: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="{Binding MerkleRoot}"  FontWeight="Bold" />
+                                            </DockPanel>
+
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Hash: " Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
+                                                <TextBlock Text="{Binding Hash}" />
+                                            </DockPanel>
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Previous hash: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="{Binding PreviousHash}"  FontWeight="Bold" />
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Grid.Resources>
+                                <ListBox  
+                                     Name="BlockHeaderListBox" 
+                                     ItemTemplate="{StaticResource blockHeaderTemplate}"
+                                 SelectionChanged="BlockHeaderListBox_SelectionChanged"
+                                />
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Transactions">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.Resources>
+                                    <DataTemplate x:Key="txTemplate">
+                                        <StackPanel Margin="3">
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Id:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="" />
+                                                <TextBlock Text="{Binding Id}" Foreground="Green" FontWeight="Bold" />
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Grid.Resources>
+                                <ListBox  
+                                     Name="TxListBox" 
+                                     ItemTemplate="{StaticResource txTemplate}"
+                                    />
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Peers">
+                            <Grid Background="#FFE5E5E5">
+                                <Grid.Resources>
+                                    <DataTemplate x:Key="peerTemplate">
+                                        <StackPanel Margin="3">
+                                            <DockPanel>
+                                                <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                <TextBlock Text="" />
+                                                <TextBlock Text="{Binding ClientIPAddress}" Foreground="Green" FontWeight="Bold" />
+                                                <TextBlock Text=": " />
+                                                <TextBlock Text="{Binding ClientListenPort}" Foreground="Green" FontWeight="Bold" />
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Grid.Resources>
+                                <ListBox  
                                      Name="PeersListBox" 
                                      ItemTemplate="{StaticResource peerTemplate}" />
-                        </Grid>
-                    </TabItem>
-                </TabControl>
-
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
             </Grid>
 
         </Grid>
