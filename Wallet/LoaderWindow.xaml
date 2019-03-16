@@ -5,9 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wallet"
         mc:Ignorable="d"
-        Title="LoaderWindow" Height="650" Width="1100"      Background="#ebebeb"
-
-        >
+        Title="fricoin wallet" Height="650" Width="1100" Background="#ebebeb">
 
     <Frame        
         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch"

@@ -5,8 +5,10 @@
        ClearTransactionPool,
        Chain,
        Transaction,
-       NewBlock,
        Version,
-
+       Inv,
+       GetBlocks,
+       Block,
+       GetData
     }
 }

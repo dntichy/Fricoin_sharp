@@ -1,4 +1,5 @@
-﻿using P2PLib.Network.MessageParser.Messages;
+﻿using DatabaseLib;
+using P2PLib.Network.MessageParser.Messages;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,6 +23,8 @@ namespace Wallet.Pages
 
         private void Loading_OnLoaded(object sender, RoutedEventArgs e)
         {
+            //var user = new User { FirstName = "D"};
+            //NavigationService?.Navigate(new WalletPage(user));
 
 
             //BlockChain friCoin = new BlockChain();

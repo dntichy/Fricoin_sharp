@@ -87,7 +87,7 @@ namespace Wallet
         public void PublishMinedBlock()
         {
             var message = new CommandMessage();
-            message.Command = CommandType.NewBlock;
+            message.Command = CommandType.Block;
             message.Client = _blockchainNetwork.ClientDetails();
             _blockchainNetwork.BroadcastMessageAsync(message);
         }

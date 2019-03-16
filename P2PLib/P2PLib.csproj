@@ -84,5 +84,11 @@
     <Compile Include="Network\Server\P2PServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChainUtils\ChainUtilsLib.csproj">
+      <Project>{C43F0EB1-3761-4708-BAA7-9E8F070A33AF}</Project>
+      <Name>ChainUtilsLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

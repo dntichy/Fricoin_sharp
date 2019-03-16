@@ -16,49 +16,70 @@
             <RowDefinition Height="18*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
-        
-        <Menu Grid.Row="0" Background="#ec4237" Height="30">
-            <MenuItem Header="_File" VerticalAlignment="Center">
-                <MenuItem Header="Export wallet" Click="ExportWalletCoreClick"/>
-                <MenuItem Header="Logout" Click="LogoutClick"/>
+
+        <Menu Grid.Row="0" Background="DarkSlateGray" Height="22">
+            <MenuItem Header="_File" VerticalAlignment="Center" Foreground="White" FontFamily="Consolas" FontSize="13">
+                <MenuItem Header="Export wallet" Click="ExportWalletCoreClick" Height="22"  Foreground="White" FontFamily="Consolas" FontSize="13"/>
+                <MenuItem Header="Logout" Click="LogoutClick" Height="22"  Foreground="White" FontFamily="Consolas" FontSize="13"/>
             </MenuItem>
         </Menu>
 
         <Grid Grid.Row="1" Background="#ebebeb">
-            <Image Source="../Pictures/logo.PNG"  Height="140"></Image>
+            <!--<Image Source="../Pictures/logo.PNG"  Height="140"></Image>-->
+            <Label FontSize="59" FontFamily="Consolas" Margin="10" Foreground="Black" HorizontalAlignment="Center">fricoin wallet</Label>
         </Grid>
 
-        <Grid Row="2" >
+        <Grid Row="2"  >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="4*" />
                 <ColumnDefinition Width="12*" />
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
-                <StackPanel Grid.Column="0" Orientation="Vertical" Margin="-10,0,10,0" >
-                    <Image Name="QrCodeAddressBox" Height="130" Width="130"/>
-                    <Label Padding="20 10 0 0" Name="Address" HorizontalAlignment="Center"></Label>
-                    <Label Padding="10 10 0 0" Name="FullName">Name:</Label>
-                    <Label Padding="10 10 0 0" Name="Email">Email:</Label>
-                    <Label Padding="10 10 0 0" Name="Balance">Balance:</Label>
-                    <Button  Click="Send" Width="100" Background="DarkSlateGray" BorderBrush="Black" HorizontalAlignment="Center" Margin="0 20 0 0" Content="MINE" />
+                <StackPanel Grid.Column="0" Orientation="Vertical" >
+                    <DockPanel Margin="0 0 0 10">
+                        <Image MouseDown="QrCodeAddressBox_MouseDown" Cursor="Hand" ToolTip="Copy" Name="QrCodeAddressBox" Height="130" Width="130"/>
+                    </DockPanel>
+                    <DockPanel>
+                        <Label FontFamily="Consolas" FontWeight="Bold" MouseDown="QrCodeAddressBox_MouseDown" Cursor="Hand" ToolTip="Copy" FontSize="13" Name="Address" HorizontalAlignment="Center"></Label>
+                    </DockPanel>
+                    <DockPanel HorizontalAlignment="Center">
+                        <Label FontFamily="Consolas" FontSize="13"  Name="FullName"></Label>
+                    </DockPanel>
+                    <DockPanel HorizontalAlignment="Center">
+                        <Label FontFamily="Consolas" FontSize="13" Name="Email"></Label>
+                    </DockPanel>
+                    <DockPanel HorizontalAlignment="Center">
+                        <Label FontFamily="Consolas" FontSize="13" Name="Balance"></Label>
+                    </DockPanel>
+                   
                 </StackPanel>
             </Grid>
-            <Grid Column="1">
+            <Grid Column="1" >
+                
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="7*" />
                     <ColumnDefinition Width="4*" />
-                    <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
                 <Grid Grid.Column="1">
-                    <Button  Click="Send" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" Margin="165,57,10,291" />
-                    <TextBox HorizontalAlignment="Left" Height="25" Margin="10,27,0,0" TextWrapping="Wrap" Text="&#xD;&#xA;" VerticalAlignment="Top" Width="53"/>
-                    <TextBox HorizontalAlignment="Left" Height="25" Margin="75,27,0,0" TextWrapping="Wrap" Text="&#xA;" VerticalAlignment="Top" Width="190"/>
-                    <Label Content="Amount&#xD;&#xA;" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="27"/>
-                    <Label Content="Address&#xA;" HorizontalAlignment="Left" Margin="70,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.526,-0.577" Height="30"/>
+                    <StackPanel>
+                        <DockPanel >
+                            <Label FontFamily="Consolas" Content="Amount"  />
+                            <TextBox FontFamily="Consolas"  Text="" Width="60"/>
+                            <Button  HorizontalAlignment="Right" FontSize="12" Height="30" Margin="0 0 20 0" Click="Send" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" />
+                        </DockPanel>
+                        <DockPanel>
+                            <Label  FontFamily="Consolas" Content="Address" />
+                            <TextBox  FontFamily="Consolas" HorizontalAlignment="Left" Text=""  Width="260" />
+                        </DockPanel>
+                        <!--<DockPanel>
+                            <Button  Click="Send" Width="100"  Margin="0 10 20 0" Background="DarkSlateGray" BorderBrush="Black" HorizontalAlignment="Right" Content="MINE" />
+                        </DockPanel>-->
+                    </StackPanel>
 
                 </Grid>
-                <Grid Grid.Column="0" Grid.ColumnSpan="2" >
-                    <TabControl HorizontalAlignment="Left" Height="346" VerticalAlignment="Top" Width="540" Margin="0,10,0,0">
-                        <TabItem Header="Users">
+                <Grid Grid.Column="0"  >
+                    <TabControl BorderBrush="Black" HorizontalAlignment="Left" Height="346" VerticalAlignment="Top" Margin="0,10,0,0" Width="456">
+                        <TabItem Header="USERS" FontFamily="Consolas">
                             <Grid Background="#FFE5E5E5">
                                 <Grid.Resources>
                                     <DataTemplate x:Key="listBoxTemplate">
@@ -78,11 +99,13 @@
                                     </DataTemplate>
                                 </Grid.Resources>
                                 <ListBox  
-                                     Name="listBox1" 
+                                     Name="usersListBox"
+                                    ToolTip="Copy address"
+                                    SelectionChanged="Users_SelectionChanged"
                                      ItemTemplate="{StaticResource listBoxTemplate}" />
                             </Grid>
                         </TabItem>
-                        <TabItem Header="Blocks">
+                        <TabItem Header="BLOCKS" FontFamily="Consolas">
                             <Grid Background="#FFE5E5E5">
                                 <Grid.Resources>
                                     <DataTemplate x:Key="blockHeaderTemplate" >
@@ -122,7 +145,7 @@
                                 />
                             </Grid>
                         </TabItem>
-                        <TabItem Header="Transactions">
+                        <TabItem Header="TRANSACTIONS" FontFamily="Consolas">
                             <Grid Background="#FFE5E5E5">
                                 <Grid.Resources>
                                     <DataTemplate x:Key="txTemplate">
@@ -141,7 +164,7 @@
                                     />
                             </Grid>
                         </TabItem>
-                        <TabItem Header="Peers">
+                        <TabItem Header="PEERS" FontFamily="Consolas">
                             <Grid Background="#FFE5E5E5">
                                 <Grid.Resources>
                                     <DataTemplate x:Key="peerTemplate">

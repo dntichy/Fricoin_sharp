@@ -1,4 +1,5 @@
-﻿using Engine.Network.MessageParser;
+﻿using ChainUtils;
+using Engine.Network.MessageParser;
 using P2PLib.Network.Components.Enums;
 using P2PLib.Network.Components.Interfaces;
 using System;
@@ -9,9 +10,11 @@ namespace P2PLib.Network.MessageParser.Messages
 {
     public class CommandMessage : IMessage
     {
+
+        public CommandType Command { get; set; }
         public int Type
         {
-            get { return (int) MessageType.CommandMessage; }
+            get { return (int)MessageType.CommandMessage; }
         }
         private ClientDetails mClient;
         public ClientDetails Client
@@ -20,21 +23,27 @@ namespace P2PLib.Network.MessageParser.Messages
             set { mClient = value; }
         }
 
+        private byte[] mData;
+        public byte[] Data
+        {
+            get { return mData; }
+            set { mData = value; }
+        }
+
         public Byte[] GetMessagePacket()
         {
             String textResult = "";
             textResult += "<message>";
             textResult += "<type>" + Type + "</type>";
             textResult += "<command>" + Command + "</command>";
+            textResult += "<data>" + HexadecimalEncoding.ToHexString(Data) + "</data>";
             textResult += "<clientdetails><name>" + mClient.ClientName + "</name><ipaddress>" + mClient.ClientIPAddress + "</ipaddress><listenport>" + mClient.ClientListenPort + "</listenport></clientdetails>";
             textResult += "</message>";
 
-            return ASCIIEncoding.UTF8.GetBytes(textResult);
+            return Encoding.UTF8.GetBytes(textResult);
         }
 
 
-        public String Text { get; set; }
-        public CommandType Command { get; set; }
 
 
         public bool Parse(Byte[] data)
@@ -69,7 +78,7 @@ namespace P2PLib.Network.MessageParser.Messages
                 {
                     if (node.Name == "type")
                     {
-                        type = (MessageType) Enum.Parse(typeof(MessageType), node.InnerText);
+                        type = (MessageType)Enum.Parse(typeof(MessageType), node.InnerText);
                         break;
                     }
                 }
@@ -77,69 +86,22 @@ namespace P2PLib.Network.MessageParser.Messages
 
             if (type != MessageType.CommandMessage)
             {
-                System.Diagnostics.Debug.WriteLine("The supplied data was the wrong message type!");
+                Console.WriteLine("The supplied data was the wrong message type!");
                 return false;
             }
-
-            //////////////////////////////////////////////////////////////////////////
-            // The real data parsing
-            this.Text = "";
 
 
             foreach (XmlNode node in messageElement.ChildNodes)
             {
-                if (node.Name == "text")
+                if (node.Name == "data")
                 {
-                    this.Text = node.InnerText;
+                    this.Data = HexadecimalEncoding.FromHexStringToByte(node.InnerText);
                 }
+                else if (node.Name == "command")
+                {
+                    Enum.TryParse(node.InnerText, out CommandType command);
 
-                else if (node.Name == "textcolor")
-                {
-                    int a, r, g, b;
-                    a = r = g = b = 0;
-                    foreach (XmlNode detailsNode in node.ChildNodes)
-                    {
-                        if (detailsNode.Name == "a")
-                        {
-                            a = int.Parse(detailsNode.InnerText);
-                        }
-                        else if (detailsNode.Name == "r")
-                        {
-                            r = int.Parse(detailsNode.InnerText);
-                        }
-                        else if (detailsNode.Name == "g")
-                        {
-                            g = int.Parse(detailsNode.InnerText);
-                        }
-                        else if (detailsNode.Name == "b")
-                        {
-                            b = int.Parse(detailsNode.InnerText);
-                        }
-                    }
-                }
-                else if (node.Name == "position")
-                {
-                    foreach (XmlNode detailsNode in node.ChildNodes)
-                    {
-                        if (detailsNode.Name == "x")
-                        {
-                        }
-                        else if (detailsNode.Name == "y")
-                        {
-                        }
-                    }
-                }
-                else if (node.Name == "resolution")
-                {
-                    foreach (XmlNode detailsNode in node.ChildNodes)
-                    {
-                        if (detailsNode.Name == "width")
-                        {
-                        }
-                        else if (detailsNode.Name == "height")
-                        {
-                        }
-                    }
+                    Command = command;
                 }
             }
 
@@ -150,9 +112,9 @@ namespace P2PLib.Network.MessageParser.Messages
         public IMessage Clone()
         {
             CommandMessage result = new CommandMessage();
-
-            result.Text = Text;
             result.Client = Client;
+            result.Data = Data;
+            result.Command = Command;
             return result;
         }
     }

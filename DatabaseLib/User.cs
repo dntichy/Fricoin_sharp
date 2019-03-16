@@ -1,9 +1,7 @@
-﻿using System;
+﻿using ChainUtils;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Cryptography;
-using System.Text;
-using ChainUtils;
 
 namespace DatabaseLib
 {

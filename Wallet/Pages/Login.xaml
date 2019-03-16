@@ -8,9 +8,9 @@
             <RowDefinition Height="20*" />
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" Background="#ec4237">
-            <MenuItem Header="_File" VerticalAlignment="Center" Height="30" >
-                <MenuItem Header="Import wallet" Click="ImportWalletCoreClick"/>
+        <Menu Grid.Row="0" Background="DarkSlateGray" Height="22"  Foreground="White" FontFamily="Consolas" FontSize="13">
+            <MenuItem Header="_File" VerticalAlignment="Center" FontFamily="Consolas" FontSize="13" >
+                <MenuItem Header="Import wallet" Click="ImportWalletCoreClick" Height="22"  Foreground="White" FontFamily="Consolas" FontSize="13"/>
             </MenuItem>
         </Menu>
 

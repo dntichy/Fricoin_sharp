@@ -1,22 +1,29 @@
-﻿using CoreLib.Blockchain;
+﻿using CoreLib;
+using CoreLib.Blockchain;
 using DatabaseLib;
+using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
+using MS.WindowsAPICodePack.Internal;
+using P2PLib.Network.Components.Interfaces;
+using P2PLib.Network.MessageParser;
+using P2PLib.Network.MessageParser.Messages;
 using QRCoder;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using CoreLib;
-using Microsoft.Win32;
-using System.ComponentModel;
-using P2PLib.Network.MessageParser.Messages;
-using P2PLib.Network.MessageParser;
-using P2PLib.Network.Components.Interfaces;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using ChainUtils;
+using Wallet.ShellHelpers;
+using Windows.Data.Xml.Dom;
+using Windows.UI.Notifications;
 
 namespace Wallet.Pages
 {
@@ -29,12 +36,16 @@ namespace Wallet.Pages
         private User _loggedUser;
         private WalletCore _loggedUserWallet;
         LayerBlockchainNetwork nettwork = new LayerBlockchainNetwork();
+        private const String APP_ID = "Fricoin.Wallet";
+
 
 
 
         public WalletPage(User user)
         {
             InitializeComponent();
+            TryCreateShortcut(); // create shortcut, so i will be able to show toasts
+
 
             //NETTWORK STUFF
             nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
@@ -97,14 +108,17 @@ namespace Wallet.Pages
             //SET GUI PROPERTIES 
             CreateQrCode(user.Address);
             Address.Content = user.Address;
-            Email.Content = "Email: " + user.Email;
-            FullName.Content = "Name: " + user.FirstName + user.LastName;
-            Balance.Content = "Balance: " + _friChain.GetBalance(user.Address);
+            Email.Content = user.Email;
+            var firstName = Regex.Replace(user.FirstName, @"\s+", "");
+            var lastName = Regex.Replace(user.LastName, @"\s+", "");
+
+            FullName.Content = firstName + " " + lastName;
+            Balance.Content = _friChain.GetBalance(user.Address);
 
             //DISPLAY LIST OF USERS
             var context = new UserContext();
             var listUsers = context.Users.ToList();
-            listBox1.ItemsSource = listUsers;
+            usersListBox.ItemsSource = listUsers;
 
         }
 
@@ -200,7 +214,7 @@ namespace Wallet.Pages
             var CmDmessage = new CommandMessage()
             {
                 Client = nettwork._blockchainNetwork.ClientDetails(),
-                Command = CommandType.NewBlock
+                Command = CommandType.Block
             };
 
             nettwork._blockchainNetwork.BroadcastMessage(CmDmessage);
@@ -243,5 +257,102 @@ namespace Wallet.Pages
             });
 
         }
+
+        private void Users_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var user = usersListBox.SelectedItem as User;
+            //copy to clipboard users address
+            Clipboard.SetText(user.Address);
+
+            //show notification about copied
+            ShowToastMessageCopiedToCB();
+
+        }
+
+        private void ShowToastMessageCopiedToCB()
+        {
+            // Get a toast XML template
+            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastImageAndText01);
+            var audio = toastXml.CreateElement("audio");
+            //audio.SetAttribute("src", "ms-winsoundevent:Notification.Alarm7");
+            //audio.SetAttribute("loop", "false");
+            audio.SetAttribute("silent", "true");
+
+            // Add the audio element
+            toastXml.DocumentElement.AppendChild(audio);
+
+
+            //TEXT
+            XmlNodeList stringElements = toastXml.GetElementsByTagName("text");
+            stringElements[0].AppendChild(toastXml.CreateTextNode("Copied to clipboard"));
+
+            // PICTURE
+            var imagePath = "file:///" + Path.GetFullPath(@"Pictures\copy.png");
+            XmlNodeList imageElements = toastXml.GetElementsByTagName("image");
+            imageElements[0].Attributes.GetNamedItem("src").NodeValue = imagePath;
+
+            // Create the toast and attach event listeners
+            ToastNotification toast = new ToastNotification(toastXml);
+
+            //toast.Activated += ToastActivated;
+            //toast.Dismissed += ToastDismissed;
+            //toast.Failed += ToastFailed;
+
+
+            // Show the toast. Be sure to specify the AppUserModelId on your application's shortcut!
+            
+            ToastNotificationManager.CreateToastNotifier(APP_ID).Show(toast);
+
+            //HIDE TOAST after 2500
+            Task.Delay(2500).ContinueWith(t =>
+            {
+                ToastNotificationManager.CreateToastNotifier(APP_ID).Hide(toast);
+            });
+
+        }
+
+        private bool TryCreateShortcut()
+        {
+            String shortcutPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\Fricoin.lnk";
+            if (!File.Exists(shortcutPath))
+            {
+                InstallShortcut(shortcutPath);
+                return true;
+            }
+            return false;
+        }
+
+        private void InstallShortcut(String shortcutPath)
+        {
+            // Find the path to the current executable
+            String exePath = Process.GetCurrentProcess().MainModule.FileName;
+            IShellLinkW newShortcut = (IShellLinkW)new CShellLink();
+
+            // Create a shortcut to the exe
+            ShellHelpers.ErrorHelper.VerifySucceeded(newShortcut.SetPath(exePath));
+            ShellHelpers.ErrorHelper.VerifySucceeded(newShortcut.SetArguments(""));
+
+            // Open the shortcut property store, set the AppUserModelId property
+            IPropertyStore newShortcutProperties = (IPropertyStore)newShortcut;
+
+            using (PropVariant appId = new PropVariant(APP_ID))
+            {
+                ShellHelpers.ErrorHelper.VerifySucceeded(newShortcutProperties.SetValue(SystemProperties.System.AppUserModel.ID, appId));
+                ShellHelpers.ErrorHelper.VerifySucceeded(newShortcutProperties.Commit());
+            }
+
+            // Commit the shortcut to disk
+            IPersistFile newShortcutSave = (IPersistFile)newShortcut;
+
+            ShellHelpers.ErrorHelper.VerifySucceeded(newShortcutSave.Save(shortcutPath, true));
+        }
+
+        private void QrCodeAddressBox_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Clipboard.SetText(_loggedUser.Address);
+            ShowToastMessageCopiedToCB();
+        }
+
+   
     }
 }
