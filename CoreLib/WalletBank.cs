@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChainUtils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -32,10 +33,19 @@ namespace CoreLib
 
             return null;
         }
-
-        public WalletCore CreateWallet()
+        public WalletCore FindWallet(string address, string hashedPassword)
         {
-            var wallet = new WalletCore();
+            foreach (var wallet in _wallets)
+            {
+                if (wallet.Address == address && wallet.PasswordHash == hashedPassword) return wallet;
+            }
+
+            return null;
+        }
+
+        public WalletCore CreateWallet(string hashedPassword)
+        {
+            var wallet = new WalletCore(hashedPassword);
             _wallets.Add(wallet);
             PersistWalletBank();
             return wallet;
@@ -48,6 +58,7 @@ namespace CoreLib
             bf.Serialize(ms, _wallets);
             return ms.ToArray();
         }
+
 
         private void PersistWalletBank()
         {

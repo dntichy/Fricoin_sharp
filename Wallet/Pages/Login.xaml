@@ -20,16 +20,20 @@
 
                 <DockPanel>
                     <TextBlock HorizontalAlignment="Left"  Name="TextBlock1" Text="Address" VerticalAlignment="Center" Width="77" />
-                    <ComboBox IsEditable="True" Name="AddressComboBox" Text="19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17"/>
+                    <ComboBox IsEditable="True" Name="AddressComboBox" Text="112H2TcYAvxWGPSWXz4bzGvm5RXEdFDCms"/>
                 </DockPanel>
 
                 <DockPanel Margin="0 10 0 0 ">
                     <TextBlock  HorizontalAlignment="Left" Name="TextBlock2" Text="Password" VerticalAlignment="Center" Width="77" />
                     <PasswordBox Height="23" Name="PasswordBox1" Password="qqqq" VerticalAlignment="Center"  />
                 </DockPanel>
-
-                <Button Background="DarkSlateGray" BorderBrush="Black" Content="LOGIN" HorizontalAlignment="Center" Name="Button1"
+                <DockPanel HorizontalAlignment="Center">
+                    <Button Background="DarkSlateGray" BorderBrush="Black" Content="LOGIN"
                 VerticalAlignment="Top" Width="104" Margin="0 23 0 0" Click="LoginButtonClicked" />
+                    <Button Background="DarkSlateGray" BorderBrush="Black" Content="BACK" 
+                VerticalAlignment="Top" Width="104" Margin="10 23 0 0" Click="BackButtonClicked" />
+                </DockPanel>
+                
                 <TextBlock Height="41" HorizontalAlignment="Left" x:Name="Errormessage" VerticalAlignment="Top" Width="262"
                    OpacityMask="Crimson" Foreground="#FFE5572C" />
             </StackPanel>

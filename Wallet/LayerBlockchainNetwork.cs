@@ -12,7 +12,7 @@ namespace Wallet
     class LayerBlockchainNetwork
     {
         private static ApplicationInputState _mCurrentState;
-        public  BlockchainNetwork _blockchainNetwork;
+        public BlockchainNetwork _blockchainNetwork;
 
         public enum ApplicationInputState
         {
@@ -34,7 +34,7 @@ namespace Wallet
 
             //REGISTER recievers
             _blockchainNetwork.OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
-            
+
             _mCurrentState = ApplicationInputState.EmptyInput;
         }
 
@@ -44,38 +44,40 @@ namespace Wallet
         {
             switch (msg.Type)
             {
-                case ((int) MessageType.TextDataMessage):
-                {
-                    TextMessage rxMsg = (TextMessage) msg;
-                    Console.WriteLine(rxMsg.Text);
-                    break;
-                }
-                case ((int) MessageType.CommandMessage):
-                {
-                    CommandMessage rxMsg = (CommandMessage) msg;
-
-                    switch (rxMsg.Command)
+                case ((int)MessageType.TextDataMessage):
                     {
-                        case CommandType.Chain:
-                            break;
-                        case CommandType.ClearTransactionPool:
-                            break;
-                        case CommandType.Transaction:
-                            break;
+                        TextMessage rxMsg = (TextMessage)msg;
+                        Console.WriteLine(rxMsg.Text);
+                        break;
                     }
+                case ((int)MessageType.CommandMessage):
+                    {
+                        CommandMessage rxMsg = (CommandMessage)msg;
 
-                    break;
-                }
+                        switch (rxMsg.Command)
+                        {
+                            case CommandType.Chain:
+                                break;
+                            case CommandType.ClearTransactionPool:
+                                break;
+                            case CommandType.Transaction:
+                                break;
+                            case CommandType.Block:
+                                break;
+                        }
+
+                        break;
+                    }
             }
         }
         //METHODS, SENDING MESSAGES
         public void CheckForUpdates()
-        {   
+        {
             var message = new CommandMessage();
             message.Command = CommandType.Chain;
             message.Client = _blockchainNetwork.ClientDetails();
             if (_blockchainNetwork.GroupClients.Count != 0) _blockchainNetwork.SendMessageAsync(message, _blockchainNetwork.GroupClients[0]);
-            
+
         }
         public void SendTransactionPool()
         {

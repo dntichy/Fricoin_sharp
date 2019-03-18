@@ -103,6 +103,26 @@ namespace P2PLib.Network.MessageParser.Messages
 
                     Command = command;
                 }
+                else if (node.Name == "clientdetails")
+                {
+                    mClient = new ClientDetails();
+
+                    foreach (XmlNode detailsNode in node.ChildNodes)
+                    {
+                        if (detailsNode.Name == "name")
+                        {
+                            mClient.ClientName = detailsNode.InnerText;
+                        }
+                        else if (detailsNode.Name == "ipaddress")
+                        {
+                            mClient.ClientIPAddress = detailsNode.InnerText;
+                        }
+                        else if (detailsNode.Name == "listenport")
+                        {
+                            mClient.ClientListenPort = int.Parse(detailsNode.InnerText);
+                        }
+                    }
+                }
             }
 
             //////////////////////////////////////////////////////////////////////////

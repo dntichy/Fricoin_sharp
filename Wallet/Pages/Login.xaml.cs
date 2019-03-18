@@ -37,7 +37,7 @@ namespace Wallet.Pages
 
             //check Private key and public Key
             var walletBank = new WalletBank();
-            var wallet = walletBank.FindWallet(address);
+            var wallet = walletBank.FindWallet(address, hashPw);
 
             if (wallet == null)
             {
@@ -95,6 +95,11 @@ namespace Wallet.Pages
                     
                 }
             }
+        }
+
+        private void BackButtonClicked(object sender, RoutedEventArgs e)
+        {
+            NavigationService?.Navigate(new Loading());
         }
     }
 } 

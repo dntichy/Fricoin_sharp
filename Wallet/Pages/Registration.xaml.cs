@@ -101,7 +101,7 @@ namespace Wallet.Pages
         {
 
             WalletBank wBank = new WalletBank();
-            var wallet = wBank.CreateWallet();
+            var wallet = wBank.CreateWallet(newUser.Password);
 
             newUser.PublicKey = Convert.ToBase64String(wallet.PublicKey);
             newUser.PublicKeyHashed = Convert.ToBase64String(wallet.PublicKeyHash);
@@ -124,9 +124,9 @@ namespace Wallet.Pages
 
         }
 
-        private void Cancel_Click(object sender, RoutedEventArgs e)
+        private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            NavigationService?.Navigate(new Loading());
         }
     }
 }

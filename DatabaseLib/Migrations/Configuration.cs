@@ -9,7 +9,7 @@ namespace DatabaseLib.Migrations
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = true;
+            AutomaticMigrationsEnabled = false;
             ContextKey = "DatabaseLib.UserContext";
         }
 

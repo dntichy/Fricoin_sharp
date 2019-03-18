@@ -67,9 +67,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Migrations\201902242156393_InitialCreate.cs" />
-    <Compile Include="Migrations\201902242156393_InitialCreate.Designer.cs">
-      <DependentUpon>201902242156393_InitialCreate.cs</DependentUpon>
+    <Compile Include="Migrations\201903181615301_New.cs" />
+    <Compile Include="Migrations\201903181615301_New.Designer.cs">
+      <DependentUpon>201903181615301_New.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="User.cs" />
@@ -81,15 +81,15 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201902242156393_InitialCreate.resx">
-      <DependentUpon>201902242156393_InitialCreate.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ChainUtils\ChainUtilsLib.csproj">
       <Project>{c43f0eb1-3761-4708-baa7-9e8f070a33af}</Project>
       <Name>ChainUtilsLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201903181615301_New.resx">
+      <DependentUpon>201903181615301_New.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

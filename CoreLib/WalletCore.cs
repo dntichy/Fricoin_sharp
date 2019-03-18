@@ -14,13 +14,15 @@ namespace CoreLib
         public byte[] PublicKey { get; set; }
         public byte[] PublicKeyHash { get; set; }
         public string Address { get; set; }
+        public string PasswordHash { get; set; }
 
 
-        public WalletCore()
+        public WalletCore(string hashedPassword)
         {
             PrivateKey = CryptoFinal.GeneratePrivateKey();
             PublicKey = CryptoFinal.GetPublicKey(PrivateKey);
             PublicKeyHash = PublicKeyHashed(PublicKey);
+            PasswordHash = hashedPassword;
 
             var version = new byte[] {0x00};
             var versionHashed = ArrayHelpers.ConcatArrays(version, PublicKeyHash);

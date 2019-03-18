@@ -65,7 +65,7 @@
                         <DockPanel >
                             <Label FontFamily="Consolas" Content="Amount"  />
                             <TextBox FontFamily="Consolas"  Text="" Width="60"/>
-                            <Button  HorizontalAlignment="Right" FontSize="12" Height="30" Margin="0 0 20 0" Click="Send" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" />
+                            <Button  HorizontalAlignment="Right" FontSize="12" Height="30" Margin="0 0 20 0" Click="SendClick" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" />
                         </DockPanel>
                         <DockPanel>
                             <Label  FontFamily="Consolas" Content="Address" />

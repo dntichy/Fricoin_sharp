@@ -1,4 +1,5 @@
-﻿using DatabaseLib;
+﻿using CoreLib;
+using DatabaseLib;
 using P2PLib.Network.MessageParser.Messages;
 using System.ComponentModel;
 using System.Windows;
@@ -26,6 +27,8 @@ namespace Wallet.Pages
             //var user = new User { FirstName = "D"};
             //NavigationService?.Navigate(new WalletPage(user));
 
+
+           
 
             //BlockChain friCoin = new BlockChain();
             //friCoin.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);

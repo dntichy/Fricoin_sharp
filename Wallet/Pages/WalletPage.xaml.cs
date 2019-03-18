@@ -1,4 +1,5 @@
-﻿using CoreLib;
+﻿using ChainUtils;
+using CoreLib;
 using CoreLib.Blockchain;
 using DatabaseLib;
 using Microsoft.Win32;
@@ -35,7 +36,7 @@ namespace Wallet.Pages
         private readonly BlockChain _friChain;
         private User _loggedUser;
         private WalletCore _loggedUserWallet;
-        LayerBlockchainNetwork nettwork = new LayerBlockchainNetwork();
+        private LayerBlockchainNetwork nettwork;
         private const String APP_ID = "Fricoin.Wallet";
 
 
@@ -48,14 +49,12 @@ namespace Wallet.Pages
 
 
             //NETTWORK STUFF
+            nettwork = new LayerBlockchainNetwork();
             nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
             nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
             nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
-
-
-
-
-
+            //kick of blockchain game here, must first register events, than kick that off
+            nettwork._blockchainNetwork.Initialize();
 
 
             //REGISTER CLOSING EVENET
@@ -70,8 +69,8 @@ namespace Wallet.Pages
 
 
             //CHAIN GAMES
-            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
-            _friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
+            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
+            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
             _friChain.PrintWholeBlockChain();
@@ -124,6 +123,7 @@ namespace Wallet.Pages
 
         private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
         {
+            Console.WriteLine("peer List obtained");
             SetListOfPeers(e.ListOfClients);
         }
 
@@ -141,6 +141,7 @@ namespace Wallet.Pages
 
         private void SetListOfPeers(Collection<IClientDetails> groupClients)
         {
+            Console.WriteLine("set peer list");
             Dispatcher.Invoke(() =>
             {
                 PeersListBox.ItemsSource = groupClients;
@@ -206,13 +207,14 @@ namespace Wallet.Pages
 
         private void SendClick(object sender, RoutedEventArgs e)
         {
-            var message = new TextMessage()
-            {
-                Client = nettwork._blockchainNetwork.ClientDetails(),
-                Text = "nazdaaaro"
-            };
+            //var message = new TextMessage()
+            //{
+            //    Client = nettwork._blockchainNetwork.ClientDetails(),
+            //    Text = "nazdaaaro"
+            //};
             var CmDmessage = new CommandMessage()
             {
+                Data = ByteHelper.GetBytesFromString("Test message"),
                 Client = nettwork._blockchainNetwork.ClientDetails(),
                 Command = CommandType.Block
             };
@@ -230,7 +232,7 @@ namespace Wallet.Pages
 
         private void LogoutClick(object sender, RoutedEventArgs e)
         {
-            nettwork._blockchainNetwork.Close();            
+            nettwork._blockchainNetwork.Close();
             NavigationService?.Navigate(new Loading());
         }
 
@@ -300,7 +302,7 @@ namespace Wallet.Pages
 
 
             // Show the toast. Be sure to specify the AppUserModelId on your application's shortcut!
-            
+
             ToastNotificationManager.CreateToastNotifier(APP_ID).Show(toast);
 
             //HIDE TOAST after 2500
@@ -353,6 +355,6 @@ namespace Wallet.Pages
             ShowToastMessageCopiedToCB();
         }
 
-   
+
     }
 }

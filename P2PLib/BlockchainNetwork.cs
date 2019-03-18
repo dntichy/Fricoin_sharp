@@ -107,6 +107,12 @@ namespace P2PLib.Network
             }
         }
 
+        public void Initialize()
+        {
+            mListener.Initialize();
+            mClient.Initialize();
+        }
+
         public BlockchainNetwork(int listenPort, int serverListenPort, string server, string group)
         {
             mListenPort = listenPort;
@@ -127,10 +133,10 @@ namespace P2PLib.Network
             ((P2PServer) mListener).OnRecieveListOfClients += new OnRecieveListOfClientsEvent(OnRecieveListPeers);
 
 
-            mListener.Initialize();
+            //mListener.Initialize();
             //////////////////////////////////////////////////////////////////////////
             mClient = new P2PClient(listenPort, server, serverListenPort, group);
-            mClient.Initialize();
+            //mClient.Initialize();
             //////////////////////////////////////////////////////////////////////////
             mClientConnections = new Dictionary<IClientDetails, IClient>();
         }

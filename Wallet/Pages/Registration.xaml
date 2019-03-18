@@ -54,12 +54,12 @@
                 </Grid>
                 <Grid Grid.Row="1" HorizontalAlignment="Center" Margin="0 23 0 0 ">
                     <StackPanel  Orientation="Horizontal"  >
-                        <Button  Content="REGISTER" Margin="0 0 10 0" Name="Submit"
+                        <Button  Content="REGISTER" Margin="0 0 10 0" 
                      Width="100"  Click="Submit_Click" Background="DarkSlateGray" BorderBrush="Black" />
-                        <Button Content="RESET" Margin="0 0 10 0" HorizontalAlignment="Left"  Name="Button2"
+                        <Button Content="RESET" Margin="0 0 10 0" HorizontalAlignment="Left"  
                     Width="100" Click="Reset_Click" Background="DarkSlateGray" BorderBrush="Black" />
-                        <Button Content="CANCEL"  HorizontalAlignment="Right" Name="Button3"
-                    Width="100" Margin="0 0 10 0" Click="Cancel_Click" Background="DarkSlateGray" BorderBrush="Black" />
+                        <Button Content="BACK"  HorizontalAlignment="Right" 
+                    Width="100" Margin="0 0 10 0" Click="BackButton_Click" Background="DarkSlateGray" BorderBrush="Black" />
                     </StackPanel>
                 </Grid>
 

@@ -3,7 +3,7 @@ namespace DatabaseLib.Migrations
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class InitialCreate : DbMigration
+    public partial class New : DbMigration
     {
         public override void Up()
         {
@@ -16,7 +16,10 @@ namespace DatabaseLib.Migrations
                         LastName = c.String(),
                         Email = c.String(),
                         PublicKey = c.String(),
+                        PublicKeyHashed = c.String(),
+                        Address = c.String(),
                         RegistrationDate = c.DateTime(nullable: false),
+                        Password = c.String(),
                     })
                 .PrimaryKey(t => t.Id);
             
