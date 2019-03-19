@@ -30,9 +30,11 @@ namespace P2PLib.Network.MessageParser.Messages
             set { mData = value; }
         }
 
-        public Byte[] GetMessagePacket()
+        public byte[] GetMessagePacket()
         {
-            String textResult = "";
+            if (Data == null) Data = new byte[] { };
+
+            var textResult = "";
             textResult += "<message>";
             textResult += "<type>" + Type + "</type>";
             textResult += "<command>" + Command + "</command>";
@@ -49,7 +51,7 @@ namespace P2PLib.Network.MessageParser.Messages
         public bool Parse(Byte[] data)
         {
             //parse the message from "incoming data packet"
-            String messageContent = Encoding.UTF8.GetString(data);
+            var messageContent = Encoding.UTF8.GetString(data);
             //////////////////////////////////////////////////////////////////////////
             //Data validation
             XmlDocument xmlDoc = new XmlDocument();

@@ -44,7 +44,6 @@ namespace P2PLib.Network
 
         private int mListenPort;
         private int mServerListenPort;
-
         private String mServer;
         private String mGroup;
         private Collection<IMessage> mInboundMessages;
@@ -260,12 +259,12 @@ namespace P2PLib.Network
 
             IClientDetails details = null;
 
-            if (this.GroupClients == null)
+            if (GroupClients == null)
             {
                 throw new NullReferenceException("The clients list is null!");
             }
 
-            if (this.GroupClients.Count == 0)
+            if (GroupClients.Count == 0)
             {
                 throw new Exception("There are no clients available!");
             }
@@ -294,8 +293,7 @@ namespace P2PLib.Network
                 }
                 else
                 {
-                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress, /*BaseSendPort+i*/
-                        currClientDetails.ClientListenPort, Group);
+                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress,currClientDetails.ClientListenPort, Group);
                     currClient.Initialize();
                 }
 

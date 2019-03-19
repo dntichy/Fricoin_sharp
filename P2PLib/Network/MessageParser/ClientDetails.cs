@@ -5,26 +5,26 @@ namespace Engine.Network.MessageParser
 {
     public class ClientDetails : IClientDetails
     {
-        private String mClientName;
-        private String mClientIPAddress;
-        private int mClientListenPort;
+        private String clientName;
+        private String clientIPAddress;
+        private int clientListenPort;
 
         public String ClientName
         {
-            get { return mClientName; }
-            set { mClientName = value; }
+            get { return clientName; }
+            set { clientName = value; }
         }
 
         public String ClientIPAddress
         {
-            get { return mClientIPAddress; }
-            set { mClientIPAddress = value; }
+            get { return clientIPAddress; }
+            set { clientIPAddress = value; }
         }
 
         public int ClientListenPort
         {
-            get { return mClientListenPort; }
-            set { mClientListenPort = value; }
+            get { return clientListenPort; }
+            set { clientListenPort = value; }
         }
 
         public int CompareTo(IClientDetails other)
@@ -40,12 +40,17 @@ namespace Engine.Network.MessageParser
             if (GetType() != obj.GetType())
                 return false;
 
-            return (mClientListenPort == ((IClientDetails)obj).ClientListenPort &&
-                    mClientIPAddress.Equals(((IClientDetails)obj).ClientIPAddress));
+            return (clientListenPort == ((IClientDetails)obj).ClientListenPort &&
+                    clientIPAddress.Equals(((IClientDetails)obj).ClientIPAddress));
         }
         public override int GetHashCode()
         {
             return base.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return ClientIPAddress + ":" + ClientListenPort;
         }
     }
 }

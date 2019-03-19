@@ -96,6 +96,16 @@ namespace CoreLib.Blockchain
             Console.WriteLine("DONE, there is: "+ countTxs +" transactions");
         }
 
+        public Block GetBlock(byte[] id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte[][] GetBlockHashes()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Send(string from, string to, int amount)
         {
             var utxoSet = new UTXOSet(this); 
@@ -108,6 +118,11 @@ namespace CoreLib.Blockchain
             
               var block = AddBlock(new List<Transaction>(){tx});
               utxoSet.Update(block);
+        }
+
+        public void AddBlock(Block block)
+        {
+            throw new NotImplementedException();
         }
 
         public bool IsValid()
@@ -157,6 +172,11 @@ namespace CoreLib.Blockchain
                 currentHash = block.PreviousHash;
                 Console.WriteLine(JsonConvert.SerializeObject(block, Formatting.Indented));
             }
+        }
+
+        public int GetBestHeight()
+        {
+            throw new NotImplementedException();
         }
 
         //ver0

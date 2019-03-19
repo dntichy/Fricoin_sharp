@@ -37,9 +37,12 @@ namespace Wallet.Pages
         private User _loggedUser;
         private WalletCore _loggedUserWallet;
         private LayerBlockchainNetwork nettwork;
-        private const String APP_ID = "Fricoin.Wallet";
+        private const string APP_ID = "Fricoin.Wallet";
 
-
+        //-------------
+        bool debug = true; //TODO remove, or set false
+        ConsoleWindow DebugWindow;
+        //------------
 
 
         public WalletPage(User user)
@@ -48,24 +51,59 @@ namespace Wallet.Pages
             TryCreateShortcut(); // create shortcut, so i will be able to show toasts
 
 
-            //NETTWORK STUFF
-            nettwork = new LayerBlockchainNetwork();
-            nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
-            nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
-            nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
-            //kick of blockchain game here, must first register events, than kick that off
-            nettwork._blockchainNetwork.Initialize();
-
-
-            //REGISTER CLOSING EVENET
-            Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
-
             //INITIALIZE CHAIN, ETC
             _friChain = new BlockChain();
             _loggedUser = user;
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
 
+            //INITIALIZE CONSOLE OUTPUT IF DEBUG
+            if (debug)
+            {
+                DebugWindow = new ConsoleWindow();
+                DebugWindow.Loaded += NetworkInitializeDelegate;
+                DebugWindow.Show();
+                DebugWindow.Title = user.Address;
+
+            }
+            
+            //INITIALIZE NETTWORK if debug is false
+            if (!debug) InitializeNettwork();
+
+            //REGISTER CLOSING EVENET
+            Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
+
+            //SET GUI PROPERTIES 
+            CreateQrCode(user.Address);
+            Address.Content = user.Address;
+            Email.Content = user.Email;
+            var firstName = Regex.Replace(user.FirstName, @"\s+", "");
+            var lastName = Regex.Replace(user.LastName, @"\s+", "");
+
+            FullName.Content = firstName + " " + lastName;
+            Balance.Content = _friChain.GetBalance(user.Address);
+
+            //DISPLAY LIST OF USERS
+            var context = new UserContext();
+            var listUsers = context.Users.ToList();
+            usersListBox.ItemsSource = listUsers;
+
+        }
+
+        private void NetworkInitializeDelegate(object sender, EventArgs e)
+        {
+            InitializeNettwork();
+        }
+
+        private void InitializeNettwork()
+        {
+            //NETTWORK STUFF
+            nettwork = new LayerBlockchainNetwork(_friChain);
+            nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
+            nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
+            nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
+            //kick of blockchain game here, must first register events, than kick that off
+            nettwork._blockchainNetwork.Initialize();
 
 
             //CHAIN GAMES
@@ -103,45 +141,34 @@ namespace Wallet.Pages
             SetListBlocksHeader(collectionOfHeaders);
 
 
-
-            //SET GUI PROPERTIES 
-            CreateQrCode(user.Address);
-            Address.Content = user.Address;
-            Email.Content = user.Email;
-            var firstName = Regex.Replace(user.FirstName, @"\s+", "");
-            var lastName = Regex.Replace(user.LastName, @"\s+", "");
-
-            FullName.Content = firstName + " " + lastName;
-            Balance.Content = _friChain.GetBalance(user.Address);
-
-            //DISPLAY LIST OF USERS
-            var context = new UserContext();
-            var listUsers = context.Users.ToList();
-            usersListBox.ItemsSource = listUsers;
-
+            //set Console window title
+            if (debug)
+            {
+                DebugWindow.Title = _loggedUser.Address + " IP: " + nettwork._blockchainNetwork.ClientDetails().ToString();
+            }
         }
 
         private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
         {
-            Console.WriteLine("peer List obtained");
+            Console.WriteLine("PEER List obtained");
             SetListOfPeers(e.ListOfClients);
         }
 
         private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
         {
-            Console.WriteLine("typek UNREGISTERED");
+            Console.WriteLine("PEER UNREGISTERED");
             SetListOfPeers(nettwork._blockchainNetwork.GroupClients);//set list of peers
         }
 
         private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
         {
-            Console.WriteLine("typek REGISTERED");
+            Console.WriteLine("PEER REGISTERED");
             SetListOfPeers(nettwork._blockchainNetwork.GroupClients); //set list of peers
         }
 
         private void SetListOfPeers(Collection<IClientDetails> groupClients)
         {
-            Console.WriteLine("set peer list");
+            Console.WriteLine("SET PEER list");
             Dispatcher.Invoke(() =>
             {
                 PeersListBox.ItemsSource = groupClients;
@@ -224,9 +251,16 @@ namespace Wallet.Pages
 
         void AppClosing(object sender, CancelEventArgs e)
         {
+
+            if (debug)
+            {
+                DebugWindow?.Close();
+            }
+
             nettwork._blockchainNetwork.Close();
             e.Cancel = true;
             Application.Current.Shutdown();
+
 
         }
 

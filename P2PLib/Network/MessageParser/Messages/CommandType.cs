@@ -3,7 +3,6 @@
     public enum CommandType
     {
        ClearTransactionPool,
-       Chain,
        Transaction,
        Version,
        Inv,
