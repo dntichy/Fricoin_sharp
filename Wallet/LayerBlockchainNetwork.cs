@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Wallet
@@ -19,11 +21,31 @@ namespace Wallet
         public BlockchainNetwork _blockchainNetwork;
         public Dictionary<string, Transaction> TransactionPool;
         private BlockChain chain;
+        private List<byte[]> blocksInTransit;
+
+
+        public static string GetIpAddress() {
+
+            int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
+
+            //SET local IP
+            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+            var localAddress = "undefined";
+
+            for (int i = 0; i < hostEntry.AddressList.Length; ++i)
+            {
+                if (hostEntry.AddressList[i].AddressFamily == AddressFamily.InterNetwork)
+                    localAddress = hostEntry.AddressList[i].ToString() +":"+ listenPort;
+            }
+
+            return localAddress;
+        }
 
         public LayerBlockchainNetwork(BlockChain bchain)
         {
             chain = bchain;
             TransactionPool = new Dictionary<string, Transaction>();
+            blocksInTransit = new List<byte[]>();
 
             //P2P CONFIGURATIONS
             int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
@@ -62,8 +84,14 @@ namespace Wallet
                             case CommandType.GetBlocks:
                                 HandleGetBlocks(rxMsg);
                                 break;
+                            case CommandType.Version:
+                                HandleVersion(rxMsg);
+                                break;
                             case CommandType.GetData:
                                 HandleGetData(rxMsg);
+                                break;
+                            case CommandType.Inv:
+                                HandleInv(rxMsg);
                                 break;
                             default:
                                 Console.WriteLine("unknown command");
@@ -73,6 +101,38 @@ namespace Wallet
                         break;
                     }
             }
+        }
+        public void Send(string from, string to, int amount, bool miningInProgress)
+        {
+            var utxoSet = new UTXOSet(chain);
+
+            var tx = Transaction.NewTransaction(from, to, amount, utxoSet);
+            if (tx == null)
+            {
+                return;
+            }
+
+            if (miningInProgress)
+            {
+                //var coinbaseTx = Transaction.CoinBaseTx(from, "");
+                var block = chain.MineBlock(new List<Transaction>() {  tx });
+                utxoSet.Update(block);
+            }
+            else
+            {
+
+                //send  to all except me and the one who send the tx
+                var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
+                var msg = new CommandMessage();
+                msg.Command = CommandType.Transaction;
+                msg.Client = _blockchainNetwork.ClientDetails();
+                msg.Data = tx.Serialize();
+
+                _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
+                Console.WriteLine("Sending tx over nettwork");
+            }
+
+
         }
 
         private void HandleGetData(CommandMessage message)
@@ -96,6 +156,7 @@ namespace Wallet
         private void HandleGetBlocks(CommandMessage message)
         {
             var blocks = chain.GetBlockHashes();
+            Console.WriteLine("GetBlocks recieved");
             SendInv(message.Client.ToString(), "block", blocks);
         }
 
@@ -122,11 +183,142 @@ namespace Wallet
 
         }
 
+        private void HandleVersion(CommandMessage message)
+        {
+            var version = new Version().DeSerialize(message.Data);
+            Console.WriteLine("Version recieved");
+            var incomeBestheight = version.BestHeigth;
+            var myBestHeight = chain.GetBestHeight();
+            if (myBestHeight < incomeBestheight)
+            {
+                SendGetBlocks(message.Client.ToString());
+
+            }
+            else if (myBestHeight > incomeBestheight)
+            {
+                SendVersion(message.Client.ToString(), chain);
+            }
+
+        }
+
+        private void HandleInv(CommandMessage rxMsg)
+        {
+            var inventory = new Inv().DeSerialize(rxMsg.Data);
+            Console.WriteLine("Inventory recieved: " + inventory.Kind);
+
+            if (inventory.Kind == "block")
+            {
+                blocksInTransit = inventory.Items; //should be hashes of blocks
+                var bHash = new Block().DeSerialize(blocksInTransit[0]).Hash;
+
+                SendGetData(rxMsg.Client.ToString(), "block", bHash);
+
+                var newInTransit = new List<byte[]>();
+
+
+                foreach (var bl in blocksInTransit)
+                {
+                    if (!ArrayHelpers.ByteArrayCompare(bl, bHash))
+                    {
+                        newInTransit.Add(bl);
+                    }
+                }
+                blocksInTransit = newInTransit;
+
+            }
+            else if (inventory.Kind == "tx")
+            {
+                var txId = inventory.Items[0];
+
+                if (!TransactionPool.ContainsKey(HexadecimalEncoding.ToHexString(txId)))
+                {
+                    SendGetData(rxMsg.Client.ToString(), "tx", txId);
+                }
+            }
+
+
+        }
         private void HandleTransaction(CommandMessage message)
         {
             var tx = new Transaction().DeSerialize(message.Data);
             Console.WriteLine("Recieved new transaction");
+            TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
+
+            //Mine transaction
+            MineTransactions();
+
+            //send inv to all except me and the one who send the tx
+            var addressesToExclude = new string[] {
+                message.Client.ToString(),
+                _blockchainNetwork.ClientDetails().ToString()
+            };
+
+            var inv = new Inv() { Items = new List<byte[]>() { tx.Id }, Kind = "tx" };
+            var msg = new CommandMessage();
+            msg.Command = CommandType.Inv;
+            msg.Client = _blockchainNetwork.ClientDetails();
+            msg.Data = inv.Serialize();
+
+            _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
         }
+
+        private void MineTransactions()
+        {
+            Console.WriteLine("Minig started");
+            var txList = new List<Transaction>();
+
+            //fill txList from TransactionPool
+            foreach (var txPair in TransactionPool)
+            {
+                var tx = txPair.Value;
+                if (chain.VerifyTransaction(tx))
+                {
+                    txList.Add(tx);
+                }
+            }
+
+            if (txList.Count == 0)
+            {
+                Console.WriteLine("All txs invalid");
+                return;
+            }
+
+            var coinBaseTx = Transaction.CoinBaseTx(_blockchainNetwork.ClientDetails().ToString(), "");
+            txList.Add(coinBaseTx);
+
+            var newBlock = chain.MineBlock(txList);
+            chain.ReindexUTXO();
+            Console.WriteLine("new block mined");
+
+            foreach (var tx in txList)
+            {
+                TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
+            }
+
+            var inv = new Inv()
+            {
+                Items = new List<byte[]> { newBlock.Hash },
+                Kind = "block"
+            };
+
+            var msg = new CommandMessage();
+            msg.Command = CommandType.Inv;
+            msg.Client = _blockchainNetwork.ClientDetails();
+            msg.Data = inv.Serialize();
+            //send inv to all except me and the one who send the tx
+            var addressesToExclude = new string[] {
+                _blockchainNetwork.ClientDetails().ToString()
+            };
+            _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
+
+            if (TransactionPool.Count > 0)
+            {
+                MineTransactions();
+            }
+
+        }
+
+
 
         //METHODS, SENDING MESSAGES
 
@@ -154,7 +346,7 @@ namespace Wallet
         }
         public class Inv
         {
-            public byte[][] Items { get; set; }
+            public List<byte[]> Items { get; set; }
             public string Kind { get; set; }
 
             public byte[] Serialize()
@@ -197,7 +389,6 @@ namespace Wallet
             }
         }
 
-
         public void SendBlock(string address, Block block)
         {
             var message = new CommandMessage();
@@ -209,7 +400,7 @@ namespace Wallet
         }
 
 
-        public void SendInv(string address, string kind, byte[][] items)
+        public void SendInv(string address, string kind, List<byte[]> items)
         {
             var message = new CommandMessage();
             message.Command = CommandType.Inv;
@@ -233,7 +424,7 @@ namespace Wallet
 
             _blockchainNetwork.BroadcastMessageAsync(message);
         }
-        public void SendVersion(BlockChain bchain)
+        public void SendVersion(string address, BlockChain bchain)
         {
             var message = new CommandMessage();
             message.Command = CommandType.Version;
@@ -245,7 +436,7 @@ namespace Wallet
                 VersionCode = 1
             }.Serialize();
 
-            _blockchainNetwork.BroadcastMessageAsync(message);
+            _blockchainNetwork.SendMessageToAddressAsync(message, address);
         }
 
 

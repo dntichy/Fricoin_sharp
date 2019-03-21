@@ -42,8 +42,7 @@ namespace CoreLib.Blockchain
         {
             SHA256 sha256 = SHA256.Create();
             byte[] inputBytes =
-                Encoding.ASCII.GetBytes(
-                    $"{TimeStamp} - {PreviousHash} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
+                Encoding.ASCII.GetBytes($"{TimeStamp} - {PreviousHash} - {JsonConvert.SerializeObject(Transactions)} - {Nonce}");
             byte[] outputBytes = sha256.ComputeHash(inputBytes);
 
             return outputBytes;
@@ -101,9 +100,9 @@ namespace CoreLib.Blockchain
         {
             var transactions = new List<Transaction>()
             {
-                Transaction.CoinBaseTx("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", ""),
-                Transaction.CoinBaseTx("1KEXhE2mFTtn5HYeLxfXhxykb95GMfZSqG", ""),
-                Transaction.CoinBaseTx("19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", "")
+                Transaction.CoinBaseTx("112H2TcYAvxWGPSWXz4bzGvm5RXEdFDCms", ""),
+                Transaction.CoinBaseTx("1DCeEWaxBxyqYnXo9dH8C4XF4ALutMxPVi", ""),
+                Transaction.CoinBaseTx("1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", ""),
             };
             var genesis = new Block(DateTime.Parse("1.1.2019"), null, transactions);
             genesis.SetMerkleRoot();

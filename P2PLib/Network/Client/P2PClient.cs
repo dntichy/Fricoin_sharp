@@ -77,7 +77,7 @@ namespace P2PLib.Network.Client
             if (string.IsNullOrEmpty(mServer))
                 return InitState.InvalidServer;
 
-            IPHostEntry hostEntry = Dns.GetHostEntry(/*"localhost"*/Dns.GetHostName()); //Dns.Resolve("localhost").AddressList[0];
+            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName()); 
 
             if (hostEntry.AddressList.Length <= 0)
                 return InitState.ErrorNoAvailableIPAddress;
@@ -85,7 +85,7 @@ namespace P2PLib.Network.Client
              localAddress = null;
             for (int i = 0; i < hostEntry.AddressList.Length; ++i)
             {
-                if (hostEntry.AddressList[i].AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                if (hostEntry.AddressList[i].AddressFamily == AddressFamily.InterNetwork)
                     localAddress = hostEntry.AddressList[i];
             }
 

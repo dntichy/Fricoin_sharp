@@ -51,7 +51,7 @@ namespace P2PLib.Network
 
         private IServer mListener;
         private P2PClient mClient;
-        private Dictionary<IClientDetails, IClient> mClientConnections;
+        private Dictionary<IClientDetails, IClient> clientConnections;
 
         public int ListenPort
         {
@@ -91,7 +91,7 @@ namespace P2PLib.Network
             get
             {
                 if (mListener != null)
-                    return ((P2PServer) mListener).GroupClientsDetails;
+                    return ((P2PServer)mListener).GroupClientsDetails;
                 return null;
             }
         }
@@ -115,41 +115,34 @@ namespace P2PLib.Network
         public BlockchainNetwork(int listenPort, int serverListenPort, string server, string group)
         {
             mListenPort = listenPort;
-            mServerListenPort  = serverListenPort;
+            mServerListenPort = serverListenPort;
             mServer = server;
             mGroup = group;
             mInboundMessages = new Collection<IMessage>();
             mGroupClients = new Collection<IClientDetails>();
-            //////////////////////////////////////////////////////////////////////////
+            
             mListener = new P2PServer(listenPort, group);
-            //mListener.ListenPort = listenPort;
-            //((CollaborativeNotesServer)mListener).Group = group;
-            ((P2PServer) mListener).IncomingMessageQueue = mInboundMessages;
-            ((P2PServer) mListener).GroupClientsDetails = mGroupClients;
-            ((P2PServer) mListener).OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
-            ((P2PServer) mListener).OnRegisterClient += new ServerRegisterEvent(OnRegisterPeer);
-            ((P2PServer) mListener).OnUnRegisterClient += new ServerUnRegisterEvent(OnUnRegisterPeer);
-            ((P2PServer) mListener).OnRecieveListOfClients += new OnRecieveListOfClientsEvent(OnRecieveListPeers);
-
+            ((P2PServer)mListener).IncomingMessageQueue = mInboundMessages;
+            ((P2PServer)mListener).GroupClientsDetails = mGroupClients;
+            ((P2PServer)mListener).OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
+            ((P2PServer)mListener).OnRegisterClient += new ServerRegisterEvent(OnRegisterPeer);
+            ((P2PServer)mListener).OnUnRegisterClient += new ServerUnRegisterEvent(OnUnRegisterPeer);
+            ((P2PServer)mListener).OnRecieveListOfClients += new OnRecieveListOfClientsEvent(OnRecieveListPeers);
 
             //mListener.Initialize();
-            //////////////////////////////////////////////////////////////////////////
             mClient = new P2PClient(listenPort, server, serverListenPort, group);
             //mClient.Initialize();
-            //////////////////////////////////////////////////////////////////////////
-            mClientConnections = new Dictionary<IClientDetails, IClient>();
+            clientConnections = new Dictionary<IClientDetails, IClient>();
         }
 
         private void OnRecieveListPeers(object sender, ReceiveListOfClientsEventArgs e)
         {
             if (mOnRecieveListOfClients != null) mOnRecieveListOfClients.Invoke(sender, e);
         }
-
         private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
             if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(sender, e);
         }
-
         private void OnRegisterPeer(object sender, ServerRegisterEventArgs e)
         {
             if (mOnRegisterClient != null) mOnRegisterClient.Invoke(sender, e);
@@ -165,11 +158,41 @@ namespace P2PLib.Network
             UnregisterMessage msg = new UnregisterMessage();
             msg.Group = this.Group;
             msg.Client = new ClientDetails();
-            msg.Client.ClientIPAddress = ((P2PServer) mListener).LocalIPAddress;
+            msg.Client.ClientIPAddress = ((P2PServer)mListener).LocalIPAddress;
             msg.Client.ClientListenPort = mListenPort;
             mClient.SendMessageAsync(msg);
             BroadcastMessageAsync(msg);
             System.Threading.Thread.Sleep(100); //Sleep required due to the use of asynchronous methods
+        }
+
+        public void BroadcastMessageAsyncExceptAddress(string[] addressesToExclude, IMessage message)
+        {
+            for (int i = 0; i < mGroupClients.Count; ++i)
+            {
+                IClientDetails currClientDetails = mGroupClients[i];
+
+                var skip = false;
+                for (var j = 0; j < addressesToExclude.Length; j++)
+                {
+                    if (addressesToExclude[j] == currClientDetails.ToString()) skip = true;
+                }
+                if (skip) continue; //skip if should be excluded
+
+
+                //set client
+                IClient currClient = null;
+                if (clientConnections.ContainsKey(currClientDetails)) currClient = clientConnections[currClientDetails];
+                else
+                {
+                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress, currClientDetails.ClientListenPort, Group);
+                    currClient.Initialize();
+                }
+                //send message
+                currClient.SendMessageAsync(message);
+
+                //add to clientConnections if not there already
+                if (!clientConnections.ContainsKey(currClientDetails)) clientConnections[currClientDetails] = currClient;
+            }
         }
 
         public void SendMessage(IMessage message, IClientDetails details)
@@ -187,9 +210,9 @@ namespace P2PLib.Network
             }
 
             IClient currClient = null;
-            if (mClientConnections.ContainsKey(details))
+            if (clientConnections.ContainsKey(details))
             {
-                currClient = mClientConnections[details];
+                currClient = clientConnections[details];
             }
             else
             {
@@ -199,13 +222,13 @@ namespace P2PLib.Network
 
             currClient.SendMessage(message);
 
-            if (!mClientConnections.ContainsKey(details))
+            if (!clientConnections.ContainsKey(details))
             {
-                mClientConnections[details] = currClient;
+                clientConnections[details] = currClient;
             }
         }
 
-        public void SendMessage(IMessage message, String name)
+        public void SendMessage(IMessage message, string name)
         {
             if (name == null)
             {
@@ -243,7 +266,7 @@ namespace P2PLib.Network
             SendMessage(message, details);
         }
 
-        public void SendMessageToAddress(IMessage message, String address)
+        public void SendMessageToAddress(IMessage message, string address)
         {
             if (address == null)
             {
@@ -287,21 +310,21 @@ namespace P2PLib.Network
             {
                 IClientDetails currClientDetails = mGroupClients[i];
                 IClient currClient = null;
-                if (mClientConnections.ContainsKey(currClientDetails))
+                if (clientConnections.ContainsKey(currClientDetails))
                 {
-                    currClient = mClientConnections[currClientDetails];
+                    currClient = clientConnections[currClientDetails];
                 }
                 else
                 {
-                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress,currClientDetails.ClientListenPort, Group);
+                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress, currClientDetails.ClientListenPort, Group);
                     currClient.Initialize();
                 }
 
                 currClient.SendMessage(message);
 
-                if (!mClientConnections.ContainsKey(currClientDetails))
+                if (!clientConnections.ContainsKey(currClientDetails))
                 {
-                    mClientConnections[currClientDetails] = currClient;
+                    clientConnections[currClientDetails] = currClient;
                 }
             }
         }
@@ -321,9 +344,9 @@ namespace P2PLib.Network
             }
 
             IClient currClient = null;
-            if (mClientConnections.ContainsKey(details))
+            if (clientConnections.ContainsKey(details))
             {
-                currClient = mClientConnections[details];
+                currClient = clientConnections[details];
             }
             else
             {
@@ -333,13 +356,13 @@ namespace P2PLib.Network
 
             currClient.SendMessageAsync(message);
 
-            if (!mClientConnections.ContainsKey(details))
+            if (!clientConnections.ContainsKey(details))
             {
-                mClientConnections[details] = currClient;
+                clientConnections[details] = currClient;
             }
         }
 
-        public void SendMessageAsync(IMessage message, String name)
+        public void SendMessageAsync(IMessage message, string name)
         {
             if (name == null)
             {
@@ -377,7 +400,7 @@ namespace P2PLib.Network
             SendMessageAsync(message, details);
         }
 
-        public void SendMessageToAddressAsync(IMessage message, String address)
+        public void SendMessageToAddressAsync(IMessage message, string address)
         {
             if (address == null)
             {
@@ -421,22 +444,20 @@ namespace P2PLib.Network
             {
                 IClientDetails currClientDetails = mGroupClients[i];
                 IClient currClient = null;
-                if (mClientConnections.ContainsKey(currClientDetails))
-                {
-                    currClient = mClientConnections[currClientDetails];
-                }
+
+                if (clientConnections.ContainsKey(currClientDetails)) currClient = clientConnections[currClientDetails];
                 else
                 {
-                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress, /*BaseSendPort+i*/
+                    currClient = new P2PClient(ListenPort, currClientDetails.ClientIPAddress,
                         currClientDetails.ClientListenPort, Group);
                     currClient.Initialize();
                 }
 
                 currClient.SendMessageAsync(message);
 
-                if (!mClientConnections.ContainsKey(currClientDetails))
+                if (!clientConnections.ContainsKey(currClientDetails))
                 {
-                    mClientConnections[currClientDetails] = currClient;
+                    clientConnections[currClientDetails] = currClient;
                 }
             }
         }

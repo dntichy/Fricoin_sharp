@@ -92,6 +92,10 @@
       <Project>{c43f0eb1-3761-4708-baa7-9e8f070a33af}</Project>
       <Name>ChainUtilsLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\P2PLib\P2PLib.csproj">
+      <Project>{AF00AD38-2B00-4844-92D7-381E42B47C5F}</Project>
+      <Name>P2PLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\LevelDB.Standard.2.1.5\build\net4\LevelDB.Standard.targets" Condition="Exists('..\packages\LevelDB.Standard.2.1.5\build\net4\LevelDB.Standard.targets')" />

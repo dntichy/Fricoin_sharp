@@ -64,12 +64,12 @@
                     <StackPanel>
                         <DockPanel >
                             <Label FontFamily="Consolas" Content="Amount"  />
-                            <TextBox FontFamily="Consolas"  Text="" Width="60"/>
+                            <TextBox FontFamily="Consolas" Name="AmountTextBox"  Text="" Width="60"/>
                             <Button  HorizontalAlignment="Right" FontSize="12" Height="30" Margin="0 0 20 0" Click="SendClick" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" />
                         </DockPanel>
                         <DockPanel>
                             <Label  FontFamily="Consolas" Content="Address" />
-                            <TextBox  FontFamily="Consolas" HorizontalAlignment="Left" Text=""  Width="260" />
+                            <TextBox Name="ToAddressTextBox" FontFamily="Consolas" HorizontalAlignment="Left" Text=""  Width="260" />
                         </DockPanel>
                         <!--<DockPanel>
                             <Button  Click="Send" Width="100"  Margin="0 10 20 0" Background="DarkSlateGray" BorderBrush="Black" HorizontalAlignment="Right" Content="MINE" />

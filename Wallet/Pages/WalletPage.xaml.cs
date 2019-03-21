@@ -40,7 +40,7 @@ namespace Wallet.Pages
         private const string APP_ID = "Fricoin.Wallet";
 
         //-------------
-        bool debug = true; //TODO remove, or set false
+        bool debug = false; //TODO remove, or set false
         ConsoleWindow DebugWindow;
         //------------
 
@@ -52,7 +52,7 @@ namespace Wallet.Pages
 
 
             //INITIALIZE CHAIN, ETC
-            _friChain = new BlockChain();
+            _friChain = new BlockChain(LayerBlockchainNetwork.GetIpAddress());
             _loggedUser = user;
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
@@ -66,9 +66,14 @@ namespace Wallet.Pages
                 DebugWindow.Title = user.Address;
 
             }
-            
+
             //INITIALIZE NETTWORK if debug is false
             if (!debug) InitializeNettwork();
+
+            //CHAIN GAMES
+            nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 20, true);
+            _friChain.PrintWholeBlockChain();
+            InitializeListBox();
 
             //REGISTER CLOSING EVENET
             Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
@@ -90,35 +95,12 @@ namespace Wallet.Pages
 
         }
 
-        private void NetworkInitializeDelegate(object sender, EventArgs e)
+        private void InitializeListBox()
         {
-            InitializeNettwork();
-        }
-
-        private void InitializeNettwork()
-        {
-            //NETTWORK STUFF
-            nettwork = new LayerBlockchainNetwork(_friChain);
-            nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
-            nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
-            nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
-            //kick of blockchain game here, must first register events, than kick that off
-            nettwork._blockchainNetwork.Initialize();
-
-
-            //CHAIN GAMES
-            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 50);
-            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
-            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
-            //_friChain.Send("1Gd8WnpnfH4oaCjva6JfgGRJRRQ271KpHC", "19p2is8biiWDEBhbfQb4yQRv1zwKX1CR17", 20);
-            _friChain.PrintWholeBlockChain();
-
-
             //todo register this on Item added....
             var collectionOfHeaders = new Collection<BlockHeader>();
             foreach (var block in _friChain)
             {
-
                 var bHash = Convert.ToBase64String(block.Hash);
                 var MerkleRoot = Convert.ToBase64String(block.MerkleRoot);
                 string PreviousHash = "-1";
@@ -140,6 +122,22 @@ namespace Wallet.Pages
             }
             SetListBlocksHeader(collectionOfHeaders);
 
+        }
+
+        private void NetworkInitializeDelegate(object sender, EventArgs e)
+        {
+            InitializeNettwork();
+        }
+
+        private void InitializeNettwork()
+        {
+            //NETTWORK STUFF
+            nettwork = new LayerBlockchainNetwork(_friChain);
+            nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
+            nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
+            nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
+            //kick of blockchain game here, must first register events, than kick that off
+            nettwork._blockchainNetwork.Initialize();
 
             //set Console window title
             if (debug)
@@ -213,11 +211,6 @@ namespace Wallet.Pages
             return image;
         }
 
-        private void Send(object sender, RoutedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         private void ExportWalletCoreClick(object sender, RoutedEventArgs e)
         {
             SaveFileDialog file = new SaveFileDialog();
@@ -230,25 +223,39 @@ namespace Wallet.Pages
 
         }
 
-
-
         private void SendClick(object sender, RoutedEventArgs e)
         {
+
+            int.TryParse(AmountTextBox.Text, out int amount);
+            if (amount == 0)
+            {
+                Console.WriteLine("Specify correct amount");
+                return;
+            }
+
+            if (ToAddressTextBox.Text.Equals(nettwork._blockchainNetwork.ClientDetails().ToString()))
+            {
+                Console.WriteLine("Can't send to yourself");
+                return;
+            }
+
+            nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount, true);
+
+
             //var message = new TextMessage()
             //{
             //    Client = nettwork._blockchainNetwork.ClientDetails(),
             //    Text = "nazdaaaro"
             //};
-            var CmDmessage = new CommandMessage()
-            {
-                Data = ByteHelper.GetBytesFromString("Test message"),
-                Client = nettwork._blockchainNetwork.ClientDetails(),
-                Command = CommandType.Block
-            };
+            //var CmDmessage = new CommandMessage()
+            //{
+            //    Data = ByteHelper.GetBytesFromString("Test message"),
+            //    Client = nettwork._blockchainNetwork.ClientDetails(),
+            //    Command = CommandType.Block
+            //};
 
-            nettwork._blockchainNetwork.BroadcastMessage(CmDmessage);
+            //nettwork._blockchainNetwork.BroadcastMessage(CmDmessage);
         }
-
         void AppClosing(object sender, CancelEventArgs e)
         {
 
@@ -293,7 +300,6 @@ namespace Wallet.Pages
             });
 
         }
-
         private void Users_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var user = usersListBox.SelectedItem as User;
@@ -346,7 +352,6 @@ namespace Wallet.Pages
             });
 
         }
-
         private bool TryCreateShortcut()
         {
             String shortcutPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Microsoft\\Windows\\Start Menu\\Programs\\Fricoin.lnk";
@@ -388,6 +393,9 @@ namespace Wallet.Pages
             Clipboard.SetText(_loggedUser.Address);
             ShowToastMessageCopiedToCB();
         }
+
+
+
 
 
     }

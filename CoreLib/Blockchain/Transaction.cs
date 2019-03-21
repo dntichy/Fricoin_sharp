@@ -86,6 +86,7 @@ namespace CoreLib.Blockchain
         public bool Verify(Dictionary<string, Transaction> prevTxs)
         {
             if (IsCoinBase()) return true;
+
             foreach (var inp in Inputs)
             {
                 var hex = HexadecimalEncoding.ToHexString(inp.Id);
@@ -140,57 +141,7 @@ namespace CoreLib.Blockchain
         {
             return Inputs.Count == 1 && Inputs[0].Id.Length == 0 && Inputs[0].Out == -1;
         }
-
-
-        //public static Transaction NewTransaction(string from, string to, int amount, BlockChain chain)
-        //{
-        //    var inputs = new List<TxInput>();
-        //    var outputs = new List<TxOutput>();
-
-        //    var walletBank = new WalletBank();
-        //    var wallet = walletBank.FindWallet(from);
-        //    var pubKeyHash = wallet.PublicKeyHash;
-
-        //    var spendableOutputs = chain.FindSpendableOutputs(pubKeyHash, amount);
-        //    var account = spendableOutputs.Item2;
-        //    var validOutputs = spendableOutputs.Item1;
-
-        //    if (account < amount)
-        //    {
-        //        Console.WriteLine("Insufficient funds");
-        //        return null;
-        //    }
-        //    else
-        //    {
-        //        foreach (var output in validOutputs.Keys)
-        //        {
-        //            var txId = output;
-
-        //            foreach (var @out in validOutputs[txId])
-        //            {
-        //                var input = new TxInput() {Id = txId, Out = @out, Signature = null, PubKey = wallet.PublicKey};
-        //                inputs.Add(input);
-        //            }
-        //        }
-
-        //        outputs.Add(TxOutput.NewTxOutput(amount, to));
-
-        //        if (account > amount)
-        //        {
-        //            outputs.Add(TxOutput.NewTxOutput(account - amount, from));
-        //        }
-        //    }
-
-        //    var tx = new Transaction()
-        //    {
-        //        Id = null,
-        //        Inputs = inputs,
-        //        Outputs = outputs
-        //    };
-        //    tx.Id = tx.CalculateHash();
-        //    chain.SignTransaction(tx, wallet.PrivateKey);
-        //    return tx;
-        //}
+        
 
         //ver1
         public static Transaction NewTransaction(string from, string to, int amount, UTXOSet set)
@@ -216,7 +167,6 @@ namespace CoreLib.Blockchain
                 foreach (var output in validOutputs.Keys)
                 {
                     var txId = (output);
-
 
                     if (validOutputs.ContainsKey(txId)) { 
                     foreach (var @out in validOutputs[txId])

@@ -11,10 +11,12 @@ namespace CoreLib
     public class PersistenceChain
     {
         private static string _dbName = "fricoin";
-        private const string DbEnv = "FricoinEnvironment";
+        //private const string DbEnv = "FricoinEnvironment";
+        private readonly string DbEnv = "";
 
-        public PersistenceChain()
+        public PersistenceChain(string environment)
         {
+            DbEnv = environment.Replace(':', '_');
             using (var env = new LightningEnvironment(DbEnv))
             {
                 env.MaxDatabases = 2;
