@@ -10,30 +10,30 @@ namespace CoreLib.Blockchain
     [Serializable]
     public class TxOutputs
     {
-        
-      public List<TxOutput> Outputs { get; set; }
 
-      public TxOutputs()
-      {
-          Outputs = new List<TxOutput>();
-      }
+        public List<TxOutput> Outputs { get; set; }
+
+        public TxOutputs()
+        {
+            Outputs = new List<TxOutput>();
+        }
 
         public byte[] Serialize()
-      {
-          BinaryFormatter bf = new BinaryFormatter();
-          MemoryStream ms = new MemoryStream();
-          bf.Serialize(ms, this);
-          return ms.ToArray();
-      }
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            bf.Serialize(ms, this);
+            return ms.ToArray();
+        }
 
-      public static TxOutputs DeSerialize(byte[] fromBytes)
-      {
-          MemoryStream memStream = new MemoryStream();
-          BinaryFormatter binForm = new BinaryFormatter();
-          memStream.Write(fromBytes, 0, fromBytes.Length);
-          memStream.Seek(0, SeekOrigin.Begin);
-          return (TxOutputs)binForm.Deserialize(memStream);
-      }
+        public static TxOutputs DeSerialize(byte[] fromBytes)
+        {
+            MemoryStream memStream = new MemoryStream();
+            BinaryFormatter binForm = new BinaryFormatter();
+            memStream.Write(fromBytes, 0, fromBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            return (TxOutputs)binForm.Deserialize(memStream);
+        }
     }
 
     public class UTXOSet
@@ -47,31 +47,36 @@ namespace CoreLib.Blockchain
 
         private void DeleteKeys()
         {
-            var collectSize= 100000;
-            var keysForDelete =new List<byte[]>();
+            var collectSize = 100000;
+            var keysForDelete = new List<byte[]>();
             var collected = 0;
-            
-            var cursor =Chain.TransactionDB.Cursor();
 
-           foreach (var current in cursor)
-           {
-               keysForDelete.Add(current.Key);
-               collected++;
+            var cursor = Chain.TransactionDB.Cursor();
 
-               if (collected == collectSize)
-               {
-                   Chain.TransactionDB.DeleteKeys(keysForDelete);
-                   keysForDelete = new List<byte[]>();
-                   collected = 0;
-               }
-           }
+            foreach (var current in cursor)
+            {
+                keysForDelete.Add(current.Key);
+                collected++;
 
-           if (collected > 0)
-           {
-               Chain.TransactionDB.DeleteKeys(keysForDelete);
-           }
+                if (collected == collectSize)
+                {
+                    Chain.TransactionDB.DeleteKeys(keysForDelete);
+                    keysForDelete = new List<byte[]>();
+                    collected = 0;
+                }
+            }
+
+            if (collected > 0)
+            {
+                Chain.TransactionDB.DeleteKeys(keysForDelete);
+            }
         }
 
+        /// <summary>
+        /// 1. Clear Database, 
+        /// 2. Finds UTXO 
+        /// 3. Add to DB
+        /// </summary>
         public void ReIndex()
         {
 
@@ -113,13 +118,13 @@ namespace CoreLib.Blockchain
                         if (updatedOutputs.Outputs.Count == 0)
                         {
                             Chain.TransactionDB.Delete(inId);
-                           
+
                         }
                         else
                         {
                             Chain.TransactionDB.Put(inId, updatedOutputs.Serialize());
                         }
-                }
+                    }
                 }
 
                 var newOutputs = new TxOutputs();
@@ -142,7 +147,7 @@ namespace CoreLib.Blockchain
             {
                 counter++;
             }
-            
+
             return counter;
         }
 
@@ -164,7 +169,7 @@ namespace CoreLib.Blockchain
 
                 if (!unspentOuts.ContainsKey(txId)) unspentOuts.Add(txId, new List<int>());
 
-            foreach (var (output, index) in outs.Outputs.Select((v, i) => (v, i)))
+                foreach (var (output, index) in outs.Outputs.Select((v, i) => (v, i)))
                 {
 
                     if (output.IsLockedWithKey(pubKeyHash) && accumulated < amount)

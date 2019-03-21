@@ -31,10 +31,6 @@ namespace P2PLib.Network
             set;
         }
 
-        Collection<IMessage> InboundMessages
-        {
-            get;
-        }
 
         IMessageParserEngine MessageParser
         {

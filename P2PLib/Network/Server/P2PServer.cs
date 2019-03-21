@@ -92,7 +92,7 @@ namespace P2PLib.Network.Server
             get { return mMessageParser; }
         }
 
-    
+
 
         public InitState Initialize()
         {
@@ -127,7 +127,7 @@ namespace P2PLib.Network.Server
                 mListenerSocket.Bind(localIP);
                 mListenerSocket.Listen(50); //TODO -> ponder which is the best value to use here
                 mListenerSocket.BeginAccept(new AsyncCallback(OnHandleClientConnection), null);
-                
+
             }
             catch (SocketException ex)
             {
@@ -195,12 +195,12 @@ namespace P2PLib.Network.Server
         {
             try
             {
-                TxRxPacket dataStatus = (TxRxPacket) asyncResult.AsyncState;
+                TxRxPacket dataStatus = (TxRxPacket)asyncResult.AsyncState;
 
-             
+
                 dataStatus.mCurrentSocket.EndReceive(asyncResult);
                 dataStatus.StoreCurrentData();
-  
+
 
                 IMessage rxMessage = mMessageParser.ParseMessage(dataStatus.mStoredBuffer);
 
@@ -211,80 +211,77 @@ namespace P2PLib.Network.Server
                         SocketFlags.None, new AsyncCallback(OnHandleClientData), dataStatus);
                     return;
                 }
-                 //handle the message (which can either be register or unregister)
+                //handle the message (which can either be register or unregister)
                 //send response message if needed
                 switch (rxMessage.Type)
                 {
-                    case ((int) MessageType.ResgisteredClientsListMessage):
-                    {
-                        Socket workerSocket = (Socket) dataStatus.mCurrentSocket;
-                        //respond with the current group in the message
-
-                        RegisteredClientsListMessage rxClientList = (RegisteredClientsListMessage) rxMessage;
-                        if (rxClientList.Clients != null)
+                    case ((int)MessageType.ResgisteredClientsListMessage):
                         {
-                            for (int i = 0; i < rxClientList.Clients.Count; ++i)
+                            Socket workerSocket = (Socket)dataStatus.mCurrentSocket;
+                            //respond with the current group in the message
+
+                            RegisteredClientsListMessage rxClientList = (RegisteredClientsListMessage)rxMessage;
+                            if (rxClientList.Clients != null)
                             {
-                                _mGroupClientsDetails.Add(rxClientList.Clients[i]);
-                                //register on each of them
-                                IClient client = new P2PClient(mListenPort, rxClientList.Clients[i].ClientIPAddress,
-                                    rxClientList.Clients[i].ClientListenPort, mGroup);
-                                client.Initialize();
-                                client = null;
+                                for (int i = 0; i < rxClientList.Clients.Count; ++i)
+                                {
+                                    _mGroupClientsDetails.Add(rxClientList.Clients[i]);
+                                    //register on each of them
+                                    IClient client = new P2PClient(mListenPort, rxClientList.Clients[i].ClientIPAddress,
+                                        rxClientList.Clients[i].ClientListenPort, mGroup);
+                                    client.Initialize();
+                                    client = null;
                                 }
 
                                 if (mOnRecieveListOfClients != null && mGroup == ((RegisteredClientsListMessage)rxMessage).Group)
                                     mOnRecieveListOfClients.Invoke(this, new ReceiveListOfClientsEventArgs(((RegisteredClientsListMessage)rxMessage).Clients));
                             }
 
-                        break;
-                    }
-                    case ((int) MessageType.RegisterMessage):
-                    {
-                        if (!(_mGroupClientsDetails.IndexOf(((RegisterMessage) rxMessage).Client) >= 0))
-                        {
-                            _mGroupClientsDetails.Add(((RegisterMessage) rxMessage).Client);
-
-                                if (mOnRegisterClient != null && mGroup == ((RegisterMessage) rxMessage).Group)
-                                mOnRegisterClient.Invoke(this,
-                                    new ServerRegisterEventArgs(((RegisterMessage) rxMessage).Client));
+                            break;
                         }
-
-                        break;
-                    }
-                    case ((int) MessageType.UnregisterMessage):
-                    {
-                        if ((_mGroupClientsDetails.IndexOf(((UnregisterMessage) rxMessage).Client) >= 0))
+                    case ((int)MessageType.RegisterMessage):
                         {
-                            _mGroupClientsDetails.Remove(((UnregisterMessage) rxMessage).Client);
+                            if (!(_mGroupClientsDetails.IndexOf(((RegisterMessage)rxMessage).Client) >= 0))
+                            {
+                                _mGroupClientsDetails.Add(((RegisterMessage)rxMessage).Client);
 
-                                if (mOnUnRegisterClient != null && mGroup == ((UnregisterMessage) rxMessage).Group)
+                                if (mOnRegisterClient != null && mGroup == ((RegisterMessage)rxMessage).Group) mOnRegisterClient.Invoke(this, new ServerRegisterEventArgs(((RegisterMessage)rxMessage).Client));
+                                if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(this, new ReceiveMessageEventArgs(rxMessage));
+                            }
+
+                            break;
+                        }
+                    case ((int)MessageType.UnregisterMessage):
+                        {
+                            if ((_mGroupClientsDetails.IndexOf(((UnregisterMessage)rxMessage).Client) >= 0))
+                            {
+                                _mGroupClientsDetails.Remove(((UnregisterMessage)rxMessage).Client);
+
+                                if (mOnUnRegisterClient != null && mGroup == ((UnregisterMessage)rxMessage).Group)
                                     mOnUnRegisterClient.Invoke(this,
-                                    new ServerRegisterEventArgs(((UnregisterMessage) rxMessage).Client));
-                        }
+                                    new ServerRegisterEventArgs(((UnregisterMessage)rxMessage).Client));
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case ((int)MessageType.CommandMessage):
                         {
                             mIncomingMessageQueue.Add(rxMessage);
-                            if (mOnReceiveMessage != null)
-                                mOnReceiveMessage.Invoke(this,
-                                    new ReceiveMessageEventArgs(rxMessage));
+                            if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(this, new ReceiveMessageEventArgs(rxMessage));
                             break;
                         }
                     default:
-                    {
-                        if (rxMessage.Type != ((int) MessageType.EmptyMessage))
                         {
-                            mIncomingMessageQueue.Add(rxMessage);
-                            if (mOnReceiveMessage != null)
-                                mOnReceiveMessage.Invoke(this,
-                                    new ReceiveMessageEventArgs(rxMessage));
-                        }
+                            if (rxMessage.Type != ((int)MessageType.EmptyMessage))
+                            {
+                                mIncomingMessageQueue.Add(rxMessage);
+                                if (mOnReceiveMessage != null)
+                                    mOnReceiveMessage.Invoke(this,
+                                        new ReceiveMessageEventArgs(rxMessage));
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
             catch (ObjectDisposedException ex)

@@ -1,5 +1,6 @@
 ﻿using ChainUtils;
 using CoreLib.Blockchain;
+using Engine.Network.MessageParser;
 using P2PLib.Network;
 using P2PLib.Network.Components;
 using P2PLib.Network.Components.Enums;
@@ -22,9 +23,14 @@ namespace Wallet
         public Dictionary<string, Transaction> TransactionPool;
         private BlockChain chain;
         private List<byte[]> blocksInTransit;
+        public event EventHandler NewBlockAdded;
+        private bool isBusy = false;
+        Queue<IMessage> IncomingMessages;
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 
-        public static string GetIpAddress() {
+        public static string GetIpAddress()
+        {
 
             int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
 
@@ -35,7 +41,7 @@ namespace Wallet
             for (int i = 0; i < hostEntry.AddressList.Length; ++i)
             {
                 if (hostEntry.AddressList[i].AddressFamily == AddressFamily.InterNetwork)
-                    localAddress = hostEntry.AddressList[i].ToString() +":"+ listenPort;
+                    localAddress = hostEntry.AddressList[i].ToString() + ":" + listenPort;
             }
 
             return localAddress;
@@ -43,9 +49,11 @@ namespace Wallet
 
         public LayerBlockchainNetwork(BlockChain bchain)
         {
+            logger.Debug("---------Initialized nettwork");
             chain = bchain;
             TransactionPool = new Dictionary<string, Transaction>();
             blocksInTransit = new List<byte[]>();
+            IncomingMessages = new Queue<IMessage>();
 
             //P2P CONFIGURATIONS
             int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
@@ -65,8 +73,16 @@ namespace Wallet
         //MAIN PROCESSING MESSAGE LOGIC
         private void ProcessMessage(IMessage msg)
         {
+            if (isBusy)
+            {
+                IncomingMessages.Enqueue(msg);
+                return;
+            }
+
+
             switch (msg.Type)
             {
+
                 case ((int)MessageType.CommandMessage):
                     {
                         var rxMsg = msg as CommandMessage;
@@ -100,7 +116,16 @@ namespace Wallet
 
                         break;
                     }
+
+                case ((int)MessageType.RegisterMessage):
+                    {
+                        isBusy = true;
+                        var rxMsg = msg as RegisterMessage;
+                        SendVersion(rxMsg.Client.ToString(), chain);
+                        break;
+                    }
             }
+
         }
         public void Send(string from, string to, int amount, bool miningInProgress)
         {
@@ -115,7 +140,7 @@ namespace Wallet
             if (miningInProgress)
             {
                 //var coinbaseTx = Transaction.CoinBaseTx(from, "");
-                var block = chain.MineBlock(new List<Transaction>() {  tx });
+                var block = chain.MineBlock(new List<Transaction>() { tx });
                 utxoSet.Update(block);
             }
             else
@@ -162,25 +187,23 @@ namespace Wallet
 
         private void HandleBlock(CommandMessage message)
         {
-            var blocksInTransmit = new List<Block>();
-
             var block = new Block().DeSerialize(message.Data);
             Console.WriteLine("Recieved new block");
             chain.AddBlock(block);
             Console.WriteLine("block added " + block.Hash);
 
-            if (blocksInTransmit.Count > 0)
+            NewBlockAdded?.Invoke(this, EventArgs.Empty);
+
+            if (blocksInTransit.Count > 0)
             {
-                var blockHash = blocksInTransmit[0].Hash;
+                var blockHash = blocksInTransit[0];
                 SendGetData(message.Client.ToString(), "block", blockHash);
-                blocksInTransmit.RemoveAt(0);
+                blocksInTransit.RemoveAt(0);
             }
             else
             {
                 chain.ReindexUTXO();
             }
-
-
         }
 
         private void HandleVersion(CommandMessage message)
@@ -192,7 +215,6 @@ namespace Wallet
             if (myBestHeight < incomeBestheight)
             {
                 SendGetBlocks(message.Client.ToString());
-
             }
             else if (myBestHeight > incomeBestheight)
             {
@@ -208,28 +230,21 @@ namespace Wallet
 
             if (inventory.Kind == "block")
             {
-                blocksInTransit = inventory.Items; //should be hashes of blocks
-                var bHash = new Block().DeSerialize(blocksInTransit[0]).Hash;
-
-                SendGetData(rxMsg.Client.ToString(), "block", bHash);
-
-                var newInTransit = new List<byte[]>();
-
-
-                foreach (var bl in blocksInTransit)
+                if (blocksInTransit.Count == 0)
                 {
-                    if (!ArrayHelpers.ByteArrayCompare(bl, bHash))
-                    {
-                        newInTransit.Add(bl);
-                    }
+                    blocksInTransit = ReduceBlocksInTransit(inventory.Items); //reduce blocksInTransit, don't wanna download whole chain again
                 }
-                blocksInTransit = newInTransit;
+                if (blocksInTransit.Count == 0) return; //this means, blockInTransit was reduced totaly and nothing is needed
+
+                var latestHashToTake = blocksInTransit[0];
+                SendGetData(rxMsg.Client.ToString(), "block", latestHashToTake);
+                blocksInTransit.RemoveAt(0);
 
             }
             else if (inventory.Kind == "tx")
             {
                 var txId = inventory.Items[0];
-
+                //request it only if I dont have it yet
                 if (!TransactionPool.ContainsKey(HexadecimalEncoding.ToHexString(txId)))
                 {
                     SendGetData(rxMsg.Client.ToString(), "tx", txId);
@@ -238,6 +253,24 @@ namespace Wallet
 
 
         }
+
+        private List<byte[]> ReduceBlocksInTransit(List<byte[]> items)
+        {
+            var lastIndex = -1;
+            for (var i = 0; i < items.Count; i++)
+            {
+                //check existence in chain for hashes obtained from nettwork
+                var block = chain.GetBlock(items[i]);
+                if (block != null)
+                {
+                    lastIndex = i;
+                    break;
+                }
+            }
+            items.RemoveRange(lastIndex, items.Count - lastIndex);
+            return items;
+        }
+
         private void HandleTransaction(CommandMessage message)
         {
             var tx = new Transaction().DeSerialize(message.Data);
@@ -321,7 +354,7 @@ namespace Wallet
 
 
         //METHODS, SENDING MESSAGES
-
+        [Serializable]
         public class Version
         {
             public int VersionCode { get; set; }
@@ -344,28 +377,8 @@ namespace Wallet
                 return binForm.Deserialize(memStream) as Version;
             }
         }
-        public class Inv
-        {
-            public List<byte[]> Items { get; set; }
-            public string Kind { get; set; }
 
-            public byte[] Serialize()
-            {
-                BinaryFormatter bf = new BinaryFormatter();
-                MemoryStream ms = new MemoryStream();
-                bf.Serialize(ms, this);
-                return ms.ToArray();
-            }
-
-            public Inv DeSerialize(byte[] fromBytes)
-            {
-                MemoryStream memStream = new MemoryStream();
-                BinaryFormatter binForm = new BinaryFormatter();
-                memStream.Write(fromBytes, 0, fromBytes.Length);
-                memStream.Seek(0, SeekOrigin.Begin);
-                return binForm.Deserialize(memStream) as Inv;
-            }
-        }
+        [Serializable]
         public class Data
         {
             public byte[] Id { get; set; }
@@ -388,6 +401,30 @@ namespace Wallet
                 return binForm.Deserialize(memStream) as Data;
             }
         }
+        [Serializable]
+        public class Inv
+        {
+            public List<byte[]> Items { get; set; }
+            public string Kind { get; set; }
+
+            public byte[] Serialize()
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                MemoryStream ms = new MemoryStream();
+                bf.Serialize(ms, this);
+                return ms.ToArray();
+            }
+
+            public Inv DeSerialize(byte[] fromBytes)
+            {
+                MemoryStream memStream = new MemoryStream();
+                BinaryFormatter binForm = new BinaryFormatter();
+                memStream.Write(fromBytes, 0, fromBytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                return binForm.Deserialize(memStream) as Inv;
+            }
+        }
+
 
         public void SendBlock(string address, Block block)
         {
@@ -396,7 +433,7 @@ namespace Wallet
             message.Client = _blockchainNetwork.ClientDetails();
             message.Data = block.Serialize();
 
-            _blockchainNetwork.BroadcastMessageAsync(message);
+            _blockchainNetwork.SendMessageToAddressAsync(message, address);
         }
 
 
@@ -411,7 +448,7 @@ namespace Wallet
                 Kind = kind
             };
             message.Data = inv.Serialize();
-            _blockchainNetwork.BroadcastMessageAsync(message);
+            _blockchainNetwork.SendMessageToAddressAsync(message, address);
         }
 
 

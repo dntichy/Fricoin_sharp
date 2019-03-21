@@ -383,7 +383,7 @@ namespace P2PLib.Network
                 throw new NullReferenceException("The clients list is null!");
             }
 
-            if (this.GroupClients.Count == 0)
+            if (GroupClients.Count == 0)
             {
                 throw new Exception("There are no clients available!");
             }
@@ -428,7 +428,7 @@ namespace P2PLib.Network
 
             for (int i = 0; i < GroupClients.Count; ++i)
             {
-                if (GroupClients[i].ClientIPAddress == address)
+                if (GroupClients[i].ClientIPAddress +":"+ GroupClients[i].ClientListenPort == address)
                 {
                     details = GroupClients[i];
                     break;

@@ -104,6 +104,7 @@ namespace CoreLib.Blockchain
 
             foreach (var block in this)
             {
+                
                 listBlock.Add(block.Hash);
             }
             return listBlock;
@@ -170,14 +171,17 @@ namespace CoreLib.Blockchain
 
         public void AddBlock(Block block)
         {
-
+            //is already inside DB? return
             var getBlockFromDB = ChainDb.Get(block.Hash);
             if (getBlockFromDB != null) return;
 
+            //persist new block
             var bData = block.Serialize();
             ChainDb.Put(block.Hash, bData);
 
             var latestBlock = GetLatestBlock();
+
+            //if index of block to be added is biggest, persist lasthash
             if (block.Index > latestBlock.Index) SetLastHash(block);
         }
 
@@ -210,27 +214,16 @@ namespace CoreLib.Blockchain
 
 
 
-
         public Dictionary<string, TxOutputs> FindUtxo()
         {
             var UTXOs = new Dictionary<string, TxOutputs>();
-
             var spentTxOs = new Dictionary<string, List<int>>();
-
 
             foreach (var block in this)
             {
                 foreach (var tx in block)
                 {
                     var tXId = tx.Id; //transaction ID
-
-                    //pokus
-                    var hex = HexadecimalEncoding.ToHexString(tXId);
-                    var backToBytes = HexadecimalEncoding.FromHexStringToByte(hex);
-
-
-                    //endpokus
-
 
                     if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
                         spentTxOs.Add(HexadecimalEncoding.ToHexString(tXId), new List<int>());
@@ -267,8 +260,6 @@ namespace CoreLib.Blockchain
                     {
                         foreach (var input in tx.Inputs)
                         {
-
-
                             if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(input.Id)))
                                 spentTxOs.Add(HexadecimalEncoding.ToHexString(input.Id), new List<int>());
                             spentTxOs[HexadecimalEncoding.ToHexString(input.Id)].Add(input.Out);

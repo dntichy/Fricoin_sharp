@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using NLog;
+using System.Windows;
 
 namespace Wallet
 {
@@ -10,6 +11,7 @@ namespace Wallet
         public LoaderWindow()
         {
             InitializeComponent();
+          
         }
 
         

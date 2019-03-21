@@ -5,6 +5,7 @@ using DatabaseLib;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using MS.WindowsAPICodePack.Internal;
+using NLog;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
 using P2PLib.Network.MessageParser.Messages;
@@ -18,6 +19,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -48,6 +50,7 @@ namespace Wallet.Pages
         public WalletPage(User user)
         {
             InitializeComponent();
+            InitializeLogger();
             TryCreateShortcut(); // create shortcut, so i will be able to show toasts
 
 
@@ -68,10 +71,13 @@ namespace Wallet.Pages
             }
 
             //INITIALIZE NETTWORK if debug is false
-            if (!debug) InitializeNettwork();
+
+            var thread = new Thread(new ThreadStart(InitializeNettwork));
+            thread.Start();
+            //if (!debug) InitializeNettwork();
 
             //CHAIN GAMES
-            nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 20, true);
+
             _friChain.PrintWholeBlockChain();
             InitializeListBox();
 
@@ -93,6 +99,20 @@ namespace Wallet.Pages
             var listUsers = context.Users.ToList();
             usersListBox.ItemsSource = listUsers;
 
+        }
+
+        private void InitializeLogger()
+        {
+            var logFile = LayerBlockchainNetwork.GetIpAddress().Replace(':','_') + ".txt";
+
+            var config = new NLog.Config.LoggingConfiguration();
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = logFile };
+            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, logconsole);
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, logfile);
+
+            LogManager.Configuration = config;
         }
 
         private void InitializeListBox()
@@ -131,19 +151,36 @@ namespace Wallet.Pages
 
         private void InitializeNettwork()
         {
-            //NETTWORK STUFF
-            nettwork = new LayerBlockchainNetwork(_friChain);
-            nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
-            nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
-            nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
-            //kick of blockchain game here, must first register events, than kick that off
-            nettwork._blockchainNetwork.Initialize();
 
-            //set Console window title
-            if (debug)
+            try
             {
-                DebugWindow.Title = _loggedUser.Address + " IP: " + nettwork._blockchainNetwork.ClientDetails().ToString();
+
+                //NETTWORK STUFF
+                nettwork = new LayerBlockchainNetwork(_friChain);
+                nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
+                nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
+                nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
+                nettwork.NewBlockAdded += NewBlockAdded;
+                //kick of blockchain game here, must first register events, than kick that off
+                nettwork._blockchainNetwork.Initialize();
+                nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 20, true);
+
+                //set Console window title
+                if (debug)
+                {
+                    DebugWindow.Title = _loggedUser.Address + " IP: " + nettwork._blockchainNetwork.ClientDetails().ToString();
+                }
+
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        private void NewBlockAdded(object sender, EventArgs e)
+        {
+            InitializeListBox();
         }
 
         private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
@@ -226,35 +263,33 @@ namespace Wallet.Pages
         private void SendClick(object sender, RoutedEventArgs e)
         {
 
-            int.TryParse(AmountTextBox.Text, out int amount);
-            if (amount == 0)
-            {
-                Console.WriteLine("Specify correct amount");
-                return;
-            }
-
-            if (ToAddressTextBox.Text.Equals(nettwork._blockchainNetwork.ClientDetails().ToString()))
-            {
-                Console.WriteLine("Can't send to yourself");
-                return;
-            }
-
-            nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount, true);
-
-
-            //var message = new TextMessage()
+            //int.TryParse(AmountTextBox.Text, out int amount);
+            //if (amount == 0)
             //{
-            //    Client = nettwork._blockchainNetwork.ClientDetails(),
-            //    Text = "nazdaaaro"
-            //};
-            //var CmDmessage = new CommandMessage()
+            //    Console.WriteLine("Specify correct amount");
+            //    return;
+            //}
+            //if (ToAddressTextBox.Text.Equals(nettwork._blockchainNetwork.ClientDetails().ToString()))
             //{
-            //    Data = ByteHelper.GetBytesFromString("Test message"),
-            //    Client = nettwork._blockchainNetwork.ClientDetails(),
-            //    Command = CommandType.Block
-            //};
+            //    Console.WriteLine("Can't send to yourself");
+            //    return;
+            //}
+            //nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount, true);
 
-            //nettwork._blockchainNetwork.BroadcastMessage(CmDmessage);
+
+            var message = new TextMessage()
+            {
+                Client = nettwork._blockchainNetwork.ClientDetails(),
+                Text = "nazdaaaro"
+            };
+            var CmDmessage = new CommandMessage()
+            {
+                Data = ByteHelper.GetBytesFromString("Test message"),
+                Client = nettwork._blockchainNetwork.ClientDetails(),
+                Command = CommandType.Block
+            };
+
+            nettwork._blockchainNetwork.BroadcastMessage(message);
         }
         void AppClosing(object sender, CancelEventArgs e)
         {
