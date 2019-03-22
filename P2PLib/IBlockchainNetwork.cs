@@ -41,11 +41,9 @@ namespace P2PLib.Network
 
         void BroadcastMessage(IMessage message);
         void SendMessage(IMessage message, IClientDetails details);
-        void SendMessage(IMessage message, String name);
 
         void BroadcastMessageAsync(IMessage message);
         void SendMessageAsync(IMessage message, IClientDetails details);
-        void SendMessageAsync(IMessage message, String name);
 
         void Close();
     }

@@ -14,37 +14,36 @@ namespace P2PLib.Network.Server
 {
     public class P2PServer : IServer
     {
-        private Collection<IClientDetails> _mGroupClientsDetails;
 
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private Collection<IClientDetails> groupClientsDetails;
         public Collection<IClientDetails> GroupClientsDetails
         {
-            get { return _mGroupClientsDetails; }
-            set { _mGroupClientsDetails = value; }
+            get { return groupClientsDetails; }
+            set { groupClientsDetails = value; }
         }
-
 
         private Socket mListenerSocket;
 
-        private String mGroup;
-
+        private String group;
         public String Group
         {
-            get { return mGroup; }
-            set { mGroup = value; }
+            get { return group; }
+            set { group = value; }
         }
 
         private String mLocalIPAddress;
-
         public String LocalIPAddress
         {
             get { return mLocalIPAddress; }
         }
 
-        private Collection<IMessage> mIncomingMessageQueue;
+        private Collection<IMessage> incomingMessageQueue;
         public Collection<IMessage> IncomingMessageQueue
         {
-            get { return mIncomingMessageQueue; }
-            set { mIncomingMessageQueue = value; }
+            get { return incomingMessageQueue; }
+            set { incomingMessageQueue = value; }
         }
 
         private int mListenPort;
@@ -131,22 +130,25 @@ namespace P2PLib.Network.Server
             }
             catch (SocketException ex)
             {
-                System.Diagnostics.Debug.WriteLine("Unable to create the socket : " + ex.Message);
+                logger.Error("Unable to create the socket : " + ex.Message);
             }
             catch (ObjectDisposedException ex)
             {
+                logger.Error("The socket was forcefully closed : " + ex.Message);
                 System.Diagnostics.Debug.WriteLine("The socket was forcefully closed : " + ex.Message);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.Message);
+                logger.Error(ex.Message);
+
             }
 
             return InitState.InitOK;
         }
 
 
-        public P2PServer(int listenPort, /*int sendPort,*/ string group)
+        public P2PServer(int listenPort,  string group)
         {
             mMessageParser = new MessageParserEngineClass();
             ListenPort = listenPort;
@@ -217,7 +219,7 @@ namespace P2PLib.Network.Server
                 {
                     case ((int)MessageType.ResgisteredClientsListMessage):
                         {
-                            Socket workerSocket = (Socket)dataStatus.mCurrentSocket;
+                            Socket workerSocket = dataStatus.mCurrentSocket;
                             //respond with the current group in the message
 
                             RegisteredClientsListMessage rxClientList = (RegisteredClientsListMessage)rxMessage;
@@ -225,15 +227,15 @@ namespace P2PLib.Network.Server
                             {
                                 for (int i = 0; i < rxClientList.Clients.Count; ++i)
                                 {
-                                    _mGroupClientsDetails.Add(rxClientList.Clients[i]);
+                                    groupClientsDetails.Add(rxClientList.Clients[i]);
                                     //register on each of them
                                     IClient client = new P2PClient(mListenPort, rxClientList.Clients[i].ClientIPAddress,
-                                        rxClientList.Clients[i].ClientListenPort, mGroup);
+                                        rxClientList.Clients[i].ClientListenPort, group);
                                     client.Initialize();
                                     client = null;
                                 }
 
-                                if (mOnRecieveListOfClients != null && mGroup == ((RegisteredClientsListMessage)rxMessage).Group)
+                                if (mOnRecieveListOfClients != null && group == ((RegisteredClientsListMessage)rxMessage).Group)
                                     mOnRecieveListOfClients.Invoke(this, new ReceiveListOfClientsEventArgs(((RegisteredClientsListMessage)rxMessage).Clients));
                             }
 
@@ -241,11 +243,11 @@ namespace P2PLib.Network.Server
                         }
                     case ((int)MessageType.RegisterMessage):
                         {
-                            if (!(_mGroupClientsDetails.IndexOf(((RegisterMessage)rxMessage).Client) >= 0))
+                            if (!(groupClientsDetails.IndexOf(((RegisterMessage)rxMessage).Client) >= 0))
                             {
-                                _mGroupClientsDetails.Add(((RegisterMessage)rxMessage).Client);
+                                groupClientsDetails.Add(((RegisterMessage)rxMessage).Client);
 
-                                if (mOnRegisterClient != null && mGroup == ((RegisterMessage)rxMessage).Group) mOnRegisterClient.Invoke(this, new ServerRegisterEventArgs(((RegisterMessage)rxMessage).Client));
+                                if (mOnRegisterClient != null && group == ((RegisterMessage)rxMessage).Group) mOnRegisterClient.Invoke(this, new ServerRegisterEventArgs(((RegisterMessage)rxMessage).Client));
                                 if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(this, new ReceiveMessageEventArgs(rxMessage));
                             }
 
@@ -253,11 +255,11 @@ namespace P2PLib.Network.Server
                         }
                     case ((int)MessageType.UnregisterMessage):
                         {
-                            if ((_mGroupClientsDetails.IndexOf(((UnregisterMessage)rxMessage).Client) >= 0))
+                            if ((groupClientsDetails.IndexOf(((UnregisterMessage)rxMessage).Client) >= 0))
                             {
-                                _mGroupClientsDetails.Remove(((UnregisterMessage)rxMessage).Client);
+                                groupClientsDetails.Remove(((UnregisterMessage)rxMessage).Client);
 
-                                if (mOnUnRegisterClient != null && mGroup == ((UnregisterMessage)rxMessage).Group)
+                                if (mOnUnRegisterClient != null && group == ((UnregisterMessage)rxMessage).Group)
                                     mOnUnRegisterClient.Invoke(this,
                                     new ServerRegisterEventArgs(((UnregisterMessage)rxMessage).Client));
                             }
@@ -266,7 +268,6 @@ namespace P2PLib.Network.Server
                         }
                     case ((int)MessageType.CommandMessage):
                         {
-                            mIncomingMessageQueue.Add(rxMessage);
                             if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(this, new ReceiveMessageEventArgs(rxMessage));
                             break;
                         }
@@ -274,7 +275,6 @@ namespace P2PLib.Network.Server
                         {
                             if (rxMessage.Type != ((int)MessageType.EmptyMessage))
                             {
-                                mIncomingMessageQueue.Add(rxMessage);
                                 if (mOnReceiveMessage != null)
                                     mOnReceiveMessage.Invoke(this,
                                         new ReceiveMessageEventArgs(rxMessage));

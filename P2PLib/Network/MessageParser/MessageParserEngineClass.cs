@@ -13,12 +13,15 @@ namespace P2PLib.Network.MessageParser
 
         public MessageParserEngineClass()
         {
-            mPossibleMessages = new Dictionary<int, IMessage>();
-            mPossibleMessages[((int) MessageType.RegisterMessage)] = new RegisterMessage();
-            mPossibleMessages[((int) MessageType.TextDataMessage)] = new TextMessage();
-            mPossibleMessages[((int) MessageType.UnregisterMessage)] = new UnregisterMessage();
-            mPossibleMessages[((int) MessageType.ResgisteredClientsListMessage)] = new RegisteredClientsListMessage();
-            mPossibleMessages[((int) MessageType.CommandMessage)] = new CommandMessage();
+            mPossibleMessages = new Dictionary<int, IMessage>
+            {
+                [((int)MessageType.CommandMessage)] = new CommandMessage(),
+                [((int)MessageType.RegisterMessage)] = new RegisterMessage(),
+                [((int)MessageType.ResgisteredClientsListMessage)] = new RegisteredClientsListMessage(),
+                [((int)MessageType.UnregisterMessage)] = new UnregisterMessage()
+            };
+            //mPossibleMessages[((int) MessageType.TextDataMessage)] = new TextMessage();
+
 
         }
 

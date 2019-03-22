@@ -49,7 +49,7 @@ namespace Wallet
 
         public LayerBlockchainNetwork(BlockChain bchain)
         {
-            logger.Debug("---------Initialized nettwork");
+            logger.Debug("Initialized nettwork");
             chain = bchain;
             TransactionPool = new Dictionary<string, Transaction>();
             blocksInTransit = new List<byte[]>();
@@ -73,11 +73,6 @@ namespace Wallet
         //MAIN PROCESSING MESSAGE LOGIC
         private void ProcessMessage(IMessage msg)
         {
-            if (isBusy)
-            {
-                IncomingMessages.Enqueue(msg);
-                return;
-            }
 
 
             switch (msg.Type)
@@ -110,7 +105,7 @@ namespace Wallet
                                 HandleInv(rxMsg);
                                 break;
                             default:
-                                Console.WriteLine("unknown command");
+                                logger.Debug("unknown command");
                                 break;
                         }
 
@@ -119,7 +114,12 @@ namespace Wallet
 
                 case ((int)MessageType.RegisterMessage):
                     {
-                        isBusy = true;
+                        if (isBusy)
+                        {
+                            IncomingMessages.Enqueue(msg);
+                            return;
+                        }
+
                         var rxMsg = msg as RegisterMessage;
                         SendVersion(rxMsg.Client.ToString(), chain);
                         break;
@@ -154,7 +154,8 @@ namespace Wallet
                 msg.Data = tx.Serialize();
 
                 _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
-                Console.WriteLine("Sending tx over nettwork");
+                logger.Debug("Sending tx over nettwork");
+
             }
 
 
@@ -181,18 +182,16 @@ namespace Wallet
         private void HandleGetBlocks(CommandMessage message)
         {
             var blocks = chain.GetBlockHashes();
-            Console.WriteLine("GetBlocks recieved");
+            logger.Debug("GetBlocks recieved");
             SendInv(message.Client.ToString(), "block", blocks);
         }
 
         private void HandleBlock(CommandMessage message)
         {
             var block = new Block().DeSerialize(message.Data);
-            Console.WriteLine("Recieved new block");
+            logger.Debug("Recieved new block");
             chain.AddBlock(block);
-            Console.WriteLine("block added " + block.Hash);
-
-            NewBlockAdded?.Invoke(this, EventArgs.Empty);
+            logger.Debug("block added " + block.Hash);
 
             if (blocksInTransit.Count > 0)
             {
@@ -203,18 +202,22 @@ namespace Wallet
             else
             {
                 chain.ReindexUTXO();
+                NewBlockAdded?.Invoke(this, EventArgs.Empty); // invoke this after all is downloaded, cause downloading from lastest to oldest, could cause problems after displaying after each block 
+                isBusy = false;
             }
         }
 
         private void HandleVersion(CommandMessage message)
         {
             var version = new Version().DeSerialize(message.Data);
-            Console.WriteLine("Version recieved");
+            logger.Debug("Version recieved");
             var incomeBestheight = version.BestHeigth;
             var myBestHeight = chain.GetBestHeight();
             if (myBestHeight < incomeBestheight)
             {
                 SendGetBlocks(message.Client.ToString());
+                isBusy = true;
+
             }
             else if (myBestHeight > incomeBestheight)
             {
@@ -226,8 +229,8 @@ namespace Wallet
         private void HandleInv(CommandMessage rxMsg)
         {
             var inventory = new Inv().DeSerialize(rxMsg.Data);
-            Console.WriteLine("Inventory recieved: " + inventory.Kind);
 
+            logger.Debug("Inventory recieved: " + inventory.Kind);
             if (inventory.Kind == "block")
             {
                 if (blocksInTransit.Count == 0)
@@ -274,7 +277,7 @@ namespace Wallet
         private void HandleTransaction(CommandMessage message)
         {
             var tx = new Transaction().DeSerialize(message.Data);
-            Console.WriteLine("Recieved new transaction");
+            logger.Debug("Recieved new transaction");
             TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
 
             //Mine transaction
@@ -297,7 +300,7 @@ namespace Wallet
 
         private void MineTransactions()
         {
-            Console.WriteLine("Minig started");
+            logger.Debug("Minig started");
             var txList = new List<Transaction>();
 
             //fill txList from TransactionPool
@@ -312,7 +315,7 @@ namespace Wallet
 
             if (txList.Count == 0)
             {
-                Console.WriteLine("All txs invalid");
+                logger.Debug("All txs invalid");
                 return;
             }
 
@@ -321,7 +324,7 @@ namespace Wallet
 
             var newBlock = chain.MineBlock(txList);
             chain.ReindexUTXO();
-            Console.WriteLine("new block mined");
+            logger.Debug("new block mined");
 
             foreach (var tx in txList)
             {

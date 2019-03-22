@@ -12,12 +12,15 @@ using System.Collections.ObjectModel;
 namespace P2PLib.Network
 {
     public class BlockchainNetwork : IBlockchainNetwork
+
     {
-        private event OnReceiveMessageEvent mOnReceiveMessage;
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private event OnReceiveMessageEvent onReceiveMessage;
         public event OnReceiveMessageEvent OnReceiveMessage
         {
-            add { mOnReceiveMessage += value; }
-            remove { mOnReceiveMessage -= value; }
+            add { onReceiveMessage += value; }
+            remove { onReceiveMessage -= value; }
         }
 
         private event ServerRegisterEvent mOnRegisterClient;
@@ -46,7 +49,6 @@ namespace P2PLib.Network
         private int mServerListenPort;
         private String mServer;
         private String mGroup;
-        private Collection<IMessage> mInboundMessages;
         private Collection<IClientDetails> mGroupClients;
 
         private IServer mListener;
@@ -81,10 +83,6 @@ namespace P2PLib.Network
             set { mGroup = value; }
         }
 
-        public Collection<IMessage> InboundMessages
-        {
-            get { return mInboundMessages; }
-        }
 
         public Collection<IClientDetails> GroupClients
         {
@@ -114,15 +112,16 @@ namespace P2PLib.Network
 
         public BlockchainNetwork(int listenPort, int serverListenPort, string server, string group)
         {
+
             mListenPort = listenPort;
             mServerListenPort = serverListenPort;
             mServer = server;
             mGroup = group;
-            mInboundMessages = new Collection<IMessage>();
+        
             mGroupClients = new Collection<IClientDetails>();
-            
+
             mListener = new P2PServer(listenPort, group);
-            ((P2PServer)mListener).IncomingMessageQueue = mInboundMessages;
+            
             ((P2PServer)mListener).GroupClientsDetails = mGroupClients;
             ((P2PServer)mListener).OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
             ((P2PServer)mListener).OnRegisterClient += new ServerRegisterEvent(OnRegisterPeer);
@@ -141,7 +140,7 @@ namespace P2PLib.Network
         }
         private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
-            if (mOnReceiveMessage != null) mOnReceiveMessage.Invoke(sender, e);
+            if (onReceiveMessage != null) onReceiveMessage.Invoke(sender, e);
         }
         private void OnRegisterPeer(object sender, ServerRegisterEventArgs e)
         {
@@ -200,12 +199,14 @@ namespace P2PLib.Network
             if (message == null)
             {
                 //throw a null reference exception
+                logger.Error("The supplied IMessage object is null!");
                 throw new NullReferenceException("The supplied IMessage object is null!");
             }
 
             if (details == null)
             {
                 //throw a null reference exception
+                logger.Error("The supplied IClientDetails object is null!");
                 throw new NullReferenceException("The supplied IClientDetails object is null!");
             }
 
@@ -226,44 +227,6 @@ namespace P2PLib.Network
             {
                 clientConnections[details] = currClient;
             }
-        }
-
-        public void SendMessage(IMessage message, string name)
-        {
-            if (name == null)
-            {
-                //throw a null reference exception
-                throw new NullReferenceException("The supplied name is null!");
-            }
-
-            if (name.Length == 0)
-            {
-                //throw an exception
-                throw new Exception("The supplied name is invalid!");
-            }
-
-            IClientDetails details = null;
-
-            if (this.GroupClients == null)
-            {
-                throw new NullReferenceException("The clients list is null!");
-            }
-
-            if (this.GroupClients.Count == 0)
-            {
-                throw new Exception("There are no clients available!");
-            }
-
-            for (int i = 0; i < GroupClients.Count; ++i)
-            {
-                if (GroupClients[i].ClientName == name)
-                {
-                    details = GroupClients[i];
-                    break;
-                }
-            }
-
-            SendMessage(message, details);
         }
 
         public void SendMessageToAddress(IMessage message, string address)
@@ -362,43 +325,6 @@ namespace P2PLib.Network
             }
         }
 
-        public void SendMessageAsync(IMessage message, string name)
-        {
-            if (name == null)
-            {
-                //throw a null reference exception
-                throw new NullReferenceException("The supplied name is null!");
-            }
-
-            if (name.Length == 0)
-            {
-                //throw an exception
-                throw new Exception("The supplied name is invalid!");
-            }
-
-            IClientDetails details = null;
-
-            if (this.GroupClients == null)
-            {
-                throw new NullReferenceException("The clients list is null!");
-            }
-
-            if (GroupClients.Count == 0)
-            {
-                throw new Exception("There are no clients available!");
-            }
-
-            for (int i = 0; i < GroupClients.Count; ++i)
-            {
-                if (GroupClients[i].ClientName == name)
-                {
-                    details = GroupClients[i];
-                    break;
-                }
-            }
-
-            SendMessageAsync(message, details);
-        }
 
         public void SendMessageToAddressAsync(IMessage message, string address)
         {
@@ -428,7 +354,7 @@ namespace P2PLib.Network
 
             for (int i = 0; i < GroupClients.Count; ++i)
             {
-                if (GroupClients[i].ClientIPAddress +":"+ GroupClients[i].ClientListenPort == address)
+                if (GroupClients[i].ClientIPAddress + ":" + GroupClients[i].ClientListenPort == address)
                 {
                     details = GroupClients[i];
                     break;

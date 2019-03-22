@@ -40,11 +40,7 @@ namespace Wallet.Pages
         private WalletCore _loggedUserWallet;
         private LayerBlockchainNetwork nettwork;
         private const string APP_ID = "Fricoin.Wallet";
-
-        //-------------
-        bool debug = false; //TODO remove, or set false
-        ConsoleWindow DebugWindow;
-        //------------
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
 
         public WalletPage(User user)
@@ -60,26 +56,12 @@ namespace Wallet.Pages
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
 
-            //INITIALIZE CONSOLE OUTPUT IF DEBUG
-            if (debug)
-            {
-                DebugWindow = new ConsoleWindow();
-                DebugWindow.Loaded += NetworkInitializeDelegate;
-                DebugWindow.Show();
-                DebugWindow.Title = user.Address;
-
-            }
 
             //INITIALIZE NETTWORK if debug is false
 
             var thread = new Thread(new ThreadStart(InitializeNettwork));
             thread.Start();
             //if (!debug) InitializeNettwork();
-
-            //CHAIN GAMES
-
-            _friChain.PrintWholeBlockChain();
-            InitializeListBox();
 
             //REGISTER CLOSING EVENET
             Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
@@ -103,7 +85,7 @@ namespace Wallet.Pages
 
         private void InitializeLogger()
         {
-            var logFile = LayerBlockchainNetwork.GetIpAddress().Replace(':','_') + ".txt";
+            var logFile = LayerBlockchainNetwork.GetIpAddress().Replace(':', '_') + ".txt";
 
             var config = new NLog.Config.LoggingConfiguration();
             var logfile = new NLog.Targets.FileTarget("logfile") { FileName = logFile };
@@ -163,18 +145,21 @@ namespace Wallet.Pages
                 nettwork.NewBlockAdded += NewBlockAdded;
                 //kick of blockchain game here, must first register events, than kick that off
                 nettwork._blockchainNetwork.Initialize();
-                nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 20, true);
-
-                //set Console window title
-                if (debug)
+                for (int i = 0; i < 50; i++)
                 {
-                    DebugWindow.Title = _loggedUser.Address + " IP: " + nettwork._blockchainNetwork.ClientDetails().ToString();
+                    nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 2, true);
                 }
+
+
+                //CHAIN GAMES
+
+                _friChain.PrintWholeBlockChain();
+                InitializeListBox();
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                logger.Error(ex.ToString());
             }
         }
 
@@ -185,25 +170,25 @@ namespace Wallet.Pages
 
         private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
         {
-            Console.WriteLine("PEER List obtained");
+            logger.Debug("PEER List obtained");
             SetListOfPeers(e.ListOfClients);
         }
 
         private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
         {
-            Console.WriteLine("PEER UNREGISTERED");
+            logger.Debug("PEER UNREGISTERED");
             SetListOfPeers(nettwork._blockchainNetwork.GroupClients);//set list of peers
         }
 
         private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
         {
-            Console.WriteLine("PEER REGISTERED");
+            logger.Debug("PEER REGISTERED");
             SetListOfPeers(nettwork._blockchainNetwork.GroupClients); //set list of peers
         }
 
         private void SetListOfPeers(Collection<IClientDetails> groupClients)
         {
-            Console.WriteLine("SET PEER list");
+            logger.Debug("SET PEER list");
             Dispatcher.Invoke(() =>
             {
                 PeersListBox.ItemsSource = groupClients;
@@ -293,11 +278,6 @@ namespace Wallet.Pages
         }
         void AppClosing(object sender, CancelEventArgs e)
         {
-
-            if (debug)
-            {
-                DebugWindow?.Close();
-            }
 
             nettwork._blockchainNetwork.Close();
             e.Cancel = true;
