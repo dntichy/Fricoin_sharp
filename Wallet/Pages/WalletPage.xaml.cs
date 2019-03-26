@@ -35,13 +35,12 @@ namespace Wallet.Pages
     /// </summary>
     public partial class WalletPage : Page
     {
-        private readonly BlockChain _friChain;
+        private BlockChain _friChain;
         private User _loggedUser;
         private WalletCore _loggedUserWallet;
         private LayerBlockchainNetwork nettwork;
         private const string APP_ID = "Fricoin.Wallet";
         private static Logger logger = LogManager.GetCurrentClassLogger();
-
 
         public WalletPage(User user)
         {
@@ -51,16 +50,13 @@ namespace Wallet.Pages
 
 
             //INITIALIZE CHAIN, ETC
-            _friChain = new BlockChain(LayerBlockchainNetwork.GetIpAddress());
             _loggedUser = user;
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
 
-
+            _friChain = new BlockChain(LayerBlockchainNetwork.GetIpAddress());
             //INITIALIZE NETTWORK if debug is false
 
-            var thread = new Thread(new ThreadStart(InitializeNettwork));
-            thread.Start();
             //if (!debug) InitializeNettwork();
 
             //REGISTER CLOSING EVENET
@@ -72,6 +68,10 @@ namespace Wallet.Pages
             Email.Content = user.Email;
             var firstName = Regex.Replace(user.FirstName, @"\s+", "");
             var lastName = Regex.Replace(user.LastName, @"\s+", "");
+            // set progressbar values to
+            progLabel.Content = "unknown";
+            progBgLabel.Width = 0;
+
 
             FullName.Content = firstName + " " + lastName;
             Balance.Content = _friChain.GetBalance(user.Address);
@@ -80,6 +80,19 @@ namespace Wallet.Pages
             var context = new UserContext();
             var listUsers = context.Users.ToList();
             usersListBox.ItemsSource = listUsers;
+
+        }
+        private void NewBlockArrived(object sender, ProgressBarEventArgs e)
+        {
+            double fraction = 1.0 * (e.HighestIndex - e.CurrentIndex) / e.HighestIndex;
+
+            Dispatcher.Invoke(() =>
+            {
+                progBgLabel.Width = progBorder.Width * fraction;
+
+                if (fraction != 1) progLabel.Content = "downloading... " + Math.Ceiling(100 * fraction) + "%";
+                else progLabel.Content = "synchronized";
+            });
 
         }
 
@@ -136,13 +149,13 @@ namespace Wallet.Pages
 
             try
             {
-
                 //NETTWORK STUFF
                 nettwork = new LayerBlockchainNetwork(_friChain);
                 nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
                 nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
                 nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
                 nettwork.NewBlockAdded += NewBlockAdded;
+                nettwork.NewBlockArrived += NewBlockArrived;
                 //kick of blockchain game here, must first register events, than kick that off
                 nettwork._blockchainNetwork.Initialize();
                 for (int i = 0; i < 50; i++)
@@ -409,9 +422,10 @@ namespace Wallet.Pages
             ShowToastMessageCopiedToCB();
         }
 
-
-
-
-
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            var thread = new Thread(new ThreadStart(InitializeNettwork));
+            thread.Start();
+        }
     }
 }

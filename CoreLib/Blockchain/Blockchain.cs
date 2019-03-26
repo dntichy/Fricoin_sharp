@@ -2,6 +2,7 @@
 using CoreLib.Interfaces;
 using Engine.Network.MessageParser;
 using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +11,9 @@ namespace CoreLib.Blockchain
 {
     public class BlockChain : IChain, IEnumerable<Block>
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
+
         public int Difficulty { set; get; } = 2;
         public byte[] LastHash { get; set; }
 
@@ -324,7 +328,9 @@ namespace CoreLib.Blockchain
 
             while (currentHash != null)
             {
-                var block = new Block().DeSerialize(ChainDb.Get(currentHash));
+                var currByteObject = ChainDb.Get(currentHash);
+
+                var block = new Block().DeSerialize(currByteObject);
                 currentHash = block.PreviousHash;
                 yield return block;
             }

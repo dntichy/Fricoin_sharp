@@ -23,8 +23,11 @@ namespace Wallet
         public Dictionary<string, Transaction> TransactionPool;
         private BlockChain chain;
         private List<byte[]> blocksInTransit;
-        public event EventHandler NewBlockAdded;
+        public event EventHandler NewBlockAdded; //todo change this stupid name
+        public event EventHandler<ProgressBarEventArgs> NewBlockArrived;
         private bool isBusy = false;
+        private bool reindexing = false;
+        private int highestIndex = 0;
         Queue<IMessage> IncomingMessages;
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -73,11 +76,8 @@ namespace Wallet
         //MAIN PROCESSING MESSAGE LOGIC
         private void ProcessMessage(IMessage msg)
         {
-
-
             switch (msg.Type)
             {
-
                 case ((int)MessageType.CommandMessage):
                     {
                         var rxMsg = msg as CommandMessage;
@@ -93,6 +93,7 @@ namespace Wallet
                                 HandleBlock(rxMsg);
                                 break;
                             case CommandType.GetBlocks:
+                                Console.WriteLine("recieved block from " + rxMsg.Client.ToString());
                                 HandleGetBlocks(rxMsg);
                                 break;
                             case CommandType.Version:
@@ -114,6 +115,7 @@ namespace Wallet
 
                 case ((int)MessageType.RegisterMessage):
                     {
+                        logger.Debug("Register message came, is bussy? " + isBusy);
                         if (isBusy)
                         {
                             IncomingMessages.Enqueue(msg);
@@ -189,9 +191,14 @@ namespace Wallet
         private void HandleBlock(CommandMessage message)
         {
             var block = new Block().DeSerialize(message.Data);
-            logger.Debug("Recieved new block");
+            logger.Debug("Recieved new block from: " + message.Client.ToString());
             chain.AddBlock(block);
-            logger.Debug("block added " + block.Hash);
+            logger.Debug("block added ID:" + Convert.ToBase64String(block.Hash) + "index: " + block.Index);
+
+            if (highestIndex < block.Index) highestIndex = block.Index; //check best index
+            NewBlockArrived?.Invoke(this, new ProgressBarEventArgs(highestIndex, block.Index)); //invoke this, mainly for progress bar now.
+
+
 
             if (blocksInTransit.Count > 0)
             {
@@ -201,9 +208,23 @@ namespace Wallet
             }
             else
             {
-                chain.ReindexUTXO();
+                if (reindexing) return;
+                reindexing = true;
+                chain.ReindexUTXO(); // asynch
                 NewBlockAdded?.Invoke(this, EventArgs.Empty); // invoke this after all is downloaded, cause downloading from lastest to oldest, could cause problems after displaying after each block 
                 isBusy = false;
+                reindexing = false;
+                ProcessNextMessage();
+
+            }
+        }
+
+        private void ProcessNextMessage()
+        {
+            if (IncomingMessages.Count > 0)
+            {
+                var nextMessage = IncomingMessages.Dequeue();
+                ProcessMessage(nextMessage);
             }
         }
 
@@ -235,7 +256,8 @@ namespace Wallet
             {
                 if (blocksInTransit.Count == 0)
                 {
-                    blocksInTransit = ReduceBlocksInTransit(inventory.Items); //reduce blocksInTransit, don't wanna download whole chain again
+                    //blocksInTransit = ReduceBlocksInTransit(inventory.Items); //reduce blocksInTransit, don't wanna download whole chain again
+                    blocksInTransit = (inventory.Items); //dont reduce blocksInTransit
                 }
                 if (blocksInTransit.Count == 0) return; //this means, blockInTransit was reduced totaly and nothing is needed
 
@@ -435,7 +457,7 @@ namespace Wallet
             message.Command = CommandType.Block;
             message.Client = _blockchainNetwork.ClientDetails();
             message.Data = block.Serialize();
-
+            logger.Debug("send block index: " + block.Index);
             _blockchainNetwork.SendMessageToAddressAsync(message, address);
         }
 

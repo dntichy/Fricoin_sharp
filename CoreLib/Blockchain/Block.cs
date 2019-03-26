@@ -101,8 +101,7 @@ namespace CoreLib.Blockchain
             var transactions = new List<Transaction>()
             {
                 Transaction.CoinBaseTx("112H2TcYAvxWGPSWXz4bzGvm5RXEdFDCms", ""),
-                Transaction.CoinBaseTx("1DCeEWaxBxyqYnXo9dH8C4XF4ALutMxPVi", ""),
-                Transaction.CoinBaseTx("1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", ""),
+          
             };
             var genesis = new Block(DateTime.Parse("1.1.2019"), null, transactions);
             genesis.SetMerkleRoot();

@@ -35,7 +35,7 @@ namespace P2PLib.Network.MessageParser
         }
     };
 
-    public class ReceiveListOfClientsEventArgs 
+    public class ReceiveListOfClientsEventArgs
     {
         private Collection<IClientDetails> mListOfClients;
         public Collection<IClientDetails> ListOfClients
@@ -43,9 +43,21 @@ namespace P2PLib.Network.MessageParser
             get { return mListOfClients; }
         }
 
-        public ReceiveListOfClientsEventArgs (Collection<IClientDetails> listOfClients)
+        public ReceiveListOfClientsEventArgs(Collection<IClientDetails> listOfClients)
         {
             mListOfClients = listOfClients;
+        }
+    }
+
+
+    public class ProgressBarEventArgs : EventArgs
+    {
+        public int HighestIndex { get; set; }
+        public int CurrentIndex { get; set; }
+        public ProgressBarEventArgs(int heighestIndex, int currentIndex)
+        {
+            HighestIndex = heighestIndex;
+            CurrentIndex = currentIndex;
         }
     }
 }

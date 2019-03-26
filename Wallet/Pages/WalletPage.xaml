@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:Wallet"
       mc:Ignorable="d"
       Title="WalletPage"
+      Loaded="Page_Loaded"
        Background="#ebebeb" d:DesignWidth="1211.35" d:DesignHeight="661">
 
 
@@ -51,11 +52,11 @@
                     <DockPanel HorizontalAlignment="Center">
                         <Label FontFamily="Consolas" FontSize="13" Name="Balance"></Label>
                     </DockPanel>
-                   
+
                 </StackPanel>
             </Grid>
             <Grid Column="1" >
-                
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="7*" />
                     <ColumnDefinition Width="4*" />
@@ -78,113 +79,130 @@
 
                 </Grid>
                 <Grid Grid.Column="0"  >
-                    <TabControl BorderBrush="Black" HorizontalAlignment="Left" Height="346" VerticalAlignment="Top" Margin="0,10,0,0" Width="456">
-                        <TabItem Header="USERS" FontFamily="Consolas">
-                            <Grid Background="#FFE5E5E5">
-                                <Grid.Resources>
-                                    <DataTemplate x:Key="listBoxTemplate">
-                                        <StackPanel Margin="3">
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="" />
-                                                <TextBlock Text="{Binding FirstName}" Foreground="Green" FontWeight="Bold" />
-                                                <TextBlock Text=" " />
-                                                <TextBlock Text="{Binding LastName}" Foreground="Green" FontWeight="Bold" />
-                                            </DockPanel>
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Address:" Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
-                                                <TextBlock Text="{Binding Address}" />
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </Grid.Resources>
-                                <ListBox  
+                    <StackPanel>
+                        <TabControl BorderBrush="Black" HorizontalAlignment="Left" Height="346" VerticalAlignment="Top" Margin="0,10,0,0" Width="456">
+                            <TabItem Header="USERS" FontFamily="Consolas">
+                                <Grid Background="#FFE5E5E5">
+                                    <Grid.Resources>
+                                        <DataTemplate x:Key="listBoxTemplate">
+                                            <StackPanel Margin="3">
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="" />
+                                                    <TextBlock Text="{Binding FirstName}" Foreground="Green" FontWeight="Bold" />
+                                                    <TextBlock Text=" " />
+                                                    <TextBlock Text="{Binding LastName}" Foreground="Green" FontWeight="Bold" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Address:" Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
+                                                    <TextBlock Text="{Binding Address}" />
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </Grid.Resources>
+                                    <ListBox  
                                      Name="usersListBox"
                                     ToolTip="Copy address"
                                     SelectionChanged="Users_SelectionChanged"
                                      ItemTemplate="{StaticResource listBoxTemplate}" />
-                            </Grid>
-                        </TabItem>
-                        <TabItem Header="BLOCKS" FontFamily="Consolas">
-                            <Grid Background="#FFE5E5E5">
-                                <Grid.Resources>
-                                    <DataTemplate x:Key="blockHeaderTemplate" >
-                                        <StackPanel Margin="3">
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Index: " DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="{Binding Index}" Foreground="Green" FontWeight="Bold" />
-                                            </DockPanel>
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Nonce: " DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="{Binding Nonce}"  FontWeight="Bold" />
-                                            </DockPanel>
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Timestamp: " Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
-                                                <TextBlock Text="{Binding TimeStamp }" />
-                                            </DockPanel>
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Merkle root: " DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="{Binding MerkleRoot}"  FontWeight="Bold" />
-                                            </DockPanel>
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="BLOCKS" FontFamily="Consolas">
+                                <Grid Background="#FFE5E5E5">
+                                    <Grid.Resources>
+                                        <DataTemplate x:Key="blockHeaderTemplate" >
+                                            <StackPanel Margin="3">
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Index: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="{Binding Index}" Foreground="Green" FontWeight="Bold" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Nonce: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="{Binding Nonce}"  FontWeight="Bold" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Timestamp: " Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
+                                                    <TextBlock Text="{Binding TimeStamp }" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Merkle root: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="{Binding MerkleRoot}"  FontWeight="Bold" />
+                                                </DockPanel>
 
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Hash: " Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
-                                                <TextBlock Text="{Binding Hash}" />
-                                            </DockPanel>
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Previous hash: " DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="{Binding PreviousHash}"  FontWeight="Bold" />
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </Grid.Resources>
-                                <ListBox  
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Hash: " Foreground="DarkOrange" DockPanel.Dock="Left" Margin="5,0,5,0" />
+                                                    <TextBlock Text="{Binding Hash}" />
+                                                </DockPanel>
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Previous hash: " DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="{Binding PreviousHash}"  FontWeight="Bold" />
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </Grid.Resources>
+                                    <ListBox  
                                      Name="BlockHeaderListBox" 
                                      ItemTemplate="{StaticResource blockHeaderTemplate}"
                                  SelectionChanged="BlockHeaderListBox_SelectionChanged"
                                 />
-                            </Grid>
-                        </TabItem>
-                        <TabItem Header="TRANSACTIONS" FontFamily="Consolas">
-                            <Grid Background="#FFE5E5E5">
-                                <Grid.Resources>
-                                    <DataTemplate x:Key="txTemplate">
-                                        <StackPanel Margin="3">
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Id:" DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="" />
-                                                <TextBlock Text="{Binding Id}" Foreground="Green" FontWeight="Bold" />
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </Grid.Resources>
-                                <ListBox  
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="TRANSACTIONS" FontFamily="Consolas">
+                                <Grid Background="#FFE5E5E5">
+                                    <Grid.Resources>
+                                        <DataTemplate x:Key="txTemplate">
+                                            <StackPanel Margin="3">
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Id:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="" />
+                                                    <TextBlock Text="{Binding Id}" Foreground="Green" FontWeight="Bold" />
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </Grid.Resources>
+                                    <ListBox  
                                      Name="TxListBox" 
                                      ItemTemplate="{StaticResource txTemplate}"
                                     />
-                            </Grid>
-                        </TabItem>
-                        <TabItem Header="PEERS" FontFamily="Consolas">
-                            <Grid Background="#FFE5E5E5">
-                                <Grid.Resources>
-                                    <DataTemplate x:Key="peerTemplate">
-                                        <StackPanel Margin="3">
-                                            <DockPanel>
-                                                <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
-                                                <TextBlock Text="" />
-                                                <TextBlock Text="{Binding ClientIPAddress}" Foreground="Green" FontWeight="Bold" />
-                                                <TextBlock Text=": " />
-                                                <TextBlock Text="{Binding ClientListenPort}" Foreground="Green" FontWeight="Bold" />
-                                            </DockPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </Grid.Resources>
-                                <ListBox  
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="PEERS" FontFamily="Consolas">
+                                <Grid Background="#FFE5E5E5">
+                                    <Grid.Resources>
+                                        <DataTemplate x:Key="peerTemplate">
+                                            <StackPanel Margin="3">
+                                                <DockPanel>
+                                                    <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                    <TextBlock Text="" />
+                                                    <TextBlock Text="{Binding ClientIPAddress}" Foreground="Green" FontWeight="Bold" />
+                                                    <TextBlock Text=": " />
+                                                    <TextBlock Text="{Binding ClientListenPort}" Foreground="Green" FontWeight="Bold" />
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </Grid.Resources>
+                                    <ListBox  
                                      Name="PeersListBox" 
                                      ItemTemplate="{StaticResource peerTemplate}" />
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+
+                        <Border Name="progBorder" Margin="0,10,0,0"  
+                                Height="30" Width="456" HorizontalAlignment="Left"
+                                BorderBrush="Black" BorderThickness="1">
+                            <Grid Margin="0">
+                                <Label Name="progBgLabel" Width="0" 
+                                       HorizontalAlignment="Left"
+                                       Background="LightGreen" />
+                                <Label Name="progLabel"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Content="0%" />
                             </Grid>
-                        </TabItem>
-                    </TabControl>
+                        </Border>
+
+                    </StackPanel>
                 </Grid>
             </Grid>
 
