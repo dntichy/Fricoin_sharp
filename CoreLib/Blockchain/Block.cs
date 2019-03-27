@@ -5,15 +5,16 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using CoreLib.DataStructures.MerkleTree;
 using CoreLib.Interfaces;
 using Newtonsoft.Json;
+using P2PLib.Network.MessageParser;
 
 namespace CoreLib.Blockchain
 {
     [Serializable]
     [JsonObject(MemberSerialization.OptOut)]
-
     public class Block : IBlock, IEnumerable<Transaction>
     {
         public int Index { get; set; }
@@ -23,6 +24,11 @@ namespace CoreLib.Blockchain
         public byte[] Hash { get; set; }
         public byte[] MerkleRoot { get; set; }
         public IList<Transaction> Transactions { get; set; }
+
+
+        [NonSerialized] public int Speed = 0;
+        [field: NonSerialized] public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
+
 
         public Block(DateTime dateTime, byte[] previousHash, IList<Transaction> transactions)
         {
@@ -56,6 +62,8 @@ namespace CoreLib.Blockchain
             {
                 Nonce++;
                 Hash = CalculateHash();
+                MinedHashUpdate?.Invoke(this, new MinedHashUpdateEventArgs(Convert.ToBase64String(Hash)));
+                System.Threading.Thread.Sleep(Speed);
             }
         }
 

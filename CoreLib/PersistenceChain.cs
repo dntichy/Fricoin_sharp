@@ -24,7 +24,7 @@ namespace CoreLib
 
                 //create db
                 using (var tx = env.BeginTransaction())
-                using (tx.OpenDatabase(_dbName, new DatabaseConfiguration {Flags = DatabaseOpenFlags.Create}))
+                using (tx.OpenDatabase(_dbName, new DatabaseConfiguration { Flags = DatabaseOpenFlags.Create }))
                 {
                     tx.Commit();
                 }
@@ -53,8 +53,8 @@ namespace CoreLib
                         var key = ByteHelper.GetStringFromBytesASCI(cur.Current.Key);
                         var value = ByteHelper.GetStringFromBytesASCI(cur.Current.Value);
 
-                        Console.WriteLine(key +" : "+ value);
-                      
+                        Console.WriteLine(key + " : " + value);
+
                     }
 
                 }
@@ -86,7 +86,7 @@ namespace CoreLib
 
 
                 using (var tx = env.BeginTransaction())
-                using (var db = tx.OpenDatabase(_dbName, new DatabaseConfiguration {Flags = DatabaseOpenFlags.Create}))
+                using (var db = tx.OpenDatabase(_dbName, new DatabaseConfiguration { Flags = DatabaseOpenFlags.Create }))
                 {
                     tx.Put(db, key, value);
                     tx.Commit();

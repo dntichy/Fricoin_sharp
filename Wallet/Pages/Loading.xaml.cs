@@ -1,4 +1,5 @@
-﻿using CoreLib;
+﻿using ChainUtils;
+using CoreLib;
 using DatabaseLib;
 using P2PLib.Network.MessageParser.Messages;
 using System.ComponentModel;
@@ -17,6 +18,15 @@ namespace Wallet.Pages
         public Loading()
         {
             InitializeComponent();
+
+
+
+            var pChain = new PersistenceChain("ChainTest");
+
+
+            pChain.Put(ByteHelper.GetBytesFromString("af"), ByteHelper.GetBytesFromString("af"));
+            System.Console.WriteLine("after");
+
         }
 
 

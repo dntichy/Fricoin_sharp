@@ -1,8 +1,8 @@
 ﻿using ChainUtils;
 using CoreLib.Interfaces;
-using Engine.Network.MessageParser;
 using Newtonsoft.Json;
 using NLog;
+using P2PLib.Network.MessageParser;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,12 +13,13 @@ namespace CoreLib.Blockchain
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
+        public event EventHandler<MinedHashUpdateEventArgs> HashDiscovered;
 
         public int Difficulty { set; get; } = 2;
         public byte[] LastHash { get; set; }
+        public Block ActuallBlockInMining { get; set; } = new Block() { Speed = 0 }; // current block in mining process
 
-        //public PersistenceChain ChainDb = new PersistenceChain();
-        //public PersistenceTransaction TransactionDB = new PersistenceTransaction();
+
         public PersistenceChain ChainDb;
         public PersistenceTransaction TransactionDB;
 
@@ -73,9 +74,11 @@ namespace CoreLib.Blockchain
                 Transactions = transactions
             };
             newBlock.Index = latestBlock.Index + 1; //increment index/height
-
+            newBlock.MinedHashUpdate += MinedHashUpdate;
             //set Merkle root
             newBlock.SetMerkleRoot();
+            newBlock.Speed = ActuallBlockInMining.Speed; //set speed
+            ActuallBlockInMining = newBlock; //set instance - this way, speed will always be depend on slidebar, this fixes problem with first create block, than able to change speed.
             newBlock.Mine(Difficulty); //MINE IT
 
             ChainDb.Put(newBlock.Hash, newBlock.Serialize());
@@ -85,6 +88,10 @@ namespace CoreLib.Blockchain
             return newBlock;
         }
 
+        private void MinedHashUpdate(object sender, MinedHashUpdateEventArgs e)
+        {
+            HashDiscovered?.Invoke(this, new MinedHashUpdateEventArgs(e.Hash));
+        }
 
         public void ReindexUTXO()
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using P2PLib.Network.Components.Interfaces;
 
@@ -60,4 +61,25 @@ namespace P2PLib.Network.MessageParser
             CurrentIndex = currentIndex;
         }
     }
+
+    public class TransactionPoolEventArgs : EventArgs
+    {
+        public List<string> TransactionPoolList { get; set; }
+
+        public TransactionPoolEventArgs(List<string> txPoolList)
+        {
+            this.TransactionPoolList = txPoolList;
+        }
+    }
+    public class MinedHashUpdateEventArgs : EventArgs
+    {
+        public string Hash { get; set; }
+
+        public MinedHashUpdateEventArgs(string hash)
+        {
+            this.Hash = hash;
+        }
+    }
+    
+
 }

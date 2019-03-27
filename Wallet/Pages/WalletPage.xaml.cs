@@ -1,5 +1,4 @@
-﻿using ChainUtils;
-using CoreLib;
+﻿using CoreLib;
 using CoreLib.Blockchain;
 using DatabaseLib;
 using Microsoft.Win32;
@@ -8,7 +7,6 @@ using MS.WindowsAPICodePack.Internal;
 using NLog;
 using P2PLib.Network.Components.Interfaces;
 using P2PLib.Network.MessageParser;
-using P2PLib.Network.MessageParser.Messages;
 using QRCoder;
 using System;
 using System.Collections.Generic;
@@ -35,7 +33,7 @@ namespace Wallet.Pages
     /// </summary>
     public partial class WalletPage : Page
     {
-        private BlockChain _friChain;
+        public BlockChain _friChain { get; set; }
         private User _loggedUser;
         private WalletCore _loggedUserWallet;
         private LayerBlockchainNetwork nettwork;
@@ -55,9 +53,6 @@ namespace Wallet.Pages
             _loggedUserWallet = bank.FindWallet(user.Address);
 
             _friChain = new BlockChain(LayerBlockchainNetwork.GetIpAddress());
-            //INITIALIZE NETTWORK if debug is false
-
-            //if (!debug) InitializeNettwork();
 
             //REGISTER CLOSING EVENET
             Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
@@ -112,6 +107,7 @@ namespace Wallet.Pages
 
         private void InitializeListBox()
         {
+            //nettwork.Lock = true;
             //todo register this on Item added....
             var collectionOfHeaders = new Collection<BlockHeader>();
             foreach (var block in _friChain)
@@ -136,12 +132,11 @@ namespace Wallet.Pages
                 collectionOfHeaders.Add(bH);
             }
             SetListBlocksHeader(collectionOfHeaders);
+            //nettwork.Lock = false;
+            //nettwork.ProcessNextMessage();
 
-        }
 
-        private void NetworkInitializeDelegate(object sender, EventArgs e)
-        {
-            InitializeNettwork();
+
         }
 
         private void InitializeNettwork()
@@ -156,16 +151,17 @@ namespace Wallet.Pages
                 nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
                 nettwork.NewBlockAdded += NewBlockAdded;
                 nettwork.NewBlockArrived += NewBlockArrived;
+                nettwork.TransactionPoolChanged += TransactionPoolChanged;
+
                 //kick of blockchain game here, must first register events, than kick that off
                 nettwork._blockchainNetwork.Initialize();
-                for (int i = 0; i < 50; i++)
-                {
-                    nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 2, true);
-                }
+                //for (int i = 0; i < 30; i++)
+                //{
+                //    nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 2, true);
+                //}
 
 
                 //CHAIN GAMES
-
                 _friChain.PrintWholeBlockChain();
                 InitializeListBox();
 
@@ -176,48 +172,30 @@ namespace Wallet.Pages
             }
         }
 
+
+
+
+        private void MinedHashUpdate(object sender, MinedHashUpdateEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                HashDisplayLabel.Content = e.Hash;
+            });
+        }
+
+        private void TransactionPoolChanged(object sender, TransactionPoolEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TransactionPoolListBox.ItemsSource = e.TransactionPoolList;
+                TransactionPoolListBox.Items.Refresh();
+            });
+        }
+
         private void NewBlockAdded(object sender, EventArgs e)
         {
             InitializeListBox();
-        }
-
-        private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
-        {
-            logger.Debug("PEER List obtained");
-            SetListOfPeers(e.ListOfClients);
-        }
-
-        private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
-        {
-            logger.Debug("PEER UNREGISTERED");
-            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);//set list of peers
-        }
-
-        private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
-        {
-            logger.Debug("PEER REGISTERED");
-            SetListOfPeers(nettwork._blockchainNetwork.GroupClients); //set list of peers
-        }
-
-        private void SetListOfPeers(Collection<IClientDetails> groupClients)
-        {
-            logger.Debug("SET PEER list");
-            Dispatcher.Invoke(() =>
-            {
-                PeersListBox.ItemsSource = groupClients;
-                PeersListBox.Items.Refresh();
-            });
-
-        }
-
-        private void SetListBlocksHeader(Collection<BlockHeader> blocks)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                BlockHeaderListBox.ItemsSource = blocks;
-                BlockHeaderListBox.Items.Refresh();
-            });
-
+            
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -261,33 +239,33 @@ namespace Wallet.Pages
         private void SendClick(object sender, RoutedEventArgs e)
         {
 
-            //int.TryParse(AmountTextBox.Text, out int amount);
-            //if (amount == 0)
-            //{
-            //    Console.WriteLine("Specify correct amount");
-            //    return;
-            //}
-            //if (ToAddressTextBox.Text.Equals(nettwork._blockchainNetwork.ClientDetails().ToString()))
-            //{
-            //    Console.WriteLine("Can't send to yourself");
-            //    return;
-            //}
-            //nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount, true);
-
-
-            var message = new TextMessage()
+            int.TryParse(AmountTextBox.Text, out int amount);
+            if (amount == 0)
             {
-                Client = nettwork._blockchainNetwork.ClientDetails(),
-                Text = "nazdaaaro"
-            };
-            var CmDmessage = new CommandMessage()
+                Console.WriteLine("Specify correct amount");
+                return;
+            }
+            if (ToAddressTextBox.Text.Equals(nettwork._blockchainNetwork.ClientDetails().ToString()))
             {
-                Data = ByteHelper.GetBytesFromString("Test message"),
-                Client = nettwork._blockchainNetwork.ClientDetails(),
-                Command = CommandType.Block
-            };
+                Console.WriteLine("Can't send to yourself");
+                return;
+            }
+            nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount, true);
 
-            nettwork._blockchainNetwork.BroadcastMessage(message);
+
+            //var message = new TextMessage()
+            //{
+            //    Client = nettwork._blockchainNetwork.ClientDetails(),
+            //    Text = "nazdaaaro"
+            //};
+            //var CmDmessage = new CommandMessage()
+            //{
+            //    Data = ByteHelper.GetBytesFromString("Test message"),
+            //    Client = nettwork._blockchainNetwork.ClientDetails(),
+            //    Command = CommandType.Block
+            //};
+
+            //nettwork._blockchainNetwork.BroadcastMessage(message);
         }
         void AppClosing(object sender, CancelEventArgs e)
         {
@@ -309,6 +287,7 @@ namespace Wallet.Pages
         {
             var txList = new List<TransactionHeader>();
             var blockHeader = BlockHeaderListBox.SelectedItem as BlockHeader;
+            if (blockHeader == null) return;
 
             var blockBytes = _friChain.ChainDb.Get(Convert.FromBase64String(blockHeader.Hash));
             var block = new Block().DeSerialize(blockBytes);
@@ -427,5 +406,75 @@ namespace Wallet.Pages
             var thread = new Thread(new ThreadStart(InitializeNettwork));
             thread.Start();
         }
+
+        private void SliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            var speed = (int)MiningSpeedSlider.Value;
+            if (_friChain.ActuallBlockInMining != null)
+            {
+                _friChain.ActuallBlockInMining.Speed = speed;
+            }
+
+        }
+
+        private void DisplayMiningCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            MiningSpeedSlider.IsEnabled = true;
+            nettwork.MinedHashUpdate += MinedHashUpdate;
+        }
+
+        private void DisplayMiningCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            MiningSpeedSlider.IsEnabled = false;
+            nettwork.MinedHashUpdate -= MinedHashUpdate;
+            _friChain.ActuallBlockInMining.Speed = 0;
+            HashDisplayLabel.Content = "";
+
+        }
+
+
+
+
+
+        //refers to p2p obtaining peers events
+        private void PeersListObtained(object sender, ReceiveListOfClientsEventArgs e)
+        {
+            logger.Debug("PEER List obtained");
+            SetListOfPeers(e.ListOfClients);
+        }
+
+        private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
+        {
+            logger.Debug("PEER UNREGISTERED");
+            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);//set list of peers
+        }
+
+        private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
+        {
+            logger.Debug("PEER REGISTERED");
+            SetListOfPeers(nettwork._blockchainNetwork.GroupClients); //set list of peers
+        }
+
+        private void SetListOfPeers(Collection<IClientDetails> groupClients)
+        {
+            logger.Debug("SET PEER list");
+            Dispatcher.Invoke(() =>
+            {
+                PeersListBox.ItemsSource = groupClients;
+                PeersListBox.Items.Refresh();
+            });
+
+        }
+
+        private void SetListBlocksHeader(Collection<BlockHeader> blocks)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                BlockHeaderListBox.ItemsSource = blocks;
+                BlockHeaderListBox.Items.Refresh();
+            });
+
+        }
+
     }
 }
