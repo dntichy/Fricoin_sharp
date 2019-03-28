@@ -6,6 +6,7 @@ using P2PLib.Network.MessageParser;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace CoreLib.Blockchain
 {
@@ -15,7 +16,7 @@ namespace CoreLib.Blockchain
 
         public event EventHandler<MinedHashUpdateEventArgs> HashDiscovered;
 
-        public int Difficulty { set; get; } = 2;
+        public int Difficulty { set; get; } = 3;
         public byte[] LastHash { get; set; }
         public Block ActuallBlockInMining { get; set; } = new Block() { Speed = 0 }; // current block in mining process
 
@@ -23,9 +24,16 @@ namespace CoreLib.Blockchain
         public PersistenceChain ChainDb;
         public PersistenceTransaction TransactionDB;
 
+        ~BlockChain()
+        {
+            ChainDb.Dispose();  //need to clean up
+            TransactionDB.Dispose();
+
+        }
         public BlockChain(string address)
         {
             //create db environments if not already created
+
             ChainDb = new PersistenceChain(address);
             TransactionDB = new PersistenceTransaction(address);
 
@@ -115,7 +123,7 @@ namespace CoreLib.Blockchain
 
             foreach (var block in this)
             {
-                
+
                 listBlock.Add(block.Hash);
             }
             return listBlock;
@@ -162,15 +170,20 @@ namespace CoreLib.Blockchain
         }
 
 
-        public void PrintWholeBlockChain()
+        public string PrintWholeBlockChain()
         {
+            string st = "";
             var currentHash = LastHash;
             while (currentHash != null)
             {
                 var block = new Block().DeSerialize(ChainDb.Get(currentHash));
                 currentHash = block.PreviousHash;
-                Console.WriteLine(JsonConvert.SerializeObject(block, Formatting.Indented));
+
+                string serializedBlock = JsonConvert.SerializeObject(block, Formatting.Indented);
+                Console.WriteLine(serializedBlock);
+                st += serializedBlock;
             }
+            return st;
         }
 
         public int GetBestHeight()

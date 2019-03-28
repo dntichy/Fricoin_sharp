@@ -19,14 +19,6 @@ namespace Wallet.Pages
         {
             InitializeComponent();
 
-
-
-            var pChain = new PersistenceChain("ChainTest");
-
-
-            pChain.Put(ByteHelper.GetBytesFromString("af"), ByteHelper.GetBytesFromString("af"));
-            System.Console.WriteLine("after");
-
         }
 
 

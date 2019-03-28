@@ -18,11 +18,13 @@ namespace CoreLib.Blockchain
             Id = transaction.Id;
             Inputs = transaction.Inputs;
             Outputs = transaction.Outputs;
+            TimeStamp = transaction.TimeStamp;
         }
 
         public byte[] Id { get; set; }
         public List<TxInput> Inputs { get; set; }
         public List<TxOutput> Outputs { get; set; }
+        public DateTime TimeStamp { get; set; }
 
         public Transaction()
         {
@@ -47,7 +49,8 @@ namespace CoreLib.Blockchain
             {
                 Inputs = txInputs,
                 Outputs = txOutputs,
-                Id = transaction.Id
+                Id = transaction.Id,
+                TimeStamp = transaction.TimeStamp
             };
             return txCopy;
         }
@@ -76,6 +79,7 @@ namespace CoreLib.Blockchain
                 txCopy.Inputs[index].PubKey = prevTx.Outputs[inp.Out].PublicKeyHash;
                 txCopy.Id = txCopy.CalculateHash();
                 txCopy.Inputs[index].PubKey = null;
+                
 
                 var signature = CryptoFinal.SignTransaction(txCopy.Id, privateKey);
                 Inputs[index].Signature = signature;
@@ -189,7 +193,8 @@ namespace CoreLib.Blockchain
             {
                 Id = null,
                 Inputs = inputs,
-                Outputs = outputs
+                Outputs = outputs,
+                TimeStamp = DateTime.Now
             };
             tx.Id = tx.CalculateHash();
             set.Chain.SignTransaction(tx, wallet.PrivateKey);

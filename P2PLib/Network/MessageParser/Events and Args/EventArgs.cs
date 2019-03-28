@@ -54,11 +54,14 @@ namespace P2PLib.Network.MessageParser
     public class ProgressBarEventArgs : EventArgs
     {
         public int HighestIndex { get; set; }
-        public int CurrentIndex { get; set; }
-        public ProgressBarEventArgs(int heighestIndex, int currentIndex)
+        public int CountCurrentBlocksInTranzit { get; set; }
+        public int ReducedBlocksCount { get; set; }
+
+        public ProgressBarEventArgs(int heighestIndex, int countCurrentBlocksInTranzit, int reducedBlockCount)
         {
             HighestIndex = heighestIndex;
-            CurrentIndex = currentIndex;
+            CountCurrentBlocksInTranzit = countCurrentBlocksInTranzit;
+            ReducedBlocksCount = reducedBlockCount;
         }
     }
 

@@ -46,40 +46,27 @@ namespace Wallet.Pages
             InitializeLogger();
             TryCreateShortcut(); // create shortcut, so i will be able to show toasts
 
-
             //INITIALIZE CHAIN, ETC
             _loggedUser = user;
             var bank = new WalletBank();
             _loggedUserWallet = bank.FindWallet(user.Address);
-
             _friChain = new BlockChain(LayerBlockchainNetwork.GetIpAddress());
 
             //REGISTER CLOSING EVENET
             Application.Current.MainWindow.Closing += new CancelEventHandler(AppClosing);
 
             //SET GUI PROPERTIES 
-            CreateQrCode(user.Address);
-            Address.Content = user.Address;
-            Email.Content = user.Email;
-            var firstName = Regex.Replace(user.FirstName, @"\s+", "");
-            var lastName = Regex.Replace(user.LastName, @"\s+", "");
-            // set progressbar values to
-            progLabel.Content = "unknown";
-            progBgLabel.Width = 0;
-
-
-            FullName.Content = firstName + " " + lastName;
-            Balance.Content = _friChain.GetBalance(user.Address);
-
-            //DISPLAY LIST OF USERS
-            var context = new UserContext();
-            var listUsers = context.Users.ToList();
-            usersListBox.ItemsSource = listUsers;
-
+            InitializeProfile();
+            UpdateBalance();
+            UpdateRawChain();
+            UpdatePeerList();
         }
+
+    
+
         private void NewBlockArrived(object sender, ProgressBarEventArgs e)
         {
-            double fraction = 1.0 * (e.HighestIndex - e.CurrentIndex) / e.HighestIndex;
+            double fraction = 1.0 * (e.HighestIndex - e.CountCurrentBlocksInTranzit - e.ReducedBlocksCount) / (e.HighestIndex - e.ReducedBlocksCount);
 
             Dispatcher.Invoke(() =>
             {
@@ -107,8 +94,6 @@ namespace Wallet.Pages
 
         private void InitializeListBox()
         {
-            //nettwork.Lock = true;
-            //todo register this on Item added....
             var collectionOfHeaders = new Collection<BlockHeader>();
             foreach (var block in _friChain)
             {
@@ -132,10 +117,6 @@ namespace Wallet.Pages
                 collectionOfHeaders.Add(bH);
             }
             SetListBlocksHeader(collectionOfHeaders);
-            //nettwork.Lock = false;
-            //nettwork.ProcessNextMessage();
-
-
 
         }
 
@@ -145,7 +126,7 @@ namespace Wallet.Pages
             try
             {
                 //NETTWORK STUFF
-                nettwork = new LayerBlockchainNetwork(_friChain);
+                nettwork = new LayerBlockchainNetwork(_friChain, _loggedUser);
                 nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
                 nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
                 nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
@@ -162,7 +143,6 @@ namespace Wallet.Pages
 
 
                 //CHAIN GAMES
-                _friChain.PrintWholeBlockChain();
                 InitializeListBox();
 
             }
@@ -195,7 +175,7 @@ namespace Wallet.Pages
         private void NewBlockAdded(object sender, EventArgs e)
         {
             InitializeListBox();
-            
+
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -474,6 +454,34 @@ namespace Wallet.Pages
                 BlockHeaderListBox.Items.Refresh();
             });
 
+        }
+
+
+
+        public void InitializeProfile()
+        {
+            CreateQrCode(_loggedUser.Address);
+            Address.Content = _loggedUser.Address;
+            var firstName = Regex.Replace(_loggedUser.FirstName, @"\s+", "");
+            var lastName = Regex.Replace(_loggedUser.LastName, @"\s+", "");
+            progLabel.Content = "unknown";  // set progressbar values 
+            progBgLabel.Width = 0;  // set progressbar values 
+            FullName.Content = "Full name : " + firstName + " " + lastName;
+            Email.Content = "Email :     " + _loggedUser.Email;
+        }
+        public void UpdateBalance()
+        {
+            Balance.Content = "Balance :   " + _friChain.GetBalance(_loggedUser.Address);
+        }
+        public void UpdateRawChain()
+        {
+            RawChainTextBlock.Text = _friChain.PrintWholeBlockChain();
+        }
+        public void UpdatePeerList()
+        {
+            var context = new UserContext();
+            var listUsers = context.Users.ToList();
+            usersListBox.ItemsSource = listUsers;
         }
 
     }

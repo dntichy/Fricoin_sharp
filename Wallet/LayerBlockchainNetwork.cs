@@ -1,5 +1,6 @@
 ﻿using ChainUtils;
 using CoreLib.Blockchain;
+using DatabaseLib;
 using Engine.Network.MessageParser;
 using P2PLib.Network;
 using P2PLib.Network.Components;
@@ -25,14 +26,17 @@ namespace Wallet
         private BlockChain chain;
         private List<byte[]> blocksInTransit;
         public event EventHandler NewBlockAdded; //todo change this stupid name
-        public event EventHandler<TransactionPoolEventArgs> TransactionPoolChanged; 
+        public event EventHandler<TransactionPoolEventArgs> TransactionPoolChanged;
         public event EventHandler<ProgressBarEventArgs> NewBlockArrived;
         public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
         private bool isBusy = false;
         private bool reindexing = false;
+        readonly User _loggedUser;
         //public bool Lock { get; set; } = false;//working with db cannot be interupted
         private int highestIndex = 0;
+        private int reducedBlockCount = 0;
         Queue<IMessage> IncomingMessages;
+        List<string> BlockOnTheFly = new List<string>();
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 
@@ -54,13 +58,14 @@ namespace Wallet
             return localAddress;
         }
 
-        public LayerBlockchainNetwork(BlockChain bchain)
+        public LayerBlockchainNetwork(BlockChain bchain, User _loggedUser)
         {
             logger.Debug("Initialized nettwork");
             chain = bchain;
             TransactionPool = new Dictionary<string, Transaction>();
             blocksInTransit = new List<byte[]>();
             IncomingMessages = new Queue<IMessage>();
+            this._loggedUser = _loggedUser;
 
             //P2P CONFIGURATIONS
             int listenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ListenPort"]);
@@ -152,19 +157,8 @@ namespace Wallet
             }
 
             //add to pool
-            
             TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
-            TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));
-            
-
-            //if (miningInProgress)
-            //{
-            //    //var coinbaseTx = Transaction.CoinBaseTx(from, "");
-            //    var block = chain.MineBlock(new List<Transaction>() { tx });
-            //    utxoSet.Update(block);
-            //}
-            //else
-            //{
+            TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));         
 
             //send to all except me and the one who send the tx
             var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
@@ -176,14 +170,27 @@ namespace Wallet
             _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
             logger.Debug("Sending tx over nettwork");
 
-            //if(TransactionPool.Count >= 3)
-            //{
-                var thread = new Thread(new ThreadStart(MineTransactions));
-                thread.Start();
-            //}
+            if (miningInProgress)
+            {
+                if (TransactionPool.Count >= 3)
+                {
+                    //TODO put in another THREAD
+                    //logger.Debug("Mining started");
+                    //var coinbaseTx = Transaction.CoinBaseTx(from, "");
+                    //var startTime = DateTime.Now;
+                    //var block = chain.MineBlock(new List<Transaction>() { tx });
+                    //var endTime = DateTime.Now;
+                    //logger.Debug($"Mining duration: {endTime - startTime}");
+                    //utxoSet.Update(block);
+                    var thread = new Thread(MineTransactions);
+                    thread.Start();
+                }
+            }
 
+            //TODO publish if mined successfully and not interupted
 
-            //}
+      
+
 
 
         }
@@ -219,26 +226,28 @@ namespace Wallet
             logger.Debug("Recieved new block from: " + message.Client.ToString());
             chain.AddBlock(block);
             logger.Debug("block added ID:" + Convert.ToBase64String(block.Hash) + "index: " + block.Index);
+            BlockOnTheFly.Remove(HexadecimalEncoding.ToHexString(block.Hash));
 
             //--progress bar
             if (highestIndex < block.Index) highestIndex = block.Index; //check best index
-            NewBlockArrived?.Invoke(this, new ProgressBarEventArgs(highestIndex, block.Index)); //invoke this, mainly for progress bar now.
+            NewBlockArrived?.Invoke(this, new ProgressBarEventArgs(highestIndex, blocksInTransit.Count, reducedBlockCount)); //invoke this, mainly for progress bar now.
             //--progress bar end
 
             if (blocksInTransit.Count > 0)
             {
                 var blockHash = blocksInTransit[0];
                 SendGetData(message.Client.ToString(), "block", blockHash);
+                BlockOnTheFly.Add(HexadecimalEncoding.ToHexString(blockHash));
                 blocksInTransit.RemoveAt(0);
             }
             else
             {
+                if (BlockOnTheFly.Count != 0) return;
                 reindexing = true;
                 chain.ReindexUTXO(); // asynch
                 NewBlockAdded?.Invoke(this, EventArgs.Empty); // invoke this after all is downloaded, cause downloading from lastest to oldest, could cause problems after displaying after each block 
                 isBusy = false;
                 reindexing = false;
-                //Lock = false; //can be
                 ProcessNextMessage();
 
             }
@@ -276,20 +285,21 @@ namespace Wallet
         {
             var inventory = new Inv().DeSerialize(rxMsg.Data);
 
+
             logger.Debug("Inventory recieved: " + inventory.Kind);
             if (inventory.Kind == "block")
             {
                 if (blocksInTransit.Count == 0)
                 {
                     blocksInTransit = ReduceBlocksInTransit(inventory.Items); //reduce blocksInTransit, don't wanna download whole chain again
-                    //blocksInTransit = (inventory.Items); //dont reduce blocksInTransit
+                                                                              //blocksInTransit = (inventory.Items); //dont reduce blocksInTransit - download whole chain
+                    logger.Debug("Reduced blocks, to download : " + blocksInTransit.Count);
                 }
                 if (blocksInTransit.Count == 0) return; //this means, blockInTransit was reduced totaly and nothing is needed
 
                 var latestHashToTake = blocksInTransit[0];
                 SendGetData(rxMsg.Client.ToString(), "block", latestHashToTake);
                 blocksInTransit.RemoveAt(0);
-
             }
             else if (inventory.Kind == "tx")
             {
@@ -304,8 +314,14 @@ namespace Wallet
 
         }
 
+        //private void ProcessNextBlockMessage()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
         private List<byte[]> ReduceBlocksInTransit(List<byte[]> items)
         {
+
             var lastIndex = -1;
             for (var i = 0; i < items.Count; i++)
             {
@@ -317,7 +333,9 @@ namespace Wallet
                     break;
                 }
             }
+            reducedBlockCount = items.Count - lastIndex; //how many block are to be downloaded
             items.RemoveRange(lastIndex, items.Count - lastIndex);
+
             return items;
         }
 
@@ -325,15 +343,26 @@ namespace Wallet
         {
 
             var tx = new Transaction().DeSerialize(message.Data);
-            logger.Debug("New Transaction recieved : " + HexadecimalEncoding.ToHexString (tx.Id));
-            
+            logger.Debug("New Transaction recieved : " + HexadecimalEncoding.ToHexString(tx.Id));
+
             //add to pool
             TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
             TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));
 
 
             //Mine transaction
-            //MineTransactions();
+            if (TransactionPool.Count >= 3)
+            {
+                //TODO put in another THREAD
+                logger.Debug("Mining started");
+                var startTime = DateTime.Now;
+                MineTransactions();
+                var endTime = DateTime.Now;
+                logger.Debug($"Mining duration: {endTime - startTime}");
+                
+
+            }
+
 
             //send inv to all except me and the one who send the tx
             //var addressesToExclude = new string[] {
@@ -352,8 +381,6 @@ namespace Wallet
 
         private void MineTransactions()
         {
-
-            logger.Debug("Minig started");
             var txList = new List<Transaction>();
 
             //fill txList from TransactionPool
@@ -371,9 +398,10 @@ namespace Wallet
                 logger.Debug("All txs invalid");
                 return;
             }
+            logger.Debug("Valid txs: "+ txList.Count);
 
-            //var coinBaseTx = Transaction.CoinBaseTx(, ""); //add later
-            //txList.Add(coinBaseTx);
+            var coinBaseTx = Transaction.CoinBaseTx(_loggedUser.Address, ""); //add later
+            txList.Add(coinBaseTx);
 
             chain.HashDiscovered += HashDiscovered;
             var newBlock = chain.MineBlock(txList);
@@ -386,11 +414,11 @@ namespace Wallet
                 TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
             }
 
-            var inv = new Inv()
-            {
-                Items = new List<byte[]> { newBlock.Hash },
-                Kind = "block"
-            };
+            //var inv = new Inv()
+            //{
+            //    Items = new List<byte[]> { newBlock.Hash },
+            //    Kind = "block"
+            //};
 
             //var msg = new CommandMessage();
             //msg.Command = CommandType.Inv;
@@ -567,12 +595,6 @@ namespace Wallet
         }
         private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {
-            //if (Lock)
-            //{
-            //    IncomingMessages.Enqueue(e.Message);
-            //    logger.Debug("#LOCKED cause of DB operation, enquee");
-            //    return;
-            //}
             ProcessMessage(e.Message);
         }
     }
