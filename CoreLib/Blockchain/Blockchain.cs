@@ -16,7 +16,7 @@ namespace CoreLib.Blockchain
 
         public event EventHandler<MinedHashUpdateEventArgs> HashDiscovered;
 
-        public int Difficulty { set; get; } = 3;
+        public int Difficulty { set; get; } = 1;
         public byte[] LastHash { get; set; }
         public Block ActuallBlockInMining { get; set; } = new Block() { Speed = 0 }; // current block in mining process
 

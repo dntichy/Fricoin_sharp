@@ -8,6 +8,7 @@
        Inv,
        GetBlocks,
        Block,
-       GetData
+       GetData,
+        NewBlockMined
     }
 }

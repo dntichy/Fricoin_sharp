@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using CoreLib.DataStructures.MerkleTree;
 using CoreLib.Interfaces;
 using Newtonsoft.Json;
+using NLog;
 using P2PLib.Network.MessageParser;
 
 namespace CoreLib.Blockchain
@@ -25,9 +26,11 @@ namespace CoreLib.Blockchain
         public byte[] MerkleRoot { get; set; }
         public IList<Transaction> Transactions { get; set; }
 
-
+        [NonSerialized] public bool Mining = true;
         [NonSerialized] public int Speed = 0;
         [field: NonSerialized] public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
+        [field: NonSerialized] private static Logger logger = LogManager.GetCurrentClassLogger();
+
 
 
         public Block(DateTime dateTime, byte[] previousHash, IList<Transaction> transactions)
@@ -56,14 +59,21 @@ namespace CoreLib.Blockchain
 
         public void Mine(int difficulty)
         {
+
             var leadingZeros = new string('0', difficulty);
             while (Hash == null ||
                    Convert.ToBase64String(Hash).Substring(0, difficulty) != leadingZeros)
             {
-                Nonce++;
-                Hash = CalculateHash();
-                MinedHashUpdate?.Invoke(this, new MinedHashUpdateEventArgs(Convert.ToBase64String(Hash)));
-                System.Threading.Thread.Sleep(Speed);
+                if (Mining)
+                {
+                    Nonce++;
+                    Hash = CalculateHash();
+                    MinedHashUpdate?.Invoke(this, new MinedHashUpdateEventArgs(Convert.ToBase64String(Hash)));
+                    System.Threading.Thread.Sleep(Speed);
+                } else
+                {
+                    logger.Debug("PoW paused, break or continue base on block ");                    
+                }
             }
         }
 
@@ -88,7 +98,7 @@ namespace CoreLib.Blockchain
             BinaryFormatter binForm = new BinaryFormatter();
             memStream.Write(fromBytes, 0, fromBytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
-            return (Block) binForm.Deserialize(memStream);
+            return (Block)binForm.Deserialize(memStream);
         }
 
         public IEnumerator<Transaction> GetEnumerator()
@@ -109,7 +119,10 @@ namespace CoreLib.Blockchain
             var transactions = new List<Transaction>()
             {
                 Transaction.CoinBaseTx("112H2TcYAvxWGPSWXz4bzGvm5RXEdFDCms", ""),
-          
+                Transaction.CoinBaseTx("1LEB1mKYDEMfpNZtSkwqNDQMGAr3mBscsk", ""),
+                Transaction.CoinBaseTx("1fp9JwtnMMnYVLaABMEQuKGtpXUnJm7Cz", ""),
+                Transaction.CoinBaseTx("1LKeGb2LNZwzTBGkuwW4PaP6EuvWhb3vuM", ""),
+
             };
             var genesis = new Block(DateTime.Parse("1.1.2019"), null, transactions);
             genesis.SetMerkleRoot();

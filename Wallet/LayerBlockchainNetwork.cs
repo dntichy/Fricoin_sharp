@@ -38,7 +38,7 @@ namespace Wallet
         Queue<IMessage> IncomingMessages;
         List<string> BlockOnTheFly = new List<string>();
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
+        private bool miningInProgress;
 
         public static string GetIpAddress()
         {
@@ -121,6 +121,9 @@ namespace Wallet
                             case CommandType.Inv:
                                 HandleInv(rxMsg);
                                 break;
+                            case CommandType.NewBlockMined:
+                                HandleNewBlockMined(rxMsg);
+                                break;
                             default:
                                 logger.Debug("unknown command");
                                 break;
@@ -145,7 +148,30 @@ namespace Wallet
                     }
             }
         }
-        public void Send(string from, string to, int amount, bool miningInProgress)
+
+        private void HandleNewBlockMined(CommandMessage rxMsg)
+        {
+            if (miningInProgress)
+            {
+                //stop mining
+                chain.ActuallBlockInMining.Mining = false;
+                //verify and add
+
+            }
+        }
+        public void SendNewBlockMined(Block newBlock)
+        {
+            var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
+            var msg = new CommandMessage();
+            msg.Command = CommandType.NewBlockMined;
+            msg.Client = _blockchainNetwork.ClientDetails();
+            msg.Data = newBlock.Serialize();
+
+            _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
+
+        }
+
+        public void Send(string from, string to, int amount)
         {
             var utxoSet = new UTXOSet(chain);
 
@@ -155,10 +181,15 @@ namespace Wallet
                 logger.Debug("Couldn't create new TX to send");
                 return;
             }
+            //old ver
+            //var block = chain.MineBlock(new List<Transaction>() { tx });
+            //utxoSet.Update(block);
+            //NewBlockAdded?.Invoke(this, EventArgs.Empty);
+
 
             //add to pool
             TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
-            TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));         
+            TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));
 
             //send to all except me and the one who send the tx
             var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
@@ -170,28 +201,14 @@ namespace Wallet
             _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
             logger.Debug("Sending tx over nettwork");
 
-            if (miningInProgress)
+            if (!miningInProgress)
             {
-                if (TransactionPool.Count >= 3)
+                if (TransactionPool.Count >= 1)
                 {
-                    //TODO put in another THREAD
-                    //logger.Debug("Mining started");
-                    //var coinbaseTx = Transaction.CoinBaseTx(from, "");
-                    //var startTime = DateTime.Now;
-                    //var block = chain.MineBlock(new List<Transaction>() { tx });
-                    //var endTime = DateTime.Now;
-                    //logger.Debug($"Mining duration: {endTime - startTime}");
-                    //utxoSet.Update(block);
                     var thread = new Thread(MineTransactions);
                     thread.Start();
                 }
             }
-
-            //TODO publish if mined successfully and not interupted
-
-      
-
-
 
         }
 
@@ -314,10 +331,6 @@ namespace Wallet
 
         }
 
-        //private void ProcessNextBlockMessage()
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         private List<byte[]> ReduceBlocksInTransit(List<byte[]> items)
         {
@@ -349,40 +362,24 @@ namespace Wallet
             TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
             TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));
 
-
-            //Mine transaction
-            if (TransactionPool.Count >= 3)
+            if (!miningInProgress)
             {
-                //TODO put in another THREAD
-                logger.Debug("Mining started");
-                var startTime = DateTime.Now;
-                MineTransactions();
-                var endTime = DateTime.Now;
-                logger.Debug($"Mining duration: {endTime - startTime}");
-                
-
+                if (TransactionPool.Count >= 1)
+                {
+                    //Mine transaction
+                    var thread = new Thread(MineTransactions);
+                    thread.Start();
+                }
             }
-
-
-            //send inv to all except me and the one who send the tx
-            //var addressesToExclude = new string[] {
-            //    message.Client.ToString(), //the one who send it
-            //    _blockchainNetwork.ClientDetails().ToString() //me
-            //};
-
-            //var inv = new Inv() { Items = new List<byte[]>() { tx.Id }, Kind = "tx" };
-            //var msg = new CommandMessage();
-            //msg.Command = CommandType.Inv;
-            //msg.Client = _blockchainNetwork.ClientDetails();
-            //msg.Data = inv.Serialize();
-
-            //_blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
         }
 
         private void MineTransactions()
         {
-            var txList = new List<Transaction>();
+            miningInProgress = true;
+            logger.Debug("Mining started");
+            var startTime = DateTime.Now;
 
+            var txList = new List<Transaction>();
             //fill txList from TransactionPool
             foreach (var txPair in TransactionPool)
             {
@@ -398,7 +395,6 @@ namespace Wallet
                 logger.Debug("All txs invalid");
                 return;
             }
-            logger.Debug("Valid txs: "+ txList.Count);
 
             var coinBaseTx = Transaction.CoinBaseTx(_loggedUser.Address, ""); //add later
             txList.Add(coinBaseTx);
@@ -406,34 +402,18 @@ namespace Wallet
             chain.HashDiscovered += HashDiscovered;
             var newBlock = chain.MineBlock(txList);
             chain.ReindexUTXO();
-            logger.Debug("new block mined");
+            logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
+            chain.HashDiscovered -= HashDiscovered;
             NewBlockAdded?.Invoke(this, EventArgs.Empty);
+            SendNewBlockMined(newBlock);
 
+            //remove txs from Transaction pool
             foreach (var tx in txList)
             {
                 TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
             }
-
-            //var inv = new Inv()
-            //{
-            //    Items = new List<byte[]> { newBlock.Hash },
-            //    Kind = "block"
-            //};
-
-            //var msg = new CommandMessage();
-            //msg.Command = CommandType.Inv;
-            //msg.Client = _blockchainNetwork.ClientDetails();
-            //msg.Data = inv.Serialize();
-            ////send inv to all except me and the one who send the tx
-            //var addressesToExclude = new string[] {
-            //    _blockchainNetwork.ClientDetails().ToString()
-            //};
-            //_blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
-
-            //if (TransactionPool.Count > 0)
-            //{
-            //    MineTransactions();
-            //}
+            miningInProgress = false;
+            if (TransactionPool.Count > 0) MineTransactions();
 
         }
 

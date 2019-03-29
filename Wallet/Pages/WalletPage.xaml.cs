@@ -175,7 +175,7 @@ namespace Wallet.Pages
         private void NewBlockAdded(object sender, EventArgs e)
         {
             InitializeListBox();
-
+            UpdateBalance();
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -230,22 +230,7 @@ namespace Wallet.Pages
                 Console.WriteLine("Can't send to yourself");
                 return;
             }
-            nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount, true);
-
-
-            //var message = new TextMessage()
-            //{
-            //    Client = nettwork._blockchainNetwork.ClientDetails(),
-            //    Text = "nazdaaaro"
-            //};
-            //var CmDmessage = new CommandMessage()
-            //{
-            //    Data = ByteHelper.GetBytesFromString("Test message"),
-            //    Client = nettwork._blockchainNetwork.ClientDetails(),
-            //    Command = CommandType.Block
-            //};
-
-            //nettwork._blockchainNetwork.BroadcastMessage(message);
+            nettwork.Send(_loggedUser.Address, ToAddressTextBox.Text, amount);
         }
         void AppClosing(object sender, CancelEventArgs e)
         {
@@ -471,11 +456,21 @@ namespace Wallet.Pages
         }
         public void UpdateBalance()
         {
-            Balance.Content = "Balance :   " + _friChain.GetBalance(_loggedUser.Address);
+            logger.Debug("Balande updated");
+            Dispatcher.Invoke(() =>
+            {
+                Balance.Content = "Balance :   " + _friChain.GetBalance(_loggedUser.Address);
+            });
+            
         }
         public void UpdateRawChain()
         {
-            RawChainTextBlock.Text = _friChain.PrintWholeBlockChain();
+            logger.Debug("RawChain updated");
+            Dispatcher.Invoke(() =>
+            {
+                RawChainTextBlock.Text = _friChain.PrintWholeBlockChain();
+            });
+           
         }
         public void UpdatePeerList()
         {
