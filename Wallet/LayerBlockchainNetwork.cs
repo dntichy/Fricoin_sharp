@@ -32,7 +32,6 @@ namespace Wallet
         private bool isBusy = false;
         private bool reindexing = false;
         readonly User _loggedUser;
-        //public bool Lock { get; set; } = false;//working with db cannot be interupted
         private int highestIndex = 0;
         private int reducedBlockCount = 0;
         Queue<IMessage> IncomingMessages;
@@ -155,8 +154,38 @@ namespace Wallet
             {
                 //stop mining
                 chain.ActuallBlockInMining.Mining = false;
-                //verify and add
 
+                //verify and add
+                Block minedBlock = new Block().DeSerialize(rxMsg.Data);
+                var transactions = minedBlock.Transactions;
+                logger.Debug("Recieved block, somebody mined: " + Convert.ToBase64String(minedBlock.Hash));
+                //verification
+                bool isValid = true;
+                foreach (var tx in transactions)
+                {
+                    if (!chain.VerifyTransaction(tx))
+                    {
+                        isValid = false;
+                    };
+                }
+                if (!ArrayHelpers.ByteArrayCompare(chain.GetLatestBlock().Hash, minedBlock.PreviousHash))
+                {
+                    isValid = false;
+                }
+
+                if (isValid)
+                {
+                    //break mining, add to local chain
+                    chain.ActuallBlockInMining.BreakMining = true;
+                    chain.AddBlock(minedBlock);
+                    chain.ReindexUTXO(); // asynch
+                    NewBlockAdded?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    //continue mining
+                    chain.ActuallBlockInMining.Mining = true;
+                }
             }
         }
         public void SendNewBlockMined(Block newBlock)
@@ -401,19 +430,29 @@ namespace Wallet
 
             chain.HashDiscovered += HashDiscovered;
             var newBlock = chain.MineBlock(txList);
-            chain.ReindexUTXO();
-            logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
-            chain.HashDiscovered -= HashDiscovered;
-            NewBlockAdded?.Invoke(this, EventArgs.Empty);
-            SendNewBlockMined(newBlock);
 
-            //remove txs from Transaction pool
-            foreach (var tx in txList)
+            if (newBlock != null)
             {
-                TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
+                //this means pow was broke 
+                chain.ReindexUTXO();
+                logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
+                chain.HashDiscovered -= HashDiscovered;
+                NewBlockAdded?.Invoke(this, EventArgs.Empty);
+                SendNewBlockMined(newBlock);
+                //remove txs from Transaction pool
+                foreach (var tx in txList)
+                {
+                    TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
+                }
+            }
+            else
+            {
+                logger.Debug("block added by remote client");
             }
             miningInProgress = false;
-            if (TransactionPool.Count > 0) MineTransactions();
+
+
+            //if (TransactionPool.Count > 0) MineTransactions(); // this might cause the trouble
 
         }
 

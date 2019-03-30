@@ -16,7 +16,7 @@ namespace CoreLib.Blockchain
 
         public event EventHandler<MinedHashUpdateEventArgs> HashDiscovered;
 
-        public int Difficulty { set; get; } = 1;
+        public int Difficulty { set; get; } = 2;
         public byte[] LastHash { get; set; }
         public Block ActuallBlockInMining { get; set; } = new Block() { Speed = 0 }; // current block in mining process
 
@@ -54,7 +54,7 @@ namespace CoreLib.Blockchain
         }
 
 
-        private Block GetLatestBlock()
+        public Block GetLatestBlock()
         {
             return (new Block()).DeSerialize(ChainDb.Get(LastHash));
         }
@@ -89,11 +89,20 @@ namespace CoreLib.Blockchain
             ActuallBlockInMining = newBlock; //set instance - this way, speed will always be depend on slidebar, this fixes problem with first create block, than able to change speed.
             newBlock.Mine(Difficulty); //MINE IT
 
+            if (!IsProperlyMined(newBlock)) return null;
+
             ChainDb.Put(newBlock.Hash, newBlock.Serialize());
             ChainDb.Put(ByteHelper.GetBytesFromString("lh"), newBlock.Hash);
             LastHash = newBlock.Hash;
 
             return newBlock;
+        }
+
+        private bool IsProperlyMined(Block newBlock)
+        {
+            string leadingZeros = new string('0', Difficulty);
+            if (Convert.ToBase64String(newBlock.Hash).Substring(0, Difficulty) == leadingZeros) return true;
+            return false;
         }
 
         private void MinedHashUpdate(object sender, MinedHashUpdateEventArgs e)

@@ -26,11 +26,11 @@ namespace CoreLib.Blockchain
         public byte[] MerkleRoot { get; set; }
         public IList<Transaction> Transactions { get; set; }
 
-        [NonSerialized] public bool Mining = true;
-        [NonSerialized] public int Speed = 0;
+        [NonSerialized] public volatile bool Mining = true;
+        [NonSerialized] public volatile bool BreakMining = false;
+        [NonSerialized] public volatile int Speed = 0;
         [field: NonSerialized] public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
-        [field: NonSerialized] private static Logger logger = LogManager.GetCurrentClassLogger();
-
+        [NonSerialized] private static Logger logger = LogManager.GetCurrentClassLogger();
 
 
         public Block(DateTime dateTime, byte[] previousHash, IList<Transaction> transactions)
@@ -61,18 +61,25 @@ namespace CoreLib.Blockchain
         {
 
             var leadingZeros = new string('0', difficulty);
-            while (Hash == null ||
-                   Convert.ToBase64String(Hash).Substring(0, difficulty) != leadingZeros)
+            while (Hash == null || Convert.ToBase64String(Hash).Substring(0, difficulty) != leadingZeros)
             {
+                if (BreakMining)
+                {
+                    //in case incoming block was valid
+                    logger.Debug("Broke from mining");
+                    break;
+                }
+
                 if (Mining)
                 {
                     Nonce++;
                     Hash = CalculateHash();
                     MinedHashUpdate?.Invoke(this, new MinedHashUpdateEventArgs(Convert.ToBase64String(Hash)));
-                    System.Threading.Thread.Sleep(Speed);
-                } else
+                    System.Threading.Thread.Sleep(Speed); //indicates speed of minig
+                }
+                else
                 {
-                    logger.Debug("PoW paused, break or continue base on block ");                    
+                    logger.Debug("PoW paused, break or continue base on block ");
                 }
             }
         }

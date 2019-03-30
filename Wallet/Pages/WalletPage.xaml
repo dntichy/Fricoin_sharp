@@ -210,7 +210,7 @@
                                             <DataTemplate x:Key="peerTemplate">
                                                 <StackPanel Margin="3">
                                                     <DockPanel>
-                                                        <TextBlock FontWeight="Bold" Text="Name:" DockPanel.Dock="Left" Margin="5,0,10,0" />
+                                                        <TextBlock FontWeight="Bold" Text="IP:" DockPanel.Dock="Left" Margin="5,0,10,0" />
                                                         <TextBlock Text="" />
                                                         <TextBlock Text="{Binding ClientIPAddress}" Foreground="Green" FontWeight="Bold" />
                                                         <TextBlock Text=": " />
