@@ -31,11 +31,9 @@ namespace Engine.Network.MessageParser
         {
             String textResult = "";
             textResult += "<message>";
-
             textResult += "<type>" + Type + "</type>";
             textResult += "<group>" + Group + "</group>";
             textResult += "<clientdetails><name>" + mClient.ClientName + "</name><ipaddress>" + mClient.ClientIPAddress + "</ipaddress><listenport>" + mClient.ClientListenPort + "</listenport></clientdetails>";
-
             textResult += "</message>";
 
             return ASCIIEncoding.UTF8.GetBytes(textResult);

@@ -78,6 +78,7 @@
   <ItemGroup>
     <Compile Include="Blockchain\Block.cs" />
     <Compile Include="Blockchain\Blockchain.cs" />
+    <Compile Include="Blockchain\InMemoryBlockChain.cs" />
     <Compile Include="DataStructures\MerkleTree\MerkleNode.cs" />
     <Compile Include="DataStructures\MerkleTree\MerkleTree.cs" />
     <Compile Include="Blockchain\TxOutputs.cs" />

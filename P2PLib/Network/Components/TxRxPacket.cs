@@ -7,7 +7,7 @@ namespace P2PLib.Network.Components
     {
         public TxRxPacket(Socket socket)
         {
-            mCurrentSocket = socket;
+            mCurrentSocket = socket; 
             mDataBuffer = new Byte[1024];
         }
 

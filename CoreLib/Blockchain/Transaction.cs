@@ -125,7 +125,6 @@ namespace CoreLib.Blockchain
             return true;
         }
 
-
         public byte[] CalculateHash()
         {
             SHA256 sha256 = SHA256.Create();
@@ -137,7 +136,6 @@ namespace CoreLib.Blockchain
 
             return outputBytes;
         }
-
 
         public bool IsCoinBase()
         {
@@ -215,14 +213,39 @@ namespace CoreLib.Blockchain
             var tx = new Transaction()
             {
                 Id = null,
-                Outputs = new List<TxOutput> {txOut},
-                Inputs = new List<TxInput>() {txIn}
+                Outputs = new List<TxOutput>() {txOut},
+                Inputs = new List<TxInput>() {txIn},
+                TimeStamp = DateTime.Now
             };
             tx.Id = tx.CalculateHash();
 
             return tx;
         }
 
+        public static Transaction CoinBaseGenesisTx(string to, string data)
+        {
+            if (data == "") data = "Coins to " + to;
+
+            var txIn = new TxInput()
+            {
+                Id = new byte[] { }, // no referencing any output
+                Out = -1, // no referencing any output
+                Signature = null,
+                PubKey = ByteHelper.GetBytesFromString(data)
+            };
+
+            var txOut = TxOutput.NewTxOutput(100, to);
+
+            var tx = new Transaction()
+            {
+                Id = null,
+                Outputs = new List<TxOutput>() { txOut },
+                Inputs = new List<TxInput>() { txIn }
+            };
+            tx.Id = tx.CalculateHash();
+
+            return tx;
+        }
 
         public byte[] Serialize()
         {

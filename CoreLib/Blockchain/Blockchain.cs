@@ -251,9 +251,13 @@ namespace CoreLib.Blockchain
         {
             var UTXOs = new Dictionary<string, TxOutputs>();
             var spentTxOs = new Dictionary<string, List<int>>();
-
+            var confirmationIndex = 0;
             foreach (var block in this)
             {
+                confirmationIndex++;
+                if (confirmationIndex < 4 && block.Index != 0) continue; //last 3 blocks are to be confirmed
+
+
                 foreach (var tx in block)
                 {
                     var tXId = tx.Id; //transaction ID
@@ -308,6 +312,13 @@ namespace CoreLib.Blockchain
             return UTXOs;
         }
 
+        public void RestructualizeSubchain(InMemoryBlockChain bestChain)
+        {
+            foreach(var block in bestChain)
+            {
+                AddBlock(block);
+            }
+        }
 
         public Transaction FindTransaction(byte[] id)
         {

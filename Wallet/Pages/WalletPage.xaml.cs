@@ -62,7 +62,7 @@ namespace Wallet.Pages
             UpdatePeerList();
         }
 
-    
+
 
         private void NewBlockArrived(object sender, ProgressBarEventArgs e)
         {
@@ -73,10 +73,31 @@ namespace Wallet.Pages
                 progBgLabel.Width = progBorder.Width * fraction;
 
                 if (fraction != 1) progLabel.Content = "downloading... " + Math.Ceiling(100 * fraction) + "%";
+
                 else progLabel.Content = "synchronized";
             });
-
         }
+
+
+        private void BlockChainSynchronizing(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                progBgLabel.Width = 0;
+                progLabel.Content = "downloading...";
+            });
+        }
+
+        private void BlockChainSynchronized(object sender ,  EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                progBgLabel.Width = progBorder.Width;
+                progLabel.Content = "synchronized";
+            });
+        }
+
+
 
         private void InitializeLogger()
         {
@@ -130,15 +151,17 @@ namespace Wallet.Pages
                 nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
                 nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
                 nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
-                nettwork.NewBlockAdded += NewBlockAdded;
+                nettwork.WholeChainDownloaded += WholeChainDownloaded;
                 nettwork.NewBlockArrived += NewBlockArrived;
                 nettwork.TransactionPoolChanged += TransactionPoolChanged;
+                nettwork.BlockChainSynchronized += BlockChainSynchronized;
+                nettwork.BlockChainSynchronizing += BlockChainSynchronizing;
 
                 //kick of blockchain game here, must first register events, than kick that off
                 nettwork._blockchainNetwork.Initialize();
-                //for (int i = 0; i < 30; i++)
+                //for (int i = 0; i < 5; i++)
                 //{
-                //    nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 2, true);
+                //    nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 2);
                 //}
 
 
@@ -172,10 +195,11 @@ namespace Wallet.Pages
             });
         }
 
-        private void NewBlockAdded(object sender, EventArgs e)
+        private void WholeChainDownloaded(object sender, EventArgs e)
         {
             InitializeListBox();
             UpdateBalance();
+            UpdateRawChain();
         }
 
         private void CreateQrCode(string serializedPublic2)
@@ -461,16 +485,18 @@ namespace Wallet.Pages
             {
                 Balance.Content = "Balance :   " + _friChain.GetBalance(_loggedUser.Address);
             });
-            
+
         }
         public void UpdateRawChain()
         {
             logger.Debug("RawChain updated");
             Dispatcher.Invoke(() =>
             {
-                RawChainTextBlock.Text = _friChain.PrintWholeBlockChain();
+                var rawchain = _friChain.PrintWholeBlockChain();
+                RawChainTextBlock.Text = rawchain;
+                Console.WriteLine(rawchain);
             });
-           
+
         }
         public void UpdatePeerList()
         {

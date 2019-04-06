@@ -2,13 +2,12 @@
 {
     public enum CommandType
     {
-       ClearTransactionPool,
        Transaction,
        Version,
        Inv,
        GetBlocks,
        Block,
        GetData,
-        NewBlockMined
+       NewBlockMined
     }
 }

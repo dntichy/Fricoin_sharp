@@ -125,10 +125,10 @@ namespace CoreLib.Blockchain
         {
             var transactions = new List<Transaction>()
             {
-                Transaction.CoinBaseTx("112H2TcYAvxWGPSWXz4bzGvm5RXEdFDCms", ""),
-                Transaction.CoinBaseTx("1LEB1mKYDEMfpNZtSkwqNDQMGAr3mBscsk", ""),
-                Transaction.CoinBaseTx("1fp9JwtnMMnYVLaABMEQuKGtpXUnJm7Cz", ""),
-                Transaction.CoinBaseTx("1LKeGb2LNZwzTBGkuwW4PaP6EuvWhb3vuM", ""),
+                Transaction.CoinBaseGenesisTx("112H2TcYAvxWGPSWXz4bzGvm5RXEdFDCms", ""),
+                Transaction.CoinBaseGenesisTx("1LEB1mKYDEMfpNZtSkwqNDQMGAr3mBscsk", ""),
+                Transaction.CoinBaseGenesisTx("1fp9JwtnMMnYVLaABMEQuKGtpXUnJm7Cz", ""),
+                Transaction.CoinBaseGenesisTx("1LKeGb2LNZwzTBGkuwW4PaP6EuvWhb3vuM", ""),
 
             };
             var genesis = new Block(DateTime.Parse("1.1.2019"), null, transactions);

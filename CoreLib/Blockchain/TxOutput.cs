@@ -4,7 +4,7 @@ using ChainUtils;
 namespace CoreLib
 {
     [Serializable]
-    public class TxOutput
+    public class TxOutput 
     {
         public int Value { get; set; }
         public byte[] PublicKeyHash { get; set; }
@@ -31,6 +31,22 @@ namespace CoreLib
         public bool IsLockedWithKey(byte[] pubKeyHash)
         {
             return ArrayHelpers.ByteArrayCompare(PublicKeyHash, pubKeyHash);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (GetType() != obj.GetType())
+                return false;
+
+            return (ArrayHelpers.ByteArrayCompare(((TxOutput)obj).PublicKeyHash, PublicKeyHash)  &&
+                    Value.Equals(((TxOutput)obj).Value));
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }

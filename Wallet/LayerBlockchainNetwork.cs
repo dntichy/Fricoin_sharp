@@ -25,11 +25,13 @@ namespace Wallet
         public Dictionary<string, Transaction> TransactionPool;
         private BlockChain chain;
         private List<byte[]> blocksInTransit;
-        public event EventHandler NewBlockAdded; //todo change this stupid name
+        public event EventHandler WholeChainDownloaded;
+        public event EventHandler BlockChainSynchronized; // remove, is unused?
+        public event EventHandler BlockChainSynchronizing;
         public event EventHandler<TransactionPoolEventArgs> TransactionPoolChanged;
         public event EventHandler<ProgressBarEventArgs> NewBlockArrived;
         public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
-        private bool isBusy = false;
+        private bool isBusy = false; //is currently downloading chain from other peers
         private bool reindexing = false;
         readonly User _loggedUser;
         private int highestIndex = 0;
@@ -38,6 +40,10 @@ namespace Wallet
         List<string> BlockOnTheFly = new List<string>();
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private bool miningInProgress;
+        private int numberOfTransactionsToStartMining = 1;
+        List<InMemoryBlockChain> InMemoryBlockChains = new List<InMemoryBlockChain>(); //local fork chains
+        Queue<IMessage> IncomingMinedNewBlocksMessages;
+        private bool handlingNewBlock = false; //is currently processing mined block
 
         public static string GetIpAddress()
         {
@@ -64,6 +70,7 @@ namespace Wallet
             TransactionPool = new Dictionary<string, Transaction>();
             blocksInTransit = new List<byte[]>();
             IncomingMessages = new Queue<IMessage>();
+            IncomingMinedNewBlocksMessages = new Queue<IMessage>();
             this._loggedUser = _loggedUser;
 
             //P2P CONFIGURATIONS
@@ -92,8 +99,7 @@ namespace Wallet
 
                         switch (rxMsg.Command)
                         {
-                            case CommandType.ClearTransactionPool:
-                                break;
+
                             case CommandType.Transaction:
                                 HandleTransaction(rxMsg);
                                 break;
@@ -121,6 +127,12 @@ namespace Wallet
                                 HandleInv(rxMsg);
                                 break;
                             case CommandType.NewBlockMined:
+                                if (handlingNewBlock)
+                                {
+                                    IncomingMinedNewBlocksMessages.Enqueue(rxMsg);
+                                    logger.Debug("NewBlockMined message enqueed");
+                                    return;
+                                }
                                 HandleNewBlockMined(rxMsg);
                                 break;
                             default:
@@ -150,44 +162,174 @@ namespace Wallet
 
         private void HandleNewBlockMined(CommandMessage rxMsg)
         {
-            if (miningInProgress)
-            {
-                //stop mining
-                chain.ActuallBlockInMining.Mining = false;
 
-                //verify and add
+            try
+            {
+                handlingNewBlock = true;
+                PauseMining(); //pause mining if mining
+
                 Block minedBlock = new Block().DeSerialize(rxMsg.Data);
                 var transactions = minedBlock.Transactions;
                 logger.Debug("Recieved block, somebody mined: " + Convert.ToBase64String(minedBlock.Hash));
-                //verification
-                bool isValid = true;
-                foreach (var tx in transactions)
-                {
-                    if (!chain.VerifyTransaction(tx))
-                    {
-                        isValid = false;
-                    };
-                }
-                if (!ArrayHelpers.ByteArrayCompare(chain.GetLatestBlock().Hash, minedBlock.PreviousHash))
-                {
-                    isValid = false;
-                }
 
-                if (isValid)
+                var isValid = IsPreviousHashValid(minedBlock.PreviousHash);
+
+                if (!isValid)
                 {
-                    //break mining, add to local chain
-                    chain.ActuallBlockInMining.BreakMining = true;
-                    chain.AddBlock(minedBlock);
-                    chain.ReindexUTXO(); // asynch
-                    NewBlockAdded?.Invoke(this, EventArgs.Empty);
+                    logger.Debug("Previous hash invalid, try add to fork subchain");
+                    if (!VerifyTransactions(transactions))
+                    {
+                        logger.Debug("Transactions  not valid");
+                        ResumeMining();
+                        handlingNewBlock = false;
+                        return;
+                    }
+
+                    //try to add to fork chains
+                    var added = false;
+                    foreach (var memChain in InMemoryBlockChains)
+                    {
+                        if (memChain.BelongsToThisChain(minedBlock))
+                        {
+                            added = memChain.AddBlock(minedBlock);
+                            logger.Debug("Added to subchain");
+                        }
+                    }
+
+                    if (!added)
+                    {
+                        var newForkChain = new InMemoryBlockChain();
+                        newForkChain.AddBlock(minedBlock);
+                        InMemoryBlockChains.Add(newForkChain);
+                        logger.Debug("Created new subchain");
+                    }
+                    PrintCurrentForkChains(InMemoryBlockChains);
                 }
                 else
                 {
-                    //continue mining
-                    chain.ActuallBlockInMining.Mining = true;
+                    logger.Debug("Previous hash VALID, add to local chain");
+
+                    if (!VerifyTransactions(transactions))
+                    {
+                        ResumeMining();
+                        handlingNewBlock = false;
+                        return;
+                    }
+
+                    BreakMining();
+                    chain.AddBlock(minedBlock);
+                    chain.ReindexUTXO(); // asynch
+                    RemoveTransactionsFromPool(minedBlock.Transactions); //remove new block transactions from pool
                 }
+
+                if (InMemoryBlockChains.Count > 0)
+                {
+
+                    logger.Debug("Find best chain");
+                    InMemoryBlockChain bestChain = null;
+                    var count = 1;
+                    var bestIndex = chain.GetBestHeight();
+
+                    foreach (var chain in InMemoryBlockChains)
+                    {
+                        var currentIndex = chain.GetLastIndex();
+
+                        if (currentIndex > bestIndex)
+                        {
+                            bestIndex = currentIndex;
+                            count = 1;
+                            bestChain = chain;
+                        }
+                        else if (currentIndex == bestIndex)
+                        {
+                            count++;
+                        }
+                    }
+                    if (count == 1)
+                    {
+                        logger.Debug("Best chain found");
+                        BreakMining();
+
+                        if (bestChain != null)
+                        {
+                            logger.Debug("Best chain found in subchains, restructualize chain");
+                            //if not restruct to new one
+                            chain.RestructualizeSubchain(bestChain);
+
+                        }
+                        else
+                        {
+                            //if bestChain is null, chain stays local
+                            logger.Debug("Best chain found in localchain, do nothing");
+                        }
+                        InMemoryBlockChains.Clear(); //clear InMemoryChains
+                    }
+                    else
+                    {
+                        logger.Debug("Best chain not found");
+                    }
+                }
+
+                WholeChainDownloaded?.Invoke(this, EventArgs.Empty);
+                handlingNewBlock = false;
+                if (IncomingMinedNewBlocksMessages.Count > 0) ProcessMessage(IncomingMinedNewBlocksMessages.Dequeue());
+
+            }
+            catch (Exception e)
+            {
+                logger.Error(e.Message);
+                logger.Error(e.StackTrace);
             }
         }
+
+        private void RemoveTransactionsFromPool(IList<Transaction> transactions)
+        {
+            foreach (var tx in transactions)
+            {
+                TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
+            }
+        }
+
+        private void PrintCurrentForkChains(List<InMemoryBlockChain> inMemoryBlockChains)
+        {
+            foreach (var chain in inMemoryBlockChains)
+            {
+                logger.Debug(chain);
+            }
+        }
+        private void ResumeMining()
+        {
+            if (miningInProgress) chain.ActuallBlockInMining.Mining = true;
+        }
+
+        private void PauseMining()
+        {
+            if (miningInProgress) chain.ActuallBlockInMining.Mining = false;
+        }
+        private void BreakMining()
+        {
+            if (miningInProgress) chain.ActuallBlockInMining.BreakMining = true; //break mining
+        }
+
+        private bool VerifyTransactions(IList<Transaction> transactions)
+        {
+            var isValid = true;
+            //verification
+            foreach (var tx in transactions)
+            {
+                if (!chain.VerifyTransaction(tx))
+                {
+                    isValid = false;
+                };
+            }
+            return isValid;
+        }
+
+        private bool IsPreviousHashValid(byte[] previousHash)
+        {
+            return ArrayHelpers.ByteArrayCompare(chain.GetLatestBlock().Hash, previousHash);
+        }
+
         public void SendNewBlockMined(Block newBlock)
         {
             var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
@@ -213,8 +355,37 @@ namespace Wallet
             //old ver
             //var block = chain.MineBlock(new List<Transaction>() { tx });
             //utxoSet.Update(block);
-            //NewBlockAdded?.Invoke(this, EventArgs.Empty);
+            //WholeChainDownloaded?.Invoke(this, EventArgs.Empty);
+            //chain.ReindexUTXO();
 
+
+            //check if not referencing same output, TODO BUG FIX
+            //var referencingSameOutput = false;
+            //foreach (var transaction in TransactionPool)
+            //{
+            //    var txOutputs = tx.Outputs;
+            //    var poolOutputs = transaction.Value.Outputs;
+
+            //    foreach (var outp in poolOutputs)
+            //    {
+            //        foreach (var txOutp in txOutputs)
+            //        {
+            //            if (outp.Equals(txOutp))
+            //            {
+            //                referencingSameOutput = true;
+            //                break;
+            //            }
+            //        }
+            //        if (referencingSameOutput) break;
+            //    }
+            //    if (referencingSameOutput) break;
+            //}
+
+            //if (referencingSameOutput)
+            //{
+            //    logger.Debug("Referencing same output in tx. Tx not added to TPool");
+            //    return;
+            //}
 
             //add to pool
             TransactionPool.Add(HexadecimalEncoding.ToHexString(tx.Id), tx);
@@ -232,7 +403,7 @@ namespace Wallet
 
             if (!miningInProgress)
             {
-                if (TransactionPool.Count >= 1)
+                if (TransactionPool.Count >= numberOfTransactionsToStartMining)
                 {
                     var thread = new Thread(MineTransactions);
                     thread.Start();
@@ -291,7 +462,7 @@ namespace Wallet
                 if (BlockOnTheFly.Count != 0) return;
                 reindexing = true;
                 chain.ReindexUTXO(); // asynch
-                NewBlockAdded?.Invoke(this, EventArgs.Empty); // invoke this after all is downloaded, cause downloading from lastest to oldest, could cause problems after displaying after each block 
+                WholeChainDownloaded?.Invoke(this, EventArgs.Empty); // invoke this after all is downloaded, cause downloading from lastest to oldest, could cause problems after displaying after each block 
                 isBusy = false;
                 reindexing = false;
                 ProcessNextMessage();
@@ -318,7 +489,7 @@ namespace Wallet
             {
                 SendGetBlocks(message.Client.ToString());
                 isBusy = true;
-
+                BlockChainSynchronizing?.Invoke(this, EventArgs.Empty);
             }
             else if (myBestHeight > incomeBestheight)
             {
@@ -393,7 +564,7 @@ namespace Wallet
 
             if (!miningInProgress)
             {
-                if (TransactionPool.Count >= 1)
+                if (TransactionPool.Count >= numberOfTransactionsToStartMining)
                 {
                     //Mine transaction
                     var thread = new Thread(MineTransactions);
@@ -409,6 +580,8 @@ namespace Wallet
             var startTime = DateTime.Now;
 
             var txList = new List<Transaction>();
+            var coinBaseTx = Transaction.CoinBaseTx(_loggedUser.Address, ""); //add later
+            txList.Add(coinBaseTx);
             //fill txList from TransactionPool
             foreach (var txPair in TransactionPool)
             {
@@ -425,8 +598,6 @@ namespace Wallet
                 return;
             }
 
-            var coinBaseTx = Transaction.CoinBaseTx(_loggedUser.Address, ""); //add later
-            txList.Add(coinBaseTx);
 
             chain.HashDiscovered += HashDiscovered;
             var newBlock = chain.MineBlock(txList);
@@ -437,7 +608,7 @@ namespace Wallet
                 chain.ReindexUTXO();
                 logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
                 chain.HashDiscovered -= HashDiscovered;
-                NewBlockAdded?.Invoke(this, EventArgs.Empty);
+                WholeChainDownloaded?.Invoke(this, EventArgs.Empty);
                 SendNewBlockMined(newBlock);
                 //remove txs from Transaction pool
                 foreach (var tx in txList)
@@ -448,11 +619,12 @@ namespace Wallet
             else
             {
                 logger.Debug("block added by remote client");
+                //I delete txs from txpool in NewBlockMined
             }
+
             miningInProgress = false;
 
-
-            //if (TransactionPool.Count > 0) MineTransactions(); // this might cause the trouble
+            if (TransactionPool.Count > 0) MineTransactions();
 
         }
 
