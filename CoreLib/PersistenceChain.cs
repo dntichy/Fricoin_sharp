@@ -24,11 +24,12 @@ namespace CoreLib
             {
                 MaxDatabases = 2
             };
+            env.MapSize = 1024 * 1024 * 1000;
             env.Open();
 
             //create db
             using (var tx = env.BeginTransaction())
-            using (tx.OpenDatabase(_dbName, new DatabaseConfiguration { Flags = DatabaseOpenFlags.Create }))
+            using (tx.OpenDatabase(_dbName, new DatabaseConfiguration { Flags = DatabaseOpenFlags.Create  }))
             {
                 tx.Commit();
             }

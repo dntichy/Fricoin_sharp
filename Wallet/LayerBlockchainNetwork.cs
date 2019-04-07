@@ -216,10 +216,11 @@ namespace Wallet
                         return;
                     }
 
-                    BreakMining();
-                    chain.AddBlock(minedBlock);
-                    chain.ReindexUTXO(); // asynch
                     RemoveTransactionsFromPool(minedBlock.Transactions); //remove new block transactions from pool
+                    chain.AddBlock(minedBlock);
+                    BreakMining();
+                    chain.ReindexUTXO(); // asynch
+                    
                 }
 
                 if (InMemoryBlockChains.Count > 0)
@@ -611,10 +612,8 @@ namespace Wallet
                 WholeChainDownloaded?.Invoke(this, EventArgs.Empty);
                 SendNewBlockMined(newBlock);
                 //remove txs from Transaction pool
-                foreach (var tx in txList)
-                {
-                    TransactionPool.Remove(HexadecimalEncoding.ToHexString(tx.Id));
-                }
+
+                RemoveTransactionsFromPool(txList);
             }
             else
             {

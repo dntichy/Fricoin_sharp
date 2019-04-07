@@ -17,12 +17,13 @@ namespace CoreLib
 
         public PersistenceTransaction(string environment)
         {
-            DbEnv = environment.Replace(':', '_');
+            DbEnv = environment.Replace(':', '_') ;
 
             env = new LightningEnvironment(DbEnv)
             {
-                MaxDatabases = 2
+                MaxDatabases = 2,
             };
+            env.MapSize = 1024 * 1024 * 1000;
             env.Open();
 
             //create db
