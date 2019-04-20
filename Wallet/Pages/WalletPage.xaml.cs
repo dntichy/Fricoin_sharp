@@ -148,9 +148,9 @@ namespace Wallet.Pages
             {
                 //NETTWORK STUFF
                 nettwork = new LayerBlockchainNetwork(_friChain, _loggedUser);
-                nettwork._blockchainNetwork.OnRegisterClient += NewClientRegistered;
-                nettwork._blockchainNetwork.OnUnRegisterClient += ClientUnregistered;
-                nettwork._blockchainNetwork.OnRecieveListOfClients += PeersListObtained;
+                nettwork._blockchainPeer.OnRegisterClient += NewClientRegistered;
+                nettwork._blockchainPeer.OnUnRegisterClient += ClientUnregistered;
+                nettwork._blockchainPeer.OnRecieveListOfClients += PeersListObtained;
                 nettwork.WholeChainDownloaded += WholeChainDownloaded;
                 nettwork.NewBlockArrived += NewBlockArrived;
                 nettwork.TransactionPoolChanged += TransactionPoolChanged;
@@ -158,7 +158,7 @@ namespace Wallet.Pages
                 nettwork.BlockChainSynchronizing += BlockChainSynchronizing;
 
                 //kick of blockchain game here, must first register events, than kick that off
-                nettwork._blockchainNetwork.Initialize();
+                nettwork._blockchainPeer.Initialize();
                 //for (int i = 0; i < 5; i++)
                 //{
                 //    nettwork.Send(_loggedUser.Address, "1EkAmczL7REZVgTHfBC8Rk3fMLiVQnR3bi", 2);
@@ -249,7 +249,7 @@ namespace Wallet.Pages
                 Console.WriteLine("Specify correct amount");
                 return;
             }
-            if (ToAddressTextBox.Text.Equals(nettwork._blockchainNetwork.ClientDetails().ToString()))
+            if (ToAddressTextBox.Text.Equals(nettwork._blockchainPeer.ClientDetails().ToString()))
             {
                 Console.WriteLine("Can't send to yourself");
                 return;
@@ -259,7 +259,7 @@ namespace Wallet.Pages
         void AppClosing(object sender, CancelEventArgs e)
         {
 
-            nettwork._blockchainNetwork.Close();
+            nettwork._blockchainPeer.Close();
             e.Cancel = true;
             Application.Current.Shutdown();
 
@@ -268,7 +268,7 @@ namespace Wallet.Pages
 
         private void LogoutClick(object sender, RoutedEventArgs e)
         {
-            nettwork._blockchainNetwork.Close();
+            nettwork._blockchainPeer.Close();
             NavigationService?.Navigate(new Loading());
         }
 
@@ -435,13 +435,13 @@ namespace Wallet.Pages
         private void ClientUnregistered(object sender, ServerRegisterEventArgs e)
         {
             logger.Debug("PEER UNREGISTERED");
-            SetListOfPeers(nettwork._blockchainNetwork.GroupClients);//set list of peers
+            SetListOfPeers(nettwork._blockchainPeer.GroupClients);//set list of peers
         }
 
         private void NewClientRegistered(object sender, ServerRegisterEventArgs e)
         {
             logger.Debug("PEER REGISTERED");
-            SetListOfPeers(nettwork._blockchainNetwork.GroupClients); //set list of peers
+            SetListOfPeers(nettwork._blockchainPeer.GroupClients); //set list of peers
         }
 
         private void SetListOfPeers(Collection<IClientDetails> groupClients)

@@ -11,7 +11,7 @@ using System.Collections.ObjectModel;
 
 namespace P2PLib.Network
 {
-    public class BlockchainNetwork : IBlockchainNetwork
+    public class BlockchainPeer : IBlockchainNetwork
 
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -110,7 +110,7 @@ namespace P2PLib.Network
             mClient.Initialize();
         }
 
-        public BlockchainNetwork(int listenPort, int serverListenPort, string server, string group)
+        public BlockchainPeer(int listenPort, int serverListenPort, string server, string group)
         {
 
             mListenPort = listenPort;

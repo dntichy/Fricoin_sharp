@@ -21,7 +21,7 @@ namespace Wallet
 {
     class LayerBlockchainNetwork
     {
-        public BlockchainNetwork _blockchainNetwork;
+        public BlockchainPeer _blockchainPeer;
         public Dictionary<string, Transaction> TransactionPool;
         private BlockChain chain;
         private List<byte[]> blocksInTransit;
@@ -79,10 +79,10 @@ namespace Wallet
             int serverListenPort = Convert.ToInt32(ConfigurationManager.AppSettings["ServerListenPort"]);
 
             //CREATE BLOCKCHAIN OBJECT
-            _blockchainNetwork = new BlockchainNetwork(listenPort, serverListenPort, server, "group11");
+            _blockchainPeer = new BlockchainPeer(listenPort, serverListenPort, server, "group11");
 
             //REGISTER recievers
-            _blockchainNetwork.OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
+            _blockchainPeer.OnReceiveMessage += new OnReceiveMessageEvent(OnReceivePeerMessage);
             //TODO transfer events here from wallet.cs?
 
         }
@@ -192,6 +192,7 @@ namespace Wallet
                         if (memChain.BelongsToThisChain(minedBlock))
                         {
                             added = memChain.AddBlock(minedBlock);
+                            RemoveTransactionsFromPool(minedBlock.Transactions);
                             logger.Debug("Added to subchain");
                         }
                     }
@@ -220,7 +221,7 @@ namespace Wallet
                     chain.AddBlock(minedBlock);
                     BreakMining();
                     chain.ReindexUTXO(); // asynch
-                    
+
                 }
 
                 if (InMemoryBlockChains.Count > 0)
@@ -256,6 +257,7 @@ namespace Wallet
                             logger.Debug("Best chain found in subchains, restructualize chain");
                             //if not restruct to new one
                             chain.RestructualizeSubchain(bestChain);
+                            InMemoryBlockChains.Clear(); //clear InMemoryChains
 
                         }
                         else
@@ -263,7 +265,6 @@ namespace Wallet
                             //if bestChain is null, chain stays local
                             logger.Debug("Best chain found in localchain, do nothing");
                         }
-                        InMemoryBlockChains.Clear(); //clear InMemoryChains
                     }
                     else
                     {
@@ -333,13 +334,13 @@ namespace Wallet
 
         public void SendNewBlockMined(Block newBlock)
         {
-            var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
+            var addressesToExclude = new string[] { _blockchainPeer.ClientDetails().ToString() };
             var msg = new CommandMessage();
             msg.Command = CommandType.NewBlockMined;
-            msg.Client = _blockchainNetwork.ClientDetails();
+            msg.Client = _blockchainPeer.ClientDetails();
             msg.Data = newBlock.Serialize();
 
-            _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
+            _blockchainPeer.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
 
         }
 
@@ -393,13 +394,13 @@ namespace Wallet
             TransactionPoolChanged?.Invoke(this, new TransactionPoolEventArgs(new List<string>(TransactionPool.Keys)));
 
             //send to all except me and the one who send the tx
-            var addressesToExclude = new string[] { _blockchainNetwork.ClientDetails().ToString() };
+            var addressesToExclude = new string[] { _blockchainPeer.ClientDetails().ToString() };
             var msg = new CommandMessage();
             msg.Command = CommandType.Transaction;
-            msg.Client = _blockchainNetwork.ClientDetails();
+            msg.Client = _blockchainPeer.ClientDetails();
             msg.Data = tx.Serialize();
 
-            _blockchainNetwork.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
+            _blockchainPeer.BroadcastMessageAsyncExceptAddress(addressesToExclude, msg);
             logger.Debug("Sending tx over nettwork");
 
             if (!miningInProgress)
@@ -467,7 +468,6 @@ namespace Wallet
                 isBusy = false;
                 reindexing = false;
                 ProcessNextMessage();
-
             }
         }
 
@@ -496,7 +496,6 @@ namespace Wallet
             {
                 SendVersion(message.Client.ToString(), chain);
             }
-
         }
 
         private void HandleInv(CommandMessage rxMsg)
@@ -528,8 +527,6 @@ namespace Wallet
                     SendGetData(rxMsg.Client.ToString(), "tx", txId);
                 }
             }
-
-
         }
 
 
@@ -576,6 +573,8 @@ namespace Wallet
 
         private void MineTransactions()
         {
+
+
             miningInProgress = true;
             logger.Debug("Mining started");
             var startTime = DateTime.Now;
@@ -605,9 +604,73 @@ namespace Wallet
 
             if (newBlock != null)
             {
+                if (handlingNewBlock)
+                {
+                    // mined same time as block came 
+                    logger.Debug($"!New block mined, mining duration: {DateTime.Now - startTime} But discard it, cause handling newRemoteBlock");
+                    return;
+                }
+                handlingNewBlock = true;
+                logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
+
+
+                //7.4.19
+                if (InMemoryBlockChains.Count > 0)
+                {
+
+                    logger.Debug("Find best chain");
+                    InMemoryBlockChain bestChain = null;
+                    var count = 1;
+                    var bestIndex = chain.GetBestHeight();
+
+                    foreach (var chain in InMemoryBlockChains)
+                    {
+                        var currentIndex = chain.GetLastIndex();
+
+                        if (currentIndex > bestIndex)
+                        {
+                            bestIndex = currentIndex;
+                            count = 1;
+                            bestChain = chain;
+                        }
+                        else if (currentIndex == bestIndex)
+                        {
+                            count++;
+                        }
+                    }
+                    if (count == 1)
+                    {
+                        logger.Debug("Best chain found");
+                        BreakMining();//redundant
+
+                        if (bestChain != null)
+                        {
+
+                            logger.Debug("Best chain found in subchains, restructualize chain");
+                            //if not restruct to new one
+                            chain.RestructualizeSubchain(bestChain);
+                            InMemoryBlockChains.Clear(); //clear InMemoryChains
+                        }
+                        else
+                        {
+                            //if bestChain is null, chain stays local
+                            logger.Debug("Best chain found in localchain, do nothing");
+                        }
+
+                    }
+                    else
+                    {
+                        logger.Debug("Best chain not found");
+                    }
+                }
+
+                handlingNewBlock = false;
+                if (IncomingMinedNewBlocksMessages.Count > 0) ProcessMessage(IncomingMinedNewBlocksMessages.Dequeue());
+                //7.4.19
+
                 //this means pow was broke 
                 chain.ReindexUTXO();
-                logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
+
                 chain.HashDiscovered -= HashDiscovered;
                 WholeChainDownloaded?.Invoke(this, EventArgs.Empty);
                 SendNewBlockMined(newBlock);
@@ -711,10 +774,10 @@ namespace Wallet
         {
             var message = new CommandMessage();
             message.Command = CommandType.Block;
-            message.Client = _blockchainNetwork.ClientDetails();
+            message.Client = _blockchainPeer.ClientDetails();
             message.Data = block.Serialize();
             logger.Debug("send block index: " + block.Index);
-            _blockchainNetwork.SendMessageToAddressAsync(message, address);
+            _blockchainPeer.SendMessageToAddressAsync(message, address);
         }
 
 
@@ -722,14 +785,14 @@ namespace Wallet
         {
             var message = new CommandMessage();
             message.Command = CommandType.Inv;
-            message.Client = _blockchainNetwork.ClientDetails();
+            message.Client = _blockchainPeer.ClientDetails();
             var inv = new Inv()
             {
                 Items = items,
                 Kind = kind
             };
             message.Data = inv.Serialize();
-            _blockchainNetwork.SendMessageToAddressAsync(message, address);
+            _blockchainPeer.SendMessageToAddressAsync(message, address);
         }
 
 
@@ -737,16 +800,16 @@ namespace Wallet
         {
             var message = new CommandMessage();
             message.Command = CommandType.Transaction;
-            message.Client = _blockchainNetwork.ClientDetails();
+            message.Client = _blockchainPeer.ClientDetails();
             message.Data = tx.Serialize();
 
-            _blockchainNetwork.BroadcastMessageAsync(message);
+            _blockchainPeer.BroadcastMessageAsync(message);
         }
         public void SendVersion(string address, BlockChain bchain)
         {
             var message = new CommandMessage();
             message.Command = CommandType.Version;
-            message.Client = _blockchainNetwork.ClientDetails();
+            message.Client = _blockchainPeer.ClientDetails();
             var bestHeigth = bchain.GetBestHeight();
             message.Data = new Version()
             {
@@ -754,7 +817,7 @@ namespace Wallet
                 VersionCode = 1
             }.Serialize();
 
-            _blockchainNetwork.SendMessageToAddressAsync(message, address);
+            _blockchainPeer.SendMessageToAddressAsync(message, address);
         }
 
 
@@ -762,9 +825,9 @@ namespace Wallet
         {
             var message = new CommandMessage();
             message.Command = CommandType.GetBlocks;
-            message.Client = _blockchainNetwork.ClientDetails();
+            message.Client = _blockchainPeer.ClientDetails();
 
-            _blockchainNetwork.SendMessageToAddressAsync(message, address);
+            _blockchainPeer.SendMessageToAddressAsync(message, address);
         }
 
 
@@ -772,7 +835,7 @@ namespace Wallet
         {
             var message = new CommandMessage();
             message.Command = CommandType.GetData;
-            message.Client = _blockchainNetwork.ClientDetails();
+            message.Client = _blockchainPeer.ClientDetails();
 
             var dt = new Data()
             {
@@ -781,7 +844,7 @@ namespace Wallet
             };
             message.Data = dt.Serialize();
 
-            _blockchainNetwork.SendMessageToAddressAsync(message, address);
+            _blockchainPeer.SendMessageToAddressAsync(message, address);
         }
         private void OnReceivePeerMessage(object sender, ReceiveMessageEventArgs e)
         {

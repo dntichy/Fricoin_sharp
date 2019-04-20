@@ -33,7 +33,6 @@ namespace CoreLib.Blockchain
         public BlockChain(string address)
         {
             //create db environments if not already created
-
             ChainDb = new PersistenceChain(address);
             TransactionDB = new PersistenceTransaction(address);
 
@@ -100,6 +99,7 @@ namespace CoreLib.Blockchain
 
         private bool IsProperlyMined(Block newBlock)
         {
+            if (newBlock == null) return false;
             string leadingZeros = new string('0', Difficulty);
             if (Convert.ToBase64String(newBlock.Hash).Substring(0, Difficulty) == leadingZeros) return true;
             return false;
@@ -317,6 +317,7 @@ namespace CoreLib.Blockchain
             foreach(var block in bestChain)
             {
                 AddBlock(block);
+                logger.Debug("Add block from restructualized - " + Convert.ToBase64String(block.Hash));
             }
         }
 
@@ -355,7 +356,9 @@ namespace CoreLib.Blockchain
             var prevTxs = new Dictionary<string, Transaction>();
             foreach (var inp in tx.Inputs)
             {
+                
                 var prevTx = FindTransaction(inp.Id);
+                //TODO if not found here... prevTx is null, must return false.
                 prevTxs[HexadecimalEncoding.ToHexString(prevTx.Id)] = prevTx;
             }
 

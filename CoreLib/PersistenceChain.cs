@@ -8,7 +8,6 @@ namespace CoreLib
     public class PersistenceChain : IDisposable
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-
         private static string _dbName = "fricoin";
         //private const string DbEnv = "FricoinEnvironment";
         private readonly string DbEnv = "";
