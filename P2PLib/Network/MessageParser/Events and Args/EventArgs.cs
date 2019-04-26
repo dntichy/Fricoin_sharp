@@ -74,6 +74,19 @@ namespace P2PLib.Network.MessageParser
             this.TransactionPoolList = txPoolList;
         }
     }
+
+    public class IsMiningEventArgs : EventArgs
+    {
+        public bool Mining { get; set; }
+
+        public IsMiningEventArgs(bool mining)
+        {
+            this.Mining = mining;
+        }
+    }
+
+
+
     public class MinedHashUpdateEventArgs : EventArgs
     {
         public string Hash { get; set; }

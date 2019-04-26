@@ -28,6 +28,7 @@ namespace Wallet
         public event EventHandler WholeChainDownloaded;
         public event EventHandler BlockChainSynchronized; // remove, is unused?
         public event EventHandler BlockChainSynchronizing;
+        public event EventHandler<IsMiningEventArgs> IsMining;
         public event EventHandler<TransactionPoolEventArgs> TransactionPoolChanged;
         public event EventHandler<ProgressBarEventArgs> NewBlockArrived;
         public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
@@ -302,15 +303,19 @@ namespace Wallet
         private void ResumeMining()
         {
             if (miningInProgress) chain.ActuallBlockInMining.Mining = true;
+            NotifyGUIisMining(true);
         }
 
         private void PauseMining()
         {
             if (miningInProgress) chain.ActuallBlockInMining.Mining = false;
+            NotifyGUIisMining(false);
         }
         private void BreakMining()
         {
             if (miningInProgress) chain.ActuallBlockInMining.BreakMining = true; //break mining
+            NotifyGUIisMining(false);
+
         }
 
         private bool VerifyTransactions(IList<Transaction> transactions)
@@ -600,8 +605,8 @@ namespace Wallet
 
 
             chain.HashDiscovered += HashDiscovered;
+            NotifyGUIisMining(true);
             var newBlock = chain.MineBlock(txList);
-
             if (newBlock != null)
             {
                 if (handlingNewBlock)
@@ -610,6 +615,7 @@ namespace Wallet
                     logger.Debug($"!New block mined, mining duration: {DateTime.Now - startTime} But discard it, cause handling newRemoteBlock");
                     return;
                 }
+                NotifyGUIisMining(false);
                 handlingNewBlock = true;
                 logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
 
@@ -688,6 +694,12 @@ namespace Wallet
 
             if (TransactionPool.Count > 0) MineTransactions();
 
+        }
+
+        private void NotifyGUIisMining(bool miningStatus)
+        {
+
+            IsMining?.Invoke(this, new IsMiningEventArgs(miningStatus));
         }
 
         private void HashDiscovered(object sender, MinedHashUpdateEventArgs e)

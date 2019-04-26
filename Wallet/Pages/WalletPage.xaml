@@ -4,6 +4,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:Wallet"
+              xmlns:gif="http://wpfanimatedgif.codeplex.com"
+
       mc:Ignorable="d"
       Title="WalletPage"
       Loaded="Page_Loaded"
@@ -49,7 +51,7 @@
                     <DockPanel>
                         <Label FontFamily="Consolas" FontWeight="Bold" MouseDown="QrCodeAddressBox_MouseDown" Cursor="Hand" ToolTip="Copy" FontSize="13" Name="Address" HorizontalAlignment="Center"></Label>
                     </DockPanel>
-               
+
 
                 </StackPanel>
             </Grid>
@@ -89,7 +91,7 @@
                         <DockPanel Margin="0 10 0 0">
                             <Label FontSize="24"  FontFamily="Consolas" Content="Mining" />
                         </DockPanel>
-                        <DockPanel Margin="20 0 0 0" HorizontalAlignment="Left">
+                        <DockPanel Margin="20 0 0 0" HorizontalAlignment="Left" >
                             <CheckBox  Checked="DisplayMiningCheckBox_Checked" Unchecked="DisplayMiningCheckBox_Unchecked" VerticalAlignment="Center" Name="DisplayMiningCheckBox" FlowDirection="RightToLeft">
                                 <TextBlock FlowDirection="LeftToRight" VerticalAlignment="Center" Text="Display mining" />
                             </CheckBox>
@@ -109,9 +111,13 @@
                         <DockPanel  Margin="15 0 0 0">
                             <Label  Name="HashDisplayLabel"/>
                         </DockPanel>
+                        <DockPanel  Margin="15 0 0 0">
+                            <Image Width="50" Height="50"  Name="MiningImage"></Image>
+                        </DockPanel>
 
 
-                      
+
+
                     </StackPanel>
 
                 </Grid>

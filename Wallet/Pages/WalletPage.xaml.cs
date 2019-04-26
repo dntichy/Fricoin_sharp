@@ -25,6 +25,7 @@ using System.Windows.Media.Imaging;
 using Wallet.ShellHelpers;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
+using WpfAnimatedGif;
 
 namespace Wallet.Pages
 {
@@ -88,7 +89,7 @@ namespace Wallet.Pages
             });
         }
 
-        private void BlockChainSynchronized(object sender ,  EventArgs e)
+        private void BlockChainSynchronized(object sender, EventArgs e)
         {
             Dispatcher.Invoke(() =>
             {
@@ -156,6 +157,7 @@ namespace Wallet.Pages
                 nettwork.TransactionPoolChanged += TransactionPoolChanged;
                 nettwork.BlockChainSynchronized += BlockChainSynchronized;
                 nettwork.BlockChainSynchronizing += BlockChainSynchronizing;
+                nettwork.IsMining += MiningIndicator;
 
                 //kick of blockchain game here, must first register events, than kick that off
                 nettwork._blockchainPeer.Initialize();
@@ -175,8 +177,33 @@ namespace Wallet.Pages
             }
         }
 
+        private void MiningIndicator(object sender, IsMiningEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (e.Mining)
+                {
+                    Console.WriteLine(  "START ANIMATION");
+                    //change gui to mining
+                    var image = new BitmapImage();
+                    image.BeginInit();
+                    image.UriSource = new Uri("pack://application:,,,/Pictures/loader-gears.gif");
+                    image.EndInit();
+                    ImageBehavior.SetAnimatedSource(MiningImage, image);
 
+                }
+                else
+                {
+                    //change gui to not mining - static image
+                    Console.WriteLine("STOP ANIMATION");
+                    var controller = ImageBehavior.GetAnimationController(MiningImage);
+                    controller.Pause();
 
+                    
+                    
+                }
+            });
+        }
 
         private void MinedHashUpdate(object sender, MinedHashUpdateEventArgs e)
         {
@@ -473,10 +500,13 @@ namespace Wallet.Pages
             Address.Content = _loggedUser.Address;
             var firstName = Regex.Replace(_loggedUser.FirstName, @"\s+", "");
             var lastName = Regex.Replace(_loggedUser.LastName, @"\s+", "");
-            progLabel.Content = "unknown";  // set progressbar values 
-            progBgLabel.Width = 0;  // set progressbar values 
+            progBgLabel.Width = progBorder.Width;
+            progLabel.Content = "synchronized";
             FullName.Content = "Full name : " + firstName + " " + lastName;
             Email.Content = "Email :     " + _loggedUser.Email;
+
+
+            MiningImage.Source = new BitmapImage(new Uri("pack://application:,,,/Pictures/loader-gears.gif")); //mining picture
         }
         public void UpdateBalance()
         {
