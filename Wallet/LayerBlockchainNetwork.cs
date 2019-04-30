@@ -29,6 +29,7 @@ namespace Wallet
         public event EventHandler BlockChainSynchronized; // remove, is unused?
         public event EventHandler BlockChainSynchronizing;
         public event EventHandler<IsMiningEventArgs> IsMining;
+        public event EventHandler<MyMinedBlocksCountEventArgs> MyMinedBlockCountChanged;
         public event EventHandler<TransactionPoolEventArgs> TransactionPoolChanged;
         public event EventHandler<ProgressBarEventArgs> NewBlockArrived;
         public event EventHandler<MinedHashUpdateEventArgs> MinedHashUpdate;
@@ -218,10 +219,14 @@ namespace Wallet
                         return;
                     }
 
+                    BreakMining();
                     RemoveTransactionsFromPool(minedBlock.Transactions); //remove new block transactions from pool
                     chain.AddBlock(minedBlock);
-                    BreakMining();
-                    chain.ReindexUTXO(); // asynch
+                    //30.4
+                    var utxoSet = new UTXOSet(chain);
+                    utxoSet.Update(minedBlock);
+                    //
+
 
                 }
 
@@ -274,6 +279,7 @@ namespace Wallet
                 }
 
                 WholeChainDownloaded?.Invoke(this, EventArgs.Empty);
+                chain.ReindexUTXO(); // asynch
                 handlingNewBlock = false;
                 if (IncomingMinedNewBlocksMessages.Count > 0) ProcessMessage(IncomingMinedNewBlocksMessages.Dequeue());
 
@@ -618,6 +624,11 @@ namespace Wallet
                 NotifyGUIisMining(false);
                 handlingNewBlock = true;
                 logger.Debug($"New block mined, mining duration: {DateTime.Now - startTime}");
+                chain.AddBlock(newBlock);
+                //30.4
+                var utxoSet = new UTXOSet(chain);
+                utxoSet.Update(newBlock);
+                //
 
 
                 //7.4.19
@@ -688,6 +699,8 @@ namespace Wallet
             {
                 logger.Debug("block added by remote client");
                 //I delete txs from txpool in NewBlockMined
+                chain.ReindexUTXO();
+
             }
 
             miningInProgress = false;

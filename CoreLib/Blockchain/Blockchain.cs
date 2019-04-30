@@ -90,9 +90,10 @@ namespace CoreLib.Blockchain
 
             if (!IsProperlyMined(newBlock)) return null;
 
-            ChainDb.Put(newBlock.Hash, newBlock.Serialize());
-            ChainDb.Put(ByteHelper.GetBytesFromString("lh"), newBlock.Hash);
-            LastHash = newBlock.Hash;
+            //commented out because it might happen, that it is properly mined but was handling block from remote, check variable in LayerBlockchain
+            //ChainDb.Put(newBlock.Hash, newBlock.Serialize());
+            //ChainDb.Put(ByteHelper.GetBytesFromString("lh"), newBlock.Hash);
+            //LastHash = newBlock.Hash;
 
             return newBlock;
         }
@@ -220,8 +221,9 @@ namespace CoreLib.Blockchain
 
         private void SetLastHash(Block block)
         {
-            ChainDb.Put(ByteHelper.GetBytesFromString("lh"), block.Hash);
             LastHash = block.Hash;
+            ChainDb.Put(ByteHelper.GetBytesFromString("lh"), block.Hash);
+
         }
 
 
@@ -251,12 +253,11 @@ namespace CoreLib.Blockchain
         {
             var UTXOs = new Dictionary<string, TxOutputs>();
             var spentTxOs = new Dictionary<string, List<int>>();
-            var confirmationIndex = 0;
+            //var confirmationIndex = 0;
             foreach (var block in this)
             {
-                confirmationIndex++;
-                if (confirmationIndex < 4 && block.Index != 0) continue; //last 3 blocks are to be confirmed
-
+                //confirmationIndex++;
+                //if (confirmationIndex < 4 && block.Index != 0) continue; //last 3 blocks are to be confirmed
 
                 foreach (var tx in block)
                 {
@@ -314,7 +315,7 @@ namespace CoreLib.Blockchain
 
         public void RestructualizeSubchain(InMemoryBlockChain bestChain)
         {
-            foreach(var block in bestChain)
+            foreach (var block in bestChain)
             {
                 AddBlock(block);
                 logger.Debug("Add block from restructualized - " + Convert.ToBase64String(block.Hash));
@@ -356,7 +357,7 @@ namespace CoreLib.Blockchain
             var prevTxs = new Dictionary<string, Transaction>();
             foreach (var inp in tx.Inputs)
             {
-                
+
                 var prevTx = FindTransaction(inp.Id);
                 //TODO if not found here... prevTx is null, must return false.
                 prevTxs[HexadecimalEncoding.ToHexString(prevTx.Id)] = prevTx;

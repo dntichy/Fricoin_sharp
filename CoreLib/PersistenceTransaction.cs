@@ -90,6 +90,7 @@ namespace CoreLib
             using (var db = tx.OpenDatabase(DbName))
             {
                 var result = tx.Get(db, key);
+                tx.Commit();
                 return result;
             }
         }

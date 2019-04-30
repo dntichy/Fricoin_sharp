@@ -85,6 +85,16 @@ namespace P2PLib.Network.MessageParser
         }
     }
 
+    public class MyMinedBlocksCountEventArgs : EventArgs
+    {
+        public int Count { get; set; }
+
+        public MyMinedBlocksCountEventArgs(int count)
+        {
+            this.Count = count;
+        }
+    }
+    
 
 
     public class MinedHashUpdateEventArgs : EventArgs

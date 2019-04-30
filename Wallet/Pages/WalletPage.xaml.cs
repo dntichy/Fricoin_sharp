@@ -197,7 +197,7 @@ namespace Wallet.Pages
                     //change gui to not mining - static image
                     Console.WriteLine("STOP ANIMATION");
                     var controller = ImageBehavior.GetAnimationController(MiningImage);
-                    controller.Pause();
+                    controller?.Pause();
 
                     
                     
