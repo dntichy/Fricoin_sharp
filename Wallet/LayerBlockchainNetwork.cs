@@ -236,9 +236,9 @@ namespace Wallet
                     logger.Debug("Find best chain");
                     InMemoryBlockChain bestChain = null;
                     var count = 1;
-                    var bestIndex = chain.GetBestHeight();
+                    var bestIndex = chain.GetBestHeight();//local blockchain
 
-                    foreach (var chain in InMemoryBlockChains)
+                    foreach (var chain in InMemoryBlockChains) //subchains
                     {
                         var currentIndex = chain.GetLastIndex();
 
@@ -592,6 +592,10 @@ namespace Wallet
 
             var txList = new List<Transaction>();
             var coinBaseTx = Transaction.CoinBaseTx(_loggedUser.Address, ""); //add later
+            coinBaseTx.Inputs[0].MagicValue = chain.GetBestHeight() + 1;
+            coinBaseTx.MagicVK = chain.GetBestHeight() + 1;
+            coinBaseTx.Id= coinBaseTx.CalculateHash();
+
             txList.Add(coinBaseTx);
             //fill txList from TransactionPool
             foreach (var txPair in TransactionPool)
@@ -699,7 +703,7 @@ namespace Wallet
             {
                 logger.Debug("block added by remote client");
                 //I delete txs from txpool in NewBlockMined
-                chain.ReindexUTXO();
+                //chain.ReindexUTXO();
 
             }
 

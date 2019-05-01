@@ -10,6 +10,7 @@ namespace CoreLib.Blockchain
         public int Out { get; set; }
         public byte[] Signature { get; set; }
         public byte[] PubKey { get; set; }
+        public int MagicValue { get; set; }
 
         public bool UsesKey(byte[] pubKeyHash)
         {

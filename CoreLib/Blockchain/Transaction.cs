@@ -17,12 +17,14 @@ namespace CoreLib.Blockchain
             Inputs = transaction.Inputs;
             Outputs = transaction.Outputs;
             TimeStamp = transaction.TimeStamp;
+            MagicVK = transaction.MagicVK;
         }
 
         public byte[] Id { get; set; }
         public List<TxInput> Inputs { get; set; }
         public List<TxOutput> Outputs { get; set; }
         public DateTime TimeStamp { get; set; }
+        public int MagicVK { get; set; }
 
         public Transaction()
         {
@@ -35,7 +37,7 @@ namespace CoreLib.Blockchain
 
             foreach (var input in transaction.Inputs)
             {
-                txInputs.Add(new TxInput() {Id = input.Id, Out = input.Out, Signature = null, PubKey = null});
+                txInputs.Add(new TxInput() {Id = input.Id, Out = input.Out, Signature = null, PubKey = null, MagicValue= input.MagicValue});
             }
 
             foreach (var (output, index) in transaction.Outputs.Select((v, i) => (v, i)))
@@ -48,7 +50,8 @@ namespace CoreLib.Blockchain
                 Inputs = txInputs,
                 Outputs = txOutputs,
                 Id = transaction.Id,
-                TimeStamp = transaction.TimeStamp
+                TimeStamp = transaction.TimeStamp,
+                
             };
             return txCopy;
         }
@@ -70,7 +73,7 @@ namespace CoreLib.Blockchain
             var txCopy = TransactionTrimmed(this);
 
             var index = 0;
-            foreach (var inp in Inputs)
+            foreach (var inp in txCopy.Inputs)
             {
                 var prevTx = prevTxs[HexadecimalEncoding.ToHexString(inp.Id)];
                 txCopy.Inputs[index].Signature = null;
@@ -215,7 +218,7 @@ namespace CoreLib.Blockchain
                 Id = null,
                 Outputs = new List<TxOutput>() {txOut},
                 Inputs = new List<TxInput>() {txIn},
-                TimeStamp = DateTime.Now
+                //TimeStamp = DateTime.Now
             };
             tx.Id = tx.CalculateHash();
 
