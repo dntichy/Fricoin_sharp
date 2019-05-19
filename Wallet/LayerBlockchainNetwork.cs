@@ -46,6 +46,7 @@ namespace Wallet
         List<InMemoryBlockChain> InMemoryBlockChains = new List<InMemoryBlockChain>(); //local fork chains
         Queue<IMessage> IncomingMinedNewBlocksMessages;
         private bool handlingNewBlock = false; //is currently processing mined block
+        private DateTime timeSkewBetweenHandlingBlock;
 
         public static string GetIpAddress()
         {
@@ -216,6 +217,7 @@ namespace Wallet
                     {
                         ResumeMining();
                         handlingNewBlock = false;
+                        timeSkewBetweenHandlingBlock = DateTime.Now;
                         return;
                     }
 
@@ -594,7 +596,7 @@ namespace Wallet
             var coinBaseTx = Transaction.CoinBaseTx(_loggedUser.Address, ""); //add later
             coinBaseTx.Inputs[0].MagicValue = chain.GetBestHeight() + 1;
             coinBaseTx.MagicVK = chain.GetBestHeight() + 1;
-            coinBaseTx.Id= coinBaseTx.CalculateHash();
+            coinBaseTx.Id = coinBaseTx.CalculateHash();
 
             txList.Add(coinBaseTx);
             //fill txList from TransactionPool
@@ -610,6 +612,7 @@ namespace Wallet
             if (txList.Count == 0)
             {
                 logger.Debug("All txs invalid");
+                miningInProgress = false;
                 return;
             }
 
@@ -619,10 +622,12 @@ namespace Wallet
             var newBlock = chain.MineBlock(txList);
             if (newBlock != null)
             {
-                if (handlingNewBlock)
+                //skew for synch
+                if (handlingNewBlock || (DateTime.Now - timeSkewBetweenHandlingBlock).Milliseconds < 200)
                 {
                     // mined same time as block came 
                     logger.Debug($"!New block mined, mining duration: {DateTime.Now - startTime} But discard it, cause handling newRemoteBlock");
+                    miningInProgress = false;
                     return;
                 }
                 NotifyGUIisMining(false);

@@ -253,14 +253,22 @@ namespace CoreLib.Blockchain
         {
             var UTXOs = new Dictionary<string, TxOutputs>();
             var spentTxOs = new Dictionary<string, List<int>>();
-            //var confirmationIndex = 0;
+            var confirmationIndex = 0;
             foreach (var block in this)
             {
-                //confirmationIndex++;
-                //if (confirmationIndex < 4 && block.Index != 0) continue; //last 3 blocks are to be confirmed
+                confirmationIndex++;
+
+
 
                 foreach (var tx in block)
                 {
+
+                    if (tx.IsCoinBase() == true)
+                    {
+                        if (confirmationIndex < 3 && block.Index != 0) continue; //last 3 blocks are to be confirmed for accepting coinbase tx
+                    }
+
+
                     var tXId = tx.Id; //transaction ID
 
                     if (!spentTxOs.ContainsKey(HexadecimalEncoding.ToHexString(tXId)))
