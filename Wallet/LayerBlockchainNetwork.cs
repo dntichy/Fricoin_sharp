@@ -27,6 +27,7 @@ namespace Wallet
         private List<byte[]> blocksInTransit;
         public event EventHandler WholeChainDownloaded;
         public event EventHandler BlockChainSynchronized; // remove, is unused?
+        public event EventHandler InsufficientFund;
         public event EventHandler BlockChainSynchronizing;
         public event EventHandler<IsMiningEventArgs> IsMining;
         public event EventHandler<MyMinedBlocksCountEventArgs> MyMinedBlockCountChanged;
@@ -365,6 +366,7 @@ namespace Wallet
             if (tx == null)
             {
                 logger.Debug("Couldn't create new TX to send");
+                InsufficientFund?.Invoke(this, EventArgs.Empty);
                 return;
             }
             //old ver

@@ -82,6 +82,7 @@
                         <DockPanel Margin="15 0 0 0">
                             <Label FontFamily="Consolas" Content="Amount"  />
                             <TextBox FontFamily="Consolas" Name="AmountTextBox" VerticalAlignment="Center"  Text="" Width="60"/>
+                            <Label FontFamily="Consolas" Foreground="Red" Name="InsuffLabel" Visibility="Hidden" FontWeight="Bold" Content="Insufficient funds" FontSize="12" VerticalAlignment="Center"  />
                             <Button  HorizontalAlignment="Right" FontSize="12" Height="30" Margin="0 0 20 0" Click="SendClick" Width="100" Content="SEND" Background="DarkSlateGray" BorderBrush="Black" />
                         </DockPanel>
                         <DockPanel Margin="15 0 0 0">

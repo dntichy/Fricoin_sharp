@@ -157,6 +157,7 @@ namespace Wallet.Pages
                 nettwork.TransactionPoolChanged += TransactionPoolChanged;
                 nettwork.BlockChainSynchronized += BlockChainSynchronized;
                 nettwork.BlockChainSynchronizing += BlockChainSynchronizing;
+                nettwork.InsufficientFund += InsufficientFundHandler;
                 nettwork.IsMining += MiningIndicator;
 
                 //kick of blockchain game here, must first register events, than kick that off
@@ -175,6 +176,23 @@ namespace Wallet.Pages
             {
                 logger.Error(ex.ToString());
             }
+        }
+
+        private void InsufficientFundHandler(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                InsuffLabel.Visibility = Visibility.Visible;
+            });
+
+            Task.Delay(new TimeSpan(0, 0, 2)).ContinueWith(o => {
+
+                Dispatcher.Invoke(() =>
+                {
+                    InsuffLabel.Visibility = Visibility.Hidden;
+                });
+            });
+
         }
 
         private void MiningIndicator(object sender, IsMiningEventArgs e)
