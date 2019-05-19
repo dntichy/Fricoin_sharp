@@ -156,7 +156,9 @@
                                     <Grid Background="#FFE5E5E5">
                                         <Grid.Resources>
                                             <DataTemplate x:Key="blockHeaderTemplate" >
+                                                
                                                 <StackPanel Margin="3">
+                                                    
                                                     <DockPanel>
                                                         <TextBlock FontWeight="Bold" Text="Index: " DockPanel.Dock="Left" Margin="5,0,10,0" />
                                                         <TextBlock Text="{Binding Index}" Foreground="Green" FontWeight="Bold" />
@@ -188,8 +190,18 @@
                                         <ListBox  
                                      Name="BlockHeaderListBox" 
                                      ItemTemplate="{StaticResource blockHeaderTemplate}"
-                                 SelectionChanged="BlockHeaderListBox_SelectionChanged"
-                                />
+                                 SelectionChanged="BlockHeaderListBox_SelectionChanged">
+
+                                            <ListBox.ContextMenu>
+                                                <ContextMenu StaysOpen="false" Background="WhiteSmoke">
+                                                    <ContextMenu.BitmapEffect>
+                                                        <BitmapEffectGroup/>
+                                                    </ContextMenu.BitmapEffect>
+                                                    <MenuItem Header="Detail" Click="MenuItem_Click_1"/>
+                                                </ContextMenu>
+                                            </ListBox.ContextMenu>
+                                        </ListBox>
+                                        
                                     </Grid>
                                 </TabItem>
                                 <TabItem Header="TRANSACTIONS" FontFamily="Consolas">

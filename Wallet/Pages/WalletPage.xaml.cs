@@ -1,4 +1,5 @@
-﻿using CoreLib;
+﻿using ChainUtils;
+using CoreLib;
 using CoreLib.Blockchain;
 using DatabaseLib;
 using Microsoft.Win32;
@@ -553,5 +554,14 @@ namespace Wallet.Pages
             usersListBox.ItemsSource = listUsers;
         }
 
+
+
+        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
+        {
+            var selected =(BlockHeader) BlockHeaderListBox.SelectedItem;
+            var getWholeBlock = _friChain.GetBlock(Convert.FromBase64String( selected.Hash));
+            var window = new BlockViewWindow(getWholeBlock);
+            window.Show();
+        }
     }
 }

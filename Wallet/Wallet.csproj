@@ -175,6 +175,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Windows\BlockViewWindow.xaml.cs">
+      <DependentUpon>BlockViewWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LayerBlockchainNetwork.cs" />
     <Compile Include="LoaderWindow.xaml.cs">
       <DependentUpon>LoaderWindow.xaml</DependentUpon>
@@ -188,6 +191,10 @@
     <Compile Include="Pages\WalletPage.xaml.cs">
       <DependentUpon>WalletPage.xaml</DependentUpon>
     </Compile>
+    <Page Include="Windows\BlockViewWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="LoaderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
